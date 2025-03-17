@@ -9,7 +9,7 @@
 DLL_EXPORT void InitTileMap(int mapSize, Pos start, Pos end, TileData* tiles, int tileSize)
 {
 	TileMap* tileMap = TileMap::GetInstance(mapSize);
-	tileMap->Init(start, end, tiles, 9);
+	tileMap->Init(start, end, tiles, tileSize);
 }
 
 DLL_EXPORT void RunPathFind(Pos** outPath, int* outPathSize, Pos** outAllPath, int* outAllPathSize)

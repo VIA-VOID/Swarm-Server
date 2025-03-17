@@ -33,7 +33,6 @@ TileMap* TileMap::GetInstance(int32 mapSize)
 {
 	if (_tileMapInstance == nullptr)
 	{
-		// TODO 에러처리
 		_tileMapInstance = new TileMap(mapSize);
 	}
 	return _tileMapInstance;
