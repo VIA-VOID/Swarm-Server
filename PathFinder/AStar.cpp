@@ -55,6 +55,10 @@ void AStar::Run()
 	std::vector<std::vector<int32>> _best = std::vector<std::vector<int32>>(mapSize, std::vector<int32>(mapSize, INT_MAX));
 	std::vector<std::vector<bool>> _closeList = std::vector<std::vector<bool>>(mapSize, std::vector<bool>(mapSize, false));
 
+	_path.clear();
+	_allPath.clear();
+	_parent.clear();
+
 	// 필요값 초기화
 	bool isFind = false;
 	const Pos start = _tileMap->GetStartPos();
@@ -67,13 +71,10 @@ void AStar::Run()
 	_parent[start] = start;
 	_openListPQ.push(PQNode{ g + h, g, start });
 
-	_path.clear();
-	_allPath.clear();
-	_parent.clear();
-
 	// 길찾기 시작
-	while (isFind == false)
+	while (_openListPQ.empty() == false)
 	{
+		if (isFind) break;
 		PQNode node = _openListPQ.top();
 		_openListPQ.pop();
 
@@ -117,7 +118,22 @@ void AStar::Run()
 	}
 
 	// 길찾기 완료 후 전체 경로 삽입
-	Pos pos = end;
+	Pos pos;
+	if (isFind == false)
+	{
+		// 만약 길이 모두 막혀있을 경우
+		int32 allPathSize = static_cast<int32>(_allPath.size());
+		if (allPathSize == 0)
+		{
+			return;
+		}
+		pos = _allPath[allPathSize - 1];
+	}
+	else
+	{
+		// 도착지 까지 길을 모두 찾았다면
+		pos = end;
+	}
 
 	while (true)
 	{
