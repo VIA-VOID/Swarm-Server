@@ -4,16 +4,13 @@
 
 // 클라에서 전달받는 데이터
 // 맵 정보
-extern "C"
+struct TileData
 {
-	struct TileData
-	{
-		// 이동가능 여부
-		int32 canMove = 0;
-		// x, y 좌표
-		Pos pos;
-	};
-}
+	// 이동가능 여부
+	int32 canMove = 0;
+	// x, y 좌표
+	Pos pos;
+};
 
 class TileMap
 {

@@ -78,6 +78,12 @@ void AStar::Run()
 		PQNode node = _openListPQ.top();
 		_openListPQ.pop();
 
+		// 만일 최적경로가 있었다면 스킵
+		if (_best[node.pos.y][node.pos.x] < node.f)
+		{
+			continue;
+		}
+
 		for (int32 dir = 0; dir < MOVENUM; dir++)
 		{
 			Pos nextPos = node.pos + moveTo[dir];
@@ -102,7 +108,7 @@ void AStar::Run()
 			_allPath.push_back(nextPos);
 			// 비용 계산
 			int32 g = node.g + cost[dir];
-			int32 h = DiagonalDistance(start, end);
+			int32 h = DiagonalDistance(nextPos, end);
 			int32 f = g + h;
 			// 더 빠른 길을 찾았다면 스킵
 			if (_best[nextPos.y][nextPos.x] <= f)
