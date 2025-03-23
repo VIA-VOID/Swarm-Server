@@ -48,6 +48,13 @@ bool TileMap::CanGo(Pos& pos)
 	return _board[pos.y][pos.x];
 }
 
+// 전달 좌표가 갈 수 있는 길인지 판단
+// 비교 없이 Direct 리턴
+bool TileMap::CanGoD(Pos& pos)
+{
+	return _board[pos.y][pos.x];
+}
+
 // 맵 정보 초기화
 void TileMap::Init(Pos& start, Pos& end, TileData* tiles, int32 tileSize)
 {

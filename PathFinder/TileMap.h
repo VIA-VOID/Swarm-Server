@@ -23,6 +23,7 @@ public:
 	void Init(Pos& start, Pos& end, TileData* tiles, int32 tileSize);
 	// 전달 좌표가 갈 수 있는 길인지 판단
 	bool CanGo(Pos& pos);
+	bool CanGoD(Pos& pos);
 	// 출발지 리턴
 	const Pos& GetStartPos() const;
 	// 도착지 리턴

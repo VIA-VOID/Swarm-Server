@@ -3,11 +3,11 @@
 #include "TileMap.h"
 
 // 가중치
-constexpr uint16 MOVENUM = 8;	// 8방 이동
-constexpr uint16 STRAIGHT = 10;	// 직선
-constexpr uint16 DIAGONAL = 14;	// 대각선
+static constexpr uint16 MOVENUM = 8;	// 8방 이동
+static constexpr uint16 STRAIGHT = 10;	// 직선
+static constexpr uint16 DIAGONAL = 14;	// 대각선
 
-Pos moveTo[MOVENUM] =
+static Pos moveTo[MOVENUM] =
 {
 	Pos {-1, 0 }, // 위
 	Pos { 0,-1 }, // 왼쪽
@@ -19,7 +19,7 @@ Pos moveTo[MOVENUM] =
 	Pos {-1, 1 }, // 오른쪽 위 대각선
 };
 
-uint16 cost[MOVENUM] =
+static uint16 cost[MOVENUM] =
 {
 	STRAIGHT, // 위
 	STRAIGHT, // 왼쪽
@@ -41,10 +41,111 @@ AStar::~AStar()
 }
 
 // 휴리스틱 함수(대각선 거리 구하기)
-inline uint32 AStar::DiagonalDistance(const Pos& start, const Pos& end)
+uint32 AStar::DiagonalDistance(const Pos& start, const Pos& end)
 {
 	return DIAGONAL * max(abs(end.x - start.x), abs(end.y - start.y));
 }
+
+// 브레젠험 직선 알고리즘
+// 출발지에서 도착지까지 직선을 긋고, 갈 수 있는 길인지 판단
+bool AStar::CanBresenhamLine(const Pos& start, const Pos& end)
+{
+	int32 startX = start.x;
+	int32 startY = start.y;
+	int32 endX = end.x;
+	int32 endY = end.y;
+
+	// 기울기
+	const int32 dx = abs(endX - startX);
+	const int32 dy = abs(endY - startY);
+
+	// 대각선 방향 결정 : 오른쪽 or 왼쪽, 위쪽 or 아래쪽
+	const int32 sx = (startX < endX) ? 1 : -1;
+	const int32 sy = (startY < endY) ? 1 : -1;
+	// 두 축 사이 오차값
+	int32 err = dx - dy;
+
+	// 도착점까지 갈 수 있는 곳인지 확인
+	while (startX != endX || startY != endY)
+	{
+		int32 e2 = err << 1;
+		// x 방향 이동
+		if (e2 > -dy)
+		{
+			err -= dy; // x 이동에 따른 오차 보정
+			startX += sx; // 오른쪽 혹은 왼쪽으로 한 칸 이동
+		}
+		// y 방향 이동
+		if (e2 < dx)
+		{
+			err += dx; // y 이동에 따른 오차 보정
+			startY += sy; // 위쪽 혹은 아래쪽으로 한 칸 이동
+		}
+
+		// 갈 수 있는 곳인지 확인
+		Pos pos = { startY, startX };
+		if (_tileMap->CanGoD(pos) == false)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// A* 길찾기 경로 보정
+void AStar::SetPathCorrection()
+{
+	int32 pathSize = static_cast<int32>(_path.size());
+	if (pathSize == 0)
+	{
+		return;
+	}
+	/*
+		_path 길찾기 결과에 거꾸로 들어가있음
+		endIdx							startIdx
+		도착지 -> 5 -> 4 -> 3 -> 2 -> 1->출발지
+	*/
+	int32 startIdx = pathSize - 1;
+	int32 endIdx = 0;
+
+	// 출발지에서 도착지까지 최대한 거리가 먼곳부터 직선 체크
+	while (endIdx < startIdx)
+	{
+		bool foundJump = false;
+
+		for (int32 index = startIdx; index > endIdx; index--)
+		{
+			Pos startPos = _path[index];
+			Pos endPos = _path[endIdx];
+
+			// 직선으로 갈 수 있는 거리라면 PUSH
+			if (CanBresenhamLine(startPos, endPos))
+			{
+				endIdx = index;
+				_bresenhamPath.push_back(_path[endIdx]);
+				foundJump = true;
+				break;
+			}
+		}
+		// 만약 바로 갈 수 있는 노드가 없으면, 한 칸씩 전진
+		if (foundJump == false)
+		{
+			++endIdx;
+		}
+	}
+
+	if (_bresenhamPath.empty())
+	{
+		std::reverse(_path.begin(), _path.end());
+	}
+	else
+	{
+		std::reverse(_bresenhamPath.begin(), _bresenhamPath.end());
+		_bresenhamPath.push_back(_path[0]);
+	}
+}
+
 
 // 길찾기 실행
 void AStar::Run()
@@ -56,6 +157,7 @@ void AStar::Run()
 	std::vector<std::vector<bool>> _closeList = std::vector<std::vector<bool>>(mapSize, std::vector<bool>(mapSize, false));
 
 	_path.clear();
+	_bresenhamPath.clear();
 	_allPath.clear();
 	_parent.clear();
 
@@ -123,12 +225,11 @@ void AStar::Run()
 		}
 	}
 
-	// 길찾기 완료 후 전체 경로 삽입
 	Pos pos;
 	if (isFind == false)
 	{
 		// 만약 길이 모두 막혀있을 경우
-		int64 allPathSize = static_cast<int64>(_allPath.size());
+		int32 allPathSize = static_cast<int32>(_allPath.size());
 		if (allPathSize == 0)
 		{
 			return;
@@ -141,6 +242,7 @@ void AStar::Run()
 		pos = end;
 	}
 
+	// 길찾기 완료 후 전체 경로 삽입
 	while (true)
 	{
 		_path.push_back(pos);
@@ -152,7 +254,8 @@ void AStar::Run()
 		pos = _parent[pos];
 	}
 
-	std::reverse(_path.begin(), _path.end());
+	// 최종경로 보정
+	SetPathCorrection();
 }
 
 // 최단경로 리턴
@@ -165,4 +268,10 @@ std::vector<Pos>& AStar::GetPath()
 std::vector<Pos>& AStar::GetAllPath()
 {
 	return _allPath;
+}
+
+// 보정경로 리턴
+std::vector<Pos>& AStar::GetBresenHamPath()
+{
+	return _bresenhamPath;
 }

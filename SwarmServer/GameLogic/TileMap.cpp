@@ -8,12 +8,12 @@ TileMap::TileMap(int32 mapSize)
 {
 	// 맵 데이터 할당
 	_board = new bool* [_mapSize];
-	for (int i = 0; i < _mapSize; i++)
+	for (int32 i = 0; i < _mapSize; i++)
 	{
 		// 각 행마다 열 크기의 bool 배열 할당
 		_board[i] = new bool[_mapSize];
 		// 모든 값을 false로 초기화
-		for (int j = 0; j < _mapSize; j++)
+		for (int32 j = 0; j < _mapSize; j++)
 		{
 			_board[i][j] = false;
 		}
@@ -22,7 +22,7 @@ TileMap::TileMap(int32 mapSize)
 
 TileMap::~TileMap()
 {
-	for (int i = 0; i < _mapSize; i++)
+	for (int32 i = 0; i < _mapSize; i++)
 	{
 		delete[] _board[i];
 	}
@@ -49,13 +49,20 @@ bool TileMap::CanGo(Pos& pos)
 	return _board[pos.y][pos.x];
 }
 
+// 전달 좌표가 갈 수 있는 길인지 판단
+// 비교 없이 Direct 리턴
+bool TileMap::CanGoD(Pos& pos)
+{
+	return _board[pos.y][pos.x];
+}
+
 // 맵 정보 초기화
 void TileMap::Init(Pos& start, Pos& end, TileData* tiles, int32 tileSize)
 {
 	_startPos = start;
 	_endPos = end;
 
-	for (int i = 0; i < tileSize; i++)
+	for (int32 i = 0; i < tileSize; i++)
 	{
 		Pos pos = tiles[i].pos;
 		bool canMove = tiles[i].canMove;
