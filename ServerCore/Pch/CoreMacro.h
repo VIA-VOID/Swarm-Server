@@ -2,16 +2,17 @@
 #include <chrono>
 
 /*-------------------------------------
-	½Ì±ÛÅæ ÆĞÅÏ Àû¿ëµÈ Å¬·¡½ºµé Á¤ÀÇ
+	ì‹±ê¸€í†¤ íŒ¨í„´ ì ìš©ëœ í´ë˜ìŠ¤ë“¤ ì •ì˜
 -------------------------------------*/
 #define CLOCK				Clock::GetInstance()
 #define RANDOM				RandomMT::GetInstance()
+#define DUMP				CrashDump::GetInstance()
 
 
 /*-------------------------------------
-	ÇÔ¼ö ¸ÅÅ©·Î
+	í•¨ìˆ˜ ë§¤í¬ë¡œ
 -------------------------------------*/
-// ³­¼ö
+// ë‚œìˆ˜
 #define RAND(min, max)		RANDOM.GetRandom<decltype(min)>(min, max)
-// ÇöÀç½Ã°£
+// í˜„ì¬ì‹œê°„
 #define NOW					std::chrono::steady_clock::now()

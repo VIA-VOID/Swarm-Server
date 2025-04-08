@@ -6,7 +6,7 @@
 int main()
 {
 	int32 randomInt = RAND(1, 100);
-	std::cout << "³­¼ö: " << randomInt << std::endl;
+	std::cout << "ë‚œìˆ˜: " << randomInt << std::endl;
 
 	auto& clock = Clock::GetInstance();
 
@@ -14,24 +14,24 @@ int main()
 	std::this_thread::sleep_for(std::chrono::milliseconds(123));
 	auto end = NOW;
 
-	std::cout << "ÇöÀç ½Ã°£: " << clock.GetFormattedTime() << std::endl;
-	std::cout << "°æ°ú ½Ã°£(ms): " << clock.GetTimeDiff(start, end) << std::endl;
-	std::cout << "ÇöÀç¿Í ½ÃÀÛ ½Ã°£ Â÷ÀÌ(ms): " << clock.GetTimeDiff(start) << std::endl;
+	std::cout << "í˜„ìž¬ ì‹œê°„: " << clock.GetFormattedTime() << std::endl;
+	std::cout << "ê²½ê³¼ ì‹œê°„(ms): " << clock.GetTimeDiff(start, end) << std::endl;
+	std::cout << "í˜„ìž¬ì™€ ì‹œìž‘ ì‹œê°„ ì°¨ì´(ms): " << clock.GetTimeDiff(start) << std::endl;
 
 	const auto n = std::thread::hardware_concurrency();
 	std::cout << n << " concurrent threads are supported.\n";
 
-	Timer timer(3000); // 3ÃÊ Å¸ÀÌ¸Ó
+	Timer timer(3000); // 3ì´ˆ íƒ€ì´ë¨¸
 
 	while (true)
 	{
 		if (timer.IsExpired())
 		{
-			std::cout << "Å¸ÀÌ¸Ó ¸¸·á!" << std::endl;
+			std::cout << "íƒ€ì´ë¨¸ ë§Œë£Œ!" << std::endl;
 			break;
 		}
 
-		std::cout << "³²Àº ½Ã°£: " << timer.Remaining() << " ms" << std::endl;
+		std::cout << "ë‚¨ì€ ì‹œê°„: " << timer.Remaining() << " ms" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
 

@@ -8,7 +8,7 @@ protected:
 	~Singleton() {}
 
 public:
-	// º¹»ç, º¹»ç ´ëÀÔ ¹æÁö
+	// ë³µì‚¬, ë³µì‚¬ ëŒ€ì… ë°©ì§€
 	Singleton(const Singleton&) = delete;
 	Singleton& operator=(const Singleton&) = delete;
 
