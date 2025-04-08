@@ -10,8 +10,8 @@ using namespace std::chrono;
 //		Clock		//
 //------------------//
 
-// Æ÷¸ËÆÃµÈ ÇöÀç½Ã°£ ¹İÈ¯ (yyyy/mm/dd HH:MM:SS.MS)
-std::string Clock::GetFormattedTime() const
+// í¬ë§·íŒ…ëœ í˜„ì¬ì‹œê°„ ë°˜í™˜ (yyyy/mm/dd HH:MM:SS.MS)
+std::wstring Clock::GetFormattedTime() const
 {
 	system_clock::time_point now = system_clock::now();
 	auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -20,14 +20,14 @@ std::string Clock::GetFormattedTime() const
 	std::tm time_tm{};
 	localtime_s(&time_tm, &now_c);
 
-	std::ostringstream oss;
-	oss << std::put_time(&time_tm, "%Y/%m/%d %H:%M:%S.");
-	oss << std::setw(3) << std::setfill('0') << ms.count();
+	std::wstringstream oss;
+	oss << std::put_time(&time_tm, L"%Y/%m/%d %H:%M:%S.");
+	oss << std::setw(3) << std::setfill(L'0') << ms.count();
 
 	return oss.str();
 }
 
-// µÎ ½Ã°£ »çÀÌÀÇ Â÷ÀÌ, ¹Ğ¸®ÃÊ ¹İÈ¯
+// ë‘ ì‹œê°„ ì‚¬ì´ì˜ ì°¨ì´, ë°€ë¦¬ì´ˆ ë°˜í™˜
 int64 Clock::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/) const
 {
 	return duration_cast<milliseconds>(end - start).count();
@@ -42,13 +42,13 @@ Timer::Timer()
 {
 }
 
-// »ı¼º ½Ã Áö¼Ó½Ã°£ ¼³Á¤
+// ìƒì„± ì‹œ ì§€ì†ì‹œê°„ ì„¤ì •
 Timer::Timer(int64 durationMs)
 	: _startTime(NOW), _durationMs(durationMs), _started(true)
 {
 }
 
-// Å¸ÀÌ¸Ó ½ÃÀÛ, ±âº»»ı¼ºÀÚ·Î »ı¼ºµÇ¾úÀ»¶§ »ç¿ë
+// íƒ€ì´ë¨¸ ì‹œì‘, ê¸°ë³¸ìƒì„±ìë¡œ ìƒì„±ë˜ì—ˆì„ë•Œ ì‚¬ìš©
 void Timer::Start(int64 durationMs)
 {
 	_startTime = NOW;
@@ -56,7 +56,7 @@ void Timer::Start(int64 durationMs)
 	_started = true;
 }
 
-// ¸¸·á È®ÀÎ
+// ë§Œë£Œ í™•ì¸
 bool Timer::IsExpired() const
 {
 	if (_started == false)
@@ -68,7 +68,7 @@ bool Timer::IsExpired() const
 	return elapsed >= _durationMs;
 }
 
-// Å¸ÀÌ¸Ó ¸®¼Â
+// íƒ€ì´ë¨¸ ë¦¬ì…‹
 void Timer::Reset()
 {
 	if (_started)
@@ -77,7 +77,7 @@ void Timer::Reset()
 	}
 }
 
-// °æ°ú ½Ã°£
+// ê²½ê³¼ ì‹œê°„
 int64 Timer::Elapsed() const
 {
 	if (_started == false)
@@ -88,7 +88,7 @@ int64 Timer::Elapsed() const
 	return CLOCK.GetTimeDiff(_startTime);
 }
 
-// ³²Àº ½Ã°£
+// ë‚¨ì€ ì‹œê°„
 int64 Timer::Remaining() const
 {
 	if (_started == false)

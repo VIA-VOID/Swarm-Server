@@ -11,10 +11,10 @@ using TimePoint = SteadyClock::time_point;
 class Clock : public Singleton<Clock>
 {
 public:
-	// Æ÷¸ËÆÃµÈ ÇöÀç½Ã°£ ¹İÈ¯ (yyyy/mm/dd HH:MM:SS.MS)
-	std::string GetFormattedTime() const;
+	// í¬ë§·íŒ…ëœ í˜„ì¬ì‹œê°„ ë°˜í™˜ (yyyy/mm/dd HH:MM:SS.MS)
+	std::wstring GetFormattedTime() const;
 
-	// µÎ ½Ã°£ »çÀÌÀÇ Â÷ÀÌ, ¹Ğ¸®ÃÊ ¹İÈ¯
+	// ë‘ ì‹œê°„ ì‚¬ì´ì˜ ì°¨ì´, ë°€ë¦¬ì´ˆ ë°˜í™˜
 	int64 GetTimeDiff(const TimePoint& start, const TimePoint& end = NOW) const;
 };
 
@@ -25,22 +25,22 @@ class Timer
 {
 public:
 	Timer();
-	// »ı¼º ½Ã Áö¼Ó½Ã°£ ¼³Á¤
+	// ìƒì„± ì‹œ ì§€ì†ì‹œê°„ ì„¤ì •
 	Timer(int64 durationMs);
 
-	// Å¸ÀÌ¸Ó ½ÃÀÛ, ±âº»»ı¼ºÀÚ·Î »ı¼ºµÇ¾úÀ»¶§ »ç¿ë
+	// íƒ€ì´ë¨¸ ì‹œì‘, ê¸°ë³¸ìƒì„±ìë¡œ ìƒì„±ë˜ì—ˆì„ë•Œ ì‚¬ìš©
 	void Start(int64 durationMs);
 
-	// ¸¸·á È®ÀÎ
+	// ë§Œë£Œ í™•ì¸
 	bool IsExpired() const;
 
-	// Å¸ÀÌ¸Ó ¸®¼Â
+	// íƒ€ì´ë¨¸ ë¦¬ì…‹
 	void Reset();
 
-	// °æ°ú ½Ã°£
+	// ê²½ê³¼ ì‹œê°„
 	int64 Elapsed() const;
 
-	// ³²Àº ½Ã°£
+	// ë‚¨ì€ ì‹œê°„
 	int64 Remaining() const;
 
 private:
