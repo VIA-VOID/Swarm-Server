@@ -1,12 +1,10 @@
 #include "pch.h"
 #include "Utils/Timer.h"
 #include "Utils/RandomMt.h"
-#include "Utils/CrashDump.h"
 #include <thread>
 
 int wmain()
 {
-	DUMP;
 	// 테스트용 강제 크래시
 	int* p = nullptr;
 	*p = 42;

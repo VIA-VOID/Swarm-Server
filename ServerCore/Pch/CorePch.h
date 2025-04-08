@@ -1,5 +1,7 @@
 #pragma once
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment(lib, "DbgHelp.lib")
+#pragma comment(lib, "Shlwapi.lib")
 
 #include "Types.h"
 #include "CoreMacro.h"

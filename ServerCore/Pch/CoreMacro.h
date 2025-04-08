@@ -6,8 +6,6 @@
 -------------------------------------*/
 #define CLOCK				Clock::GetInstance()
 #define RANDOM				RandomMT::GetInstance()
-#define DUMP				CrashDump::GetInstance()
-
 
 /*-------------------------------------
 	함수 매크로
