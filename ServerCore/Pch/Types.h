@@ -1,7 +1,7 @@
 #pragma once
 
 //----------------------------------------------------------//
-// ÀÚ·áÇü Á¤ÀÇ
+// ìë£Œí˜• ì •ì˜
 using BYTE = unsigned char;
 using int8 = __int8;
 using int16 = __int16;

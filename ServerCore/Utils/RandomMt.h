@@ -10,8 +10,8 @@ public:
 	{
 		std::random_device randomDevice;
 		std::mt19937 engine(randomDevice());
-		// T°¡ Á¤¼öÇüÀÌ¸é uniform_int_distribution, 
-		// ¾Æ´Ï¶ó¸é uniform_real_distributionÀ» »ç¿ë
+		// Tê°€ ì •ìˆ˜í˜•ì´ë©´ uniform_int_distribution, 
+		// ì•„ë‹ˆë¼ë©´ uniform_real_distributionì„ ì‚¬ìš©
 		using Distribution = typename std::conditional<
 			std::is_integral<T>::value,
 			std::uniform_int_distribution<T>,
