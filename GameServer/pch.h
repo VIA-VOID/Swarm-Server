@@ -4,4 +4,4 @@
 
 #pragma comment(lib, "serverCore.lib")
 
-#include "CorePch.h"
+#include "Pch/CorePch.h"
