@@ -3,6 +3,8 @@
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Utils\Timer.cpp" />
+    <ClCompile Include="Thread\Lock.cpp" />
+    <ClCompile Include="Utils\CrashDump.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -12,5 +14,7 @@
     <ClInclude Include="Utils\Timer.h" />
     <ClInclude Include="Utils\RandomMt.h" />
     <ClInclude Include="Utils\Singleton.h" />
+    <ClInclude Include="Thread\Lock.h" />
+    <ClInclude Include="Utils\CrashDump.h" />
   </ItemGroup>
 </Project>

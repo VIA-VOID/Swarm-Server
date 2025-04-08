@@ -1,10 +1,16 @@
 #include "pch.h"
 #include "Utils/Timer.h"
 #include "Utils/RandomMt.h"
+#include "Utils/CrashDump.h"
 #include <thread>
 
-int main()
+int wmain()
 {
+	DUMP;
+	// 테스트용 강제 크래시
+	int* p = nullptr;
+	*p = 42;
+
 	int32 randomInt = RAND(1, 100);
 	std::cout << "난수: " << randomInt << std::endl;
 
@@ -14,7 +20,7 @@ int main()
 	std::this_thread::sleep_for(std::chrono::milliseconds(123));
 	auto end = NOW;
 
-	std::cout << "현재 시간: " << clock.GetFormattedTime() << std::endl;
+	std::wcout << L"현재 시간: " << clock.GetFormattedTime() << std::endl;
 	std::cout << "경과 시간(ms): " << clock.GetTimeDiff(start, end) << std::endl;
 	std::cout << "현재와 시작 시간 차이(ms): " << clock.GetTimeDiff(start) << std::endl;
 
