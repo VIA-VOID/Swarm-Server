@@ -1,5 +1,7 @@
 #pragma once
 
+//----------------------------------------------------------//
+// 자료형 정의
 using BYTE = unsigned char;
 using int8 = __int8;
 using int16 = __int16;
