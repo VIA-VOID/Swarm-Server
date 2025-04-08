@@ -402,3 +402,6 @@ FodyWeavers.xsd
 # build & output
 /Build
 /Output
+
+# dump 파일
+*.dmp
