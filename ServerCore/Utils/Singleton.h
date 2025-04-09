@@ -5,7 +5,7 @@ class Singleton
 {
 protected:
 	Singleton() {}
-	~Singleton() {}
+	virtual ~Singleton() {}
 
 public:
 	// 복사, 복사 대입 방지
