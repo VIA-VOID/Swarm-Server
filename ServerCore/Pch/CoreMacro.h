@@ -6,7 +6,6 @@
 -------------------------------------*/
 #define CLOCK				Clock::GetInstance()
 #define RANDOM				RandomMT::GetInstance()
-#define CRASHDUMP			CrashDump::GetInstance()
 
 /*-------------------------------------
 	함수 매크로
@@ -15,3 +14,24 @@
 #define RAND(min, max)		RANDOM.GetRandom<decltype(min)>(min, max)
 // 현재시간
 #define NOW					std::chrono::steady_clock::now()
+
+/*-------------------------------------
+	커스텀 매크로
+-------------------------------------*/
+/// 인위적인 CRASH
+#define CRASH(cause)						\
+{											\
+	uint32* crash = nullptr;				\
+	__analysis_assume(crash != nullptr);	\
+	*crash = 0xDEADBEEF;					\
+}
+
+/// 인위적인 조건부 CRASH
+#define ASSERT_CRASH(expr)					\
+{											\
+	if(!(expr))								\
+	{										\
+		CRASH("ASSERT_CRASH");				\
+		__analysis_assume(expr);			\
+	}										\
+}

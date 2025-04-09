@@ -6,7 +6,8 @@
 
 int wmain()
 {
-	CRASHDUMP;
+	// CRASH DUMP 활성화
+	CrashDump::Init();
 
 	// 테스트용 강제 크래시
 	volatile int* crashPtr = nullptr;

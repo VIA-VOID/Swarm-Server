@@ -8,7 +8,7 @@
 /*----------------------------
 		CrashDump
 ----------------------------*/
-CrashDump::CrashDump()
+void CrashDump::Init()
 {
 	// 프로세스에서 처리되지 않은 예외가 발생했을 때 호출할 사용자 정의 함수를 등록
 	::SetUnhandledExceptionFilter(ExceptionFilter);
@@ -52,7 +52,7 @@ std::wstring CrashDump::MakeDumpFileName()
 	::GetLocalTime(&time);
 
 	WCHAR fileName[MAX_PATH];
-	wsprintf(
+	::wsprintf(
 		fileName, L"Dump_%d_%02d_%02d_%02d%02d%02d.dmp",
 		time.wYear, time.wMonth, time.wDay,
 		time.wHour, time.wMinute, time.wSecond

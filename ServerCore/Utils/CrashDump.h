@@ -3,11 +3,11 @@
 /*----------------------------
 		CrashDump
 ----------------------------*/
-class CrashDump : public Singleton<CrashDump>
+class CrashDump
 {
 public:
 	// CrashDump 활성화
-	CrashDump();
+	static void Init();
 	// dump 파일 생성
 	static LONG WINAPI ExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo);
 
