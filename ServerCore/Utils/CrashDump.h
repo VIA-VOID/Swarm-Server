@@ -15,5 +15,3 @@ private:
 	// Dump 파일명 지정
 	static std::wstring MakeDumpFileName();
 };
-
-static CrashDump crashDump;

@@ -1,13 +1,16 @@
 #include "pch.h"
 #include "Utils/Timer.h"
 #include "Utils/RandomMt.h"
+#include "Utils/CrashDump.h"
 #include <thread>
 
 int wmain()
 {
+	CRASHDUMP;
+
 	// 테스트용 강제 크래시
-	int* p = nullptr;
-	*p = 42;
+	volatile int* crashPtr = nullptr;
+	*crashPtr = 42;
 
 	int32 randomInt = RAND(1, 100);
 	std::cout << "난수: " << randomInt << std::endl;

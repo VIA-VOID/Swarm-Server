@@ -19,26 +19,34 @@ std::wstring CrashDump::MakeDumpFileName()
 {
 	wchar_t moduleFileName[MAX_PATH] = {};
 	::GetModuleFileNameW(nullptr, moduleFileName, MAX_PATH);
-	std::wstring modulePath(moduleFileName);
+	std::wstring dumpPath = moduleFileName;
 
+#ifdef _DEBUG
 	// 실행파일 위치에서 3번 상위 폴더로 이동(프로젝트 폴더로)
 	// 현재 세팅으로 프로젝트에서 실행파일이 저장되는곳은
 	// $ProjectDir/Build/$Configuration/*.exe
 	for (int i = 0; i < 3; i++)
 	{
-		size_t pos = modulePath.find_last_of(L"\\");
+		// 마지막 '\'를 찾아 실행 파일 이름 제거, 디렉토리 경로만 남김
+		size_t pos = dumpPath.find_last_of(L'\\');
 		if (pos != std::wstring::npos)
 		{
-			modulePath = modulePath.substr(0, pos);
+			dumpPath = dumpPath.substr(0, pos);
 		}
 	}
+#else
+	size_t pos = dumpPath.find_last_of(L'\\');
+	if (pos != std::wstring::npos)
+	{
+		dumpPath = dumpPath.substr(0, pos);
+	}
+#endif
 
 	// Dump 폴더 붙이기
-	std::wstring dumpFolder = modulePath;
-	dumpFolder += L"\\Dump";
+	dumpPath += L"\\Dump";
 
 	// 폴더가 없으면 생성
-	::CreateDirectoryW(dumpFolder.c_str(), nullptr);
+	::CreateDirectoryW(dumpPath.c_str(), nullptr);
 
 	SYSTEMTIME time;
 	::GetLocalTime(&time);
@@ -50,7 +58,7 @@ std::wstring CrashDump::MakeDumpFileName()
 		time.wHour, time.wMinute, time.wSecond
 	);
 
-	return dumpFolder + L"\\" + fileName;
+	return dumpPath + L"\\" + fileName;
 }
 
 // dump 파일 생성
