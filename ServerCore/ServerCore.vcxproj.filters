@@ -5,6 +5,12 @@
     <ClCompile Include="Utils\Timer.cpp" />
     <ClCompile Include="Thread\Lock.cpp" />
     <ClCompile Include="Utils\CrashDump.cpp" />
+    <ClCompile Include="Thread\ThreadPool.cpp" />
+    <ClCompile Include="Memory\MemoryAllocator.cpp" />
+    <ClCompile Include="Memory\MemoryManger.cpp" />
+    <ClCompile Include="Memory\MemoryPool.cpp" />
+    <ClCompile Include="Container\LockStack.cpp" />
+    <ClCompile Include="Pch\CoreTLS.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -16,5 +22,12 @@
     <ClInclude Include="Utils\Singleton.h" />
     <ClInclude Include="Thread\Lock.h" />
     <ClInclude Include="Utils\CrashDump.h" />
+    <ClInclude Include="Thread\ThreadPool.h" />
+    <ClInclude Include="Memory\ObjectPool.h" />
+    <ClInclude Include="Memory\MemoryAllocator.h" />
+    <ClInclude Include="Memory\MemoryManger.h" />
+    <ClInclude Include="Memory\MemoryPool.h" />
+    <ClInclude Include="Container\LockStack.h" />
+    <ClInclude Include="Pch\CoreTLS.h" />
   </ItemGroup>
 </Project>

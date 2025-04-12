@@ -171,6 +171,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Container\LockStack.h" />
+    <ClInclude Include="Memory\MemoryPool.h" />
+    <ClInclude Include="Memory\MemoryManger.h" />
+    <ClInclude Include="Memory\MemoryAllocator.h" />
+    <ClInclude Include="Memory\ObjectPool.h" />
+    <ClInclude Include="Pch\CoreTLS.h" />
+    <ClInclude Include="Thread\ThreadPool.h" />
     <ClInclude Include="Utils\CrashDump.h" />
     <ClInclude Include="Thread\Lock.h" />
     <ClInclude Include="Utils\Timer.h" />
@@ -182,6 +189,12 @@
     <ClInclude Include="Pch\Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Container\LockStack.cpp" />
+    <ClCompile Include="Memory\MemoryPool.cpp" />
+    <ClCompile Include="Memory\MemoryManger.cpp" />
+    <ClCompile Include="Memory\MemoryAllocator.cpp" />
+    <ClCompile Include="Pch\CoreTLS.cpp" />
+    <ClCompile Include="Thread\ThreadPool.cpp" />
     <ClCompile Include="Utils\CrashDump.cpp" />
     <ClCompile Include="Thread\Lock.cpp" />
     <ClCompile Include="Utils\Timer.cpp" />
