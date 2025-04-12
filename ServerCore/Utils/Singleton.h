@@ -12,9 +12,10 @@ public:
 	Singleton(const Singleton&) = delete;
 	Singleton& operator=(const Singleton&) = delete;
 
-	static T& GetInstance()
+	template <typename... Args>
+	static T& GetInstance(Args&&... args)
 	{
-		static T instance;
+		static T instance(std::forward<Args>(args)...);
 		return instance;
 	}
 };
