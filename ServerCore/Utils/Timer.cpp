@@ -11,7 +11,7 @@ using namespace std::chrono;
 //------------------//
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-std::wstring Clock::GetFormattedTime() const
+std::wstring Clock::GetFormattedTime()
 {
 	system_clock::time_point now = system_clock::now();
 	auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -28,7 +28,7 @@ std::wstring Clock::GetFormattedTime() const
 }
 
 // 두 시간 사이의 차이, 밀리초 반환
-int64 Clock::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/) const
+int64 Clock::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/)
 {
 	return duration_cast<milliseconds>(end - start).count();
 }
@@ -57,7 +57,7 @@ void Timer::Start(int64 durationMs)
 }
 
 // 만료 확인
-bool Timer::IsExpired() const
+bool Timer::IsExpired()
 {
 	if (_started == false)
 	{
@@ -78,7 +78,7 @@ void Timer::Reset()
 }
 
 // 경과 시간
-int64 Timer::Elapsed() const
+int64 Timer::Elapsed()
 {
 	if (_started == false)
 	{
@@ -89,7 +89,7 @@ int64 Timer::Elapsed() const
 }
 
 // 남은 시간
-int64 Timer::Remaining() const
+int64 Timer::Remaining()
 {
 	if (_started == false)
 	{

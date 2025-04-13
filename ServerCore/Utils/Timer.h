@@ -12,10 +12,10 @@ class Clock : public Singleton<Clock>
 {
 public:
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-	std::wstring GetFormattedTime() const;
+	std::wstring GetFormattedTime();
 
 	// 두 시간 사이의 차이, 밀리초 반환
-	int64 GetTimeDiff(const TimePoint& start, const TimePoint& end = NOW) const;
+	int64 GetTimeDiff(const TimePoint& start, const TimePoint& end = NOW);
 };
 
 //------------------//
@@ -32,16 +32,16 @@ public:
 	void Start(int64 durationMs);
 
 	// 만료 확인
-	bool IsExpired() const;
+	bool IsExpired();
 
 	// 타이머 리셋
 	void Reset();
 
 	// 경과 시간
-	int64 Elapsed() const;
+	int64 Elapsed();
 
 	// 남은 시간
-	int64 Remaining() const;
+	int64 Remaining();
 
 private:
 	TimePoint _startTime;
