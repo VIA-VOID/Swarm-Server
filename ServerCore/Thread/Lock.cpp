@@ -24,7 +24,7 @@ LockGuard::LockGuard(Lock* lock)
 {
 #if _DEBUG
 	// 데드락 확인
-	LOCK.CheckDeadLock(lock);
+	LOCK_M.CheckDeadLock(lock);
 #endif
 
 	// 락 걸기
@@ -37,7 +37,7 @@ LockGuard::~LockGuard()
 	_lock->ScopedUnlock();
 
 #if _DEBUG
-	LOCK.UnLock();
+	LOCK_M.UnLock();
 #endif
 }
 

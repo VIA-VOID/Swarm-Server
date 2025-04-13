@@ -6,7 +6,8 @@
 -------------------------------------*/
 #define CLOCK					Clock::GetInstance()
 #define RANDOM					RandomMT::GetInstance()
-#define LOCK					LockDebugManger::GetInstance()
+#define LOCK_M					LockDebugManger::GetInstance()
+#define LOG_M					LogManager::GetInstance()
 
 /*-------------------------------------
 	함수 매크로
