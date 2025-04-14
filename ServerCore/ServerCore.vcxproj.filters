@@ -13,6 +13,8 @@
     <ClCompile Include="Pch\CoreTLS.cpp" />
     <ClCompile Include="Log\LogManager.cpp" />
     <ClCompile Include="Log\Logger.cpp" />
+    <ClCompile Include="Log\LogFile.cpp" />
+    <ClCompile Include="Thread\LockGuard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -33,5 +35,8 @@
     <ClInclude Include="Pch\CoreTLS.h" />
     <ClInclude Include="Log\LogManager.h" />
     <ClInclude Include="Log\Logger.h" />
+    <ClInclude Include="Log\LogDefine.h" />
+    <ClInclude Include="Log\LogFile.h" />
+    <ClInclude Include="Thread\LockGuard.h" />
   </ItemGroup>
 </Project>

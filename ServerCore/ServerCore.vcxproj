@@ -172,6 +172,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Container\LockStack.h" />
+    <ClInclude Include="Thread\LockGuard.h" />
+    <ClInclude Include="Log\LogFile.h" />
+    <ClInclude Include="Log\LogDefine.h" />
     <ClInclude Include="Log\Logger.h" />
     <ClInclude Include="Log\LogManager.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
@@ -192,6 +195,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Container\LockStack.cpp" />
+    <ClCompile Include="Thread\LockGuard.cpp" />
+    <ClCompile Include="Log\LogFile.cpp" />
     <ClCompile Include="Log\Logger.cpp" />
     <ClCompile Include="Log\LogManager.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
