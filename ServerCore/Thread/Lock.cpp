@@ -58,13 +58,13 @@ void LockDebugManger::CheckCycle(std::thread::id threadId, std::uintptr_t lockAd
 }
 
 // 데드락 확인
-void LockDebugManger::CheckDeadLock(Lock& lock)
+void LockDebugManger::CheckDeadLock(Lock* lock)
 {
 	std::lock_guard<std::mutex> guard(_managerMutex);
 	// 스레드 ID
 	const std::thread::id threadId = std::this_thread::get_id();
 	// debug 편의를 위해 주소값으로 변환 후 map에 추가
-	const std::uintptr_t lockAddr = reinterpret_cast<std::uintptr_t>(&lock);
+	const std::uintptr_t lockAddr = reinterpret_cast<std::uintptr_t>(lock);
 
 	// 만일 현재 스레드가 가지고 있는 lock 확인
 	if (LThreadLock.empty() == false)

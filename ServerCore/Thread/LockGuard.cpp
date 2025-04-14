@@ -5,8 +5,8 @@
 		LockGuard
 ----------------------------*/
 
-LockGuard::LockGuard(Lock& lock)
-	: _lock(&lock)
+LockGuard::LockGuard(Lock* lock)
+	: _lock(lock)
 {
 	// 데드락 확인
 	LOCK_M.CheckDeadLock(lock);
@@ -30,8 +30,8 @@ UniqueLockGuard::UniqueLockGuard()
 {
 }
 
-UniqueLockGuard::UniqueLockGuard(Lock& lock)
-	: _lock(&lock), _owns(false)
+UniqueLockGuard::UniqueLockGuard(Lock* lock)
+	: _lock(lock), _owns(false)
 {
 	CallLock();
 }
@@ -91,7 +91,7 @@ void UniqueLockGuard::unlock()
 void UniqueLockGuard::CallLock()
 {
 	// 데드락 확인
-	LOCK_M.CheckDeadLock(*_lock);
+	LOCK_M.CheckDeadLock(_lock);
 	// 락 걸기
 	_lock->ScopedLock();
 	// 소유중

@@ -8,7 +8,7 @@
 class LockGuard
 {
 public:
-	LockGuard(Lock& lock);
+	LockGuard(Lock* lock);
 	~LockGuard();
 
 	// 복사방지
@@ -31,7 +31,7 @@ class UniqueLockGuard
 public:
 	UniqueLockGuard();
 	// 생성자 & Lock 소유
-	UniqueLockGuard(Lock& lock);
+	UniqueLockGuard(Lock* lock);
 	~UniqueLockGuard();
 
 	// 이동 생성자
