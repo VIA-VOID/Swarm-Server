@@ -42,5 +42,13 @@
 	커스텀 매크로
 -------------------------------------*/
 // debug 모드시 데드락 탐지
+#if _DEBUG
 #define USE_LOCK				Lock _lock
-#define LOCK_GURAD				LockGuard lockGuard(&_lock)
+#define LOCK_GURAD				LockGuard lockGuard(_lock)
+#define UNIQUE_LOCK_GUARD		UniqueLockGuard ulockGuard(_lock)
+#else
+#define USE_LOCK				std::mutex _mutex
+#define LOCK_GURAD				std::lock_guard<std::mutex> lockGuard(_mutex)
+#define UNIQUE_LOCK_GUARD		std::unique_lock<std::mutex> ulockGuard(_mutex)
+#endif
+

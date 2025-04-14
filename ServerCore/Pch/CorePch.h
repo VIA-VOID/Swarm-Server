@@ -23,4 +23,5 @@
 #include "Pch/CoreTLS.h"
 #include "Utils/Singleton.h"
 #include "Thread/Lock.h"
+#include "Thread/LockGuard.h"
 #include "Thread/ThreadManager.h"
