@@ -5,22 +5,25 @@
 using SteadyClock = std::chrono::steady_clock;
 using TimePoint = SteadyClock::time_point;
 
-//------------------//
-//		Clock		//
-//------------------//
+/*--------------------------------------------------------
+					Clock
+--------------------------------------------------------*/
 class Clock : public Singleton<Clock>
 {
 public:
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-	std::wstring GetFormattedTime();
-
+	std::wstring GetFormattedTime(wchar_t dateSep = '/', wchar_t timeSep = L':');
+	// 포맷팅된 현재시간 반환 (yyyy/mm/dd)
+	std::wstring GetFormattedDate(wchar_t dateSep = '/');
+	// 일자 변경 여부
+	bool IsNewDay();
 	// 두 시간 사이의 차이, 밀리초 반환
 	int64 GetTimeDiff(const TimePoint& start, const TimePoint& end = NOW);
 };
 
-//------------------//
-//		Timer		//
-//------------------//
+/*--------------------------------------------------------
+					Timer
+--------------------------------------------------------*/
 class Timer
 {
 public:

@@ -6,36 +6,77 @@
 
 using namespace std::chrono;
 
-//------------------//
-//		Clock		//
-//------------------//
+/*----------------------------
+		Clock
+----------------------------*/
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-std::wstring Clock::GetFormattedTime()
+std::wstring Clock::GetFormattedTime(wchar_t dateSep /*= '/'*/, wchar_t timeSep /*= L':'*/)
 {
 	system_clock::time_point now = system_clock::now();
-	auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+	auto ms = ::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
 	std::time_t now_c = system_clock::to_time_t(now);
 	std::tm time_tm{};
-	localtime_s(&time_tm, &now_c);
+	::localtime_s(&time_tm, &now_c);
 
 	std::wstringstream oss;
-	oss << std::put_time(&time_tm, L"%Y/%m/%d %H:%M:%S.");
-	oss << std::setw(3) << std::setfill(L'0') << ms.count();
+	oss << std::put_time(&time_tm, (
+		std::wstring(L"%Y") + dateSep +
+		L"%m" + dateSep +
+		L"%d %H" + timeSep +
+		L"%M" + timeSep +
+		L"%S").c_str()
+	);
+
+	oss << L"." << std::setw(3) << std::setfill(L'0') << ms.count();
 
 	return oss.str();
+}
+
+// 포맷팅된 현재시간 반환 (yyyy/mm/dd)
+std::wstring Clock::GetFormattedDate(wchar_t dateSep /*= '/'*/)
+{
+	system_clock::time_point now = system_clock::now();
+
+	std::time_t now_c = system_clock::to_time_t(now);
+	std::tm time_tm{};
+	::localtime_s(&time_tm, &now_c);
+
+	std::wstringstream oss;
+	oss << std::put_time(&time_tm, (
+		std::wstring(L"%Y") + dateSep +
+		L"%m" + dateSep +
+		L"%d").c_str()
+	);
+
+	return oss.str();
+}
+
+// 일자 변경 여부
+bool Clock::IsNewDay()
+{
+	static std::wstring today = GetFormattedDate();
+	std::wstring now = GetFormattedDate();
+
+	// 일자변경
+	if (today != now)
+	{
+		today = now;
+		return true;
+	}
+	return false;
 }
 
 // 두 시간 사이의 차이, 밀리초 반환
 int64 Clock::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/)
 {
-	return duration_cast<milliseconds>(end - start).count();
+	return ::duration_cast<milliseconds>(end - start).count();
 }
 
-//------------------//
-//		Timer		//
-//------------------//
+/*----------------------------
+		Timer
+----------------------------*/
 
 Timer::Timer()
 	: _durationMs(0), _started(false)
