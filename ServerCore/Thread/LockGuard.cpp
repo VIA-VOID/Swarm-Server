@@ -5,11 +5,11 @@
 		LockGuard
 ----------------------------*/
 
-LockGuard::LockGuard(Lock* lock)
-	: _lock(lock)
+LockGuard::LockGuard(Lock* lock, const char* name)
+	: _lock(lock), _className(name)
 {
 	// 데드락 확인
-	LOCK_M.CheckDeadLock(lock);
+	LOCK.CheckDeadLock(lock, name);
 	// 락 걸기
 	_lock->ScopedLock();
 }
@@ -18,7 +18,7 @@ LockGuard::~LockGuard()
 {
 	// 락 해제
 	_lock->ScopedUnlock();
-	LOCK_M.UnLock();
+	LOCK.UnLock();
 }
 
 /*----------------------------
@@ -26,12 +26,12 @@ LockGuard::~LockGuard()
 ----------------------------*/
 
 UniqueLockGuard::UniqueLockGuard()
-	: _lock(nullptr), _owns(false)
+	: _lock(nullptr), _owns(false), _className(nullptr)
 {
 }
 
-UniqueLockGuard::UniqueLockGuard(Lock* lock)
-	: _lock(lock), _owns(false)
+UniqueLockGuard::UniqueLockGuard(Lock* lock, const char* name)
+	: _lock(lock), _owns(false), _className(name)
 {
 	CallLock();
 }
@@ -41,14 +41,15 @@ UniqueLockGuard::~UniqueLockGuard()
 	unlock();
 }
 
-UniqueLockGuard::UniqueLockGuard(UniqueLockGuard&& other)
-	: _lock(other._lock), _owns(other._owns)
+UniqueLockGuard::UniqueLockGuard(UniqueLockGuard&& other) noexcept
+	: _lock(other._lock), _owns(other._owns), _className(other._className)
 {
 	other._lock = nullptr;
+	other._className = nullptr;
 	other._owns = false;
 }
 
-UniqueLockGuard& UniqueLockGuard::operator=(UniqueLockGuard&& other)
+UniqueLockGuard& UniqueLockGuard::operator=(UniqueLockGuard&& other) noexcept
 {
 	if (this != &other)
 	{
@@ -81,7 +82,7 @@ void UniqueLockGuard::unlock()
 	{
 		// 락 해제
 		_lock->ScopedUnlock();
-		LOCK_M.UnLock();
+		LOCK.UnLock();
 		// 소유 해제
 		_owns = false;
 	}
@@ -91,7 +92,7 @@ void UniqueLockGuard::unlock()
 void UniqueLockGuard::CallLock()
 {
 	// 데드락 확인
-	LOCK_M.CheckDeadLock(_lock);
+	LOCK.CheckDeadLock(_lock, _className);
 	// 락 걸기
 	_lock->ScopedLock();
 	// 소유중

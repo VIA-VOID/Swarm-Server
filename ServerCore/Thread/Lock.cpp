@@ -35,7 +35,25 @@ void LockDebugManger::CheckCycle(std::thread::id threadId, std::uintptr_t lockAd
 	// 이미 _path에 ownerId가 포함되어 있다면 사이클이 존재함 (데드락 감지)
 	if (std::find(_path.begin(), _path.end(), ownerId) != _path.end())
 	{
-		// TODO: 로그찍기
+		_path.push_back(threadId);
+		std::reverse(_path.begin(), _path.end());
+
+		std::wstringstream ws;
+		ws << L"====================================================\n";
+		ws << L"!!!!!!!!!!!! DEADLOCK_DETECTED !!!!!!!!!!!!\n";
+		ws << L"Cycle Path (Thread ID) : (Class Name)\n";
+
+		for (auto& id : _path)
+		{
+			auto findPath = _namePath.find(id);
+			if (findPath != _namePath.end())
+			{
+				ws << L" → Thread " << id << L" : " << findPath->second << L"\n";
+			}
+		}
+
+		ws << L"====================================================\n";
+		std::wcout << ws.str();
 		CRASH("DEADLOCK_DETECTED!!!");
 	}
 
@@ -58,7 +76,7 @@ void LockDebugManger::CheckCycle(std::thread::id threadId, std::uintptr_t lockAd
 }
 
 // 데드락 확인
-void LockDebugManger::CheckDeadLock(Lock* lock)
+void LockDebugManger::CheckDeadLock(Lock* lock, const char* name)
 {
 	std::lock_guard<std::mutex> guard(_managerMutex);
 	// 스레드 ID
@@ -76,7 +94,8 @@ void LockDebugManger::CheckDeadLock(Lock* lock)
 			// 락 요청한 스레드 목록에 추가
 			auto& reqSet = _reqLock[threadId];
 			reqSet.insert(lockAddr);
-
+			// 로그용
+			_namePath.insert_or_assign(threadId, name);
 			// 사이클 체크
 			CheckCycle(threadId, lockAddr);
 		}

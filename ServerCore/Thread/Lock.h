@@ -25,7 +25,7 @@ class LockDebugManger : public Singleton<LockDebugManger>
 {
 public:
 	// 데드락 확인
-	void CheckDeadLock(Lock* lock);
+	void CheckDeadLock(Lock* lock, const char* name);
 	// 락 해제시 소유권 제거
 	void UnLock();
 
@@ -41,4 +41,5 @@ private:
 	std::unordered_map<std::uintptr_t, std::thread::id> _owner;
 	// 사이클 경로 추적용도
 	std::vector<std::thread::id> _path;
+	std::unordered_map<std::thread::id, const char*> _namePath;
 };

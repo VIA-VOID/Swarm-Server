@@ -8,7 +8,7 @@
 class LockGuard
 {
 public:
-	LockGuard(Lock* lock);
+	LockGuard(Lock* lock, const char* name);
 	~LockGuard();
 
 	// 복사방지
@@ -17,6 +17,8 @@ public:
 
 private:
 	Lock* _lock;
+	// 데드락 디버깅용 - 클래스명
+	const char* _className;
 };
 
 /*-------------------------------------------------------
@@ -31,13 +33,13 @@ class UniqueLockGuard
 public:
 	UniqueLockGuard();
 	// 생성자 & Lock 소유
-	UniqueLockGuard(Lock* lock);
+	UniqueLockGuard(Lock* lock, const char* name);
 	~UniqueLockGuard();
 
 	// 이동 생성자
 	// 표준 unique_lock에선 이동만 허용, 복사 금지
-	UniqueLockGuard(UniqueLockGuard&& other);
-	UniqueLockGuard& operator=(UniqueLockGuard&& other);
+	UniqueLockGuard(UniqueLockGuard&& other) noexcept;
+	UniqueLockGuard& operator=(UniqueLockGuard&& other) noexcept;
 
 	// 복사방지
 	UniqueLockGuard(const Lock& lock) = delete;
@@ -61,4 +63,6 @@ private:
 	Lock* _lock;
 	// unlock -> unlock 호출 방지
 	bool _owns;
+	// 데드락 디버깅용 - 클래스명
+	const char* _className;
 };
