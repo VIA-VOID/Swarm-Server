@@ -1,78 +1,92 @@
 #include "pch.h"
-#include "Utils/CrashDump.h"
-#include "Thread/Lock.h"
-#include <cassert>
-#include <condition_variable>
 
-class CustomUniqueLockTester
+class ComplexWorker
 {
+public:
+	ComplexWorker(int id) : _id(id) {}
+
+	void A()
+	{
+		LOCK_GUARD;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::cout << "A  \n";
+		LOG_INFO(L"[A] THREAD");
+		LOG_SYSTEM(L"[A] THREAD");
+	}
+
+	void B()
+	{
+		LOCK_GUARD;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::cout << "B  \n";
+		LOG_SYSTEM(L"[A] THREAD");
+		LOG_INFO(L"[B] THREAD");
+	}
+
+	void C()
+	{
+		LOCK_GUARD;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::cout << "C  \n";
+		LOG_ERROR(L"[C] THREAD");
+	}
+
+	void D()
+	{
+		LOCK_GUARD;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::cout << "D  \n";
+		LOG_SYSTEM(L"[D] THREAD");
+		LOG_INFO(L"[D] THREAD");
+	}
+
+	void RunLoop()
+	{
+		while (true)
+		{
+			A();
+			B();
+			C();
+			D();
+			std::this_thread::sleep_for(std::chrono::milliseconds(5)); // 약간 쉬어감
+		}
+	}
+
 private:
 	USE_LOCK;
-
-public:
-	void RunAll()
-	{
-		TestConditionVariable();
-		TestMultiThread();
-
-		std::cout << "\n 모든 테스트 통과!" << std::endl;
-	}
-
-private:
-	void TestConditionVariable()
-	{
-		ConditionVariable cv;
-		bool ready = false;
-
-		std::thread notifier([&]() {
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			{
-				UNIQUE_LOCK_GUARD;
-				ready = true;
-			}
-			cv.notify_one();
-			});
-
-		UNIQUE_LOCK_GUARD;
-		cv.wait(ulockGuard, [&]() { return ready; });
-
-		assert(ready);
-		std::cout << "[PASS] condition_variable_any wait 성공" << std::endl;
-		notifier.join();
-	}
-
-	void TestMultiThread()
-	{
-		int sharedCounter = 0;
-		const int threadCount = 10;
-		const int iterationPerThread = 1000;
-		std::vector<std::thread> threads;
-
-		threads.reserve(threadCount);
-		for (int i = 0; i < threadCount; ++i)
-		{
-			threads.emplace_back([&]() {
-				for (int j = 0; j < iterationPerThread; ++j)
-				{
-					UNIQUE_LOCK_GUARD;
-					++sharedCounter;
-				}
-				});
-		}
-
-		for (auto& t : threads)
-			t.join();
-
-		assert(sharedCounter == threadCount * iterationPerThread);
-		std::cout << "[PASS] 멀티스레드 환경에서 락 보호 정상 작동" << std::endl;
-	}
+	int _id;
 };
 
-int main()
+int wmain()
 {
+	std::wcout.imbue(std::locale("kor"));
+
 	CrashDump::Init();
 
-	CustomUniqueLockTester tester;
-	tester.RunAll();
+	LOG.Init();
+
+	constexpr int ThreadCount = 8;
+
+	std::vector<std::unique_ptr<ComplexWorker>> workers;
+
+	for (int i = 0; i < ThreadCount; ++i)
+	{
+		workers.emplace_back(std::make_unique<ComplexWorker>(i));
+
+		THREAD_MANAGER.Push([&, i]() {
+			workers[i]->RunLoop();
+			});
+	}
+
+	THREAD_MANAGER.Push([] {
+		LOG.ProcessThread();
+		});
+
+
+
+
+	THREAD_MANAGER.Join();
+	LOG.Shutdown();
+
 	return 0;
 }
