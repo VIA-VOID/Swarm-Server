@@ -2,4 +2,7 @@
 
 #include <stack>
 
-extern thread_local std::stack<uintptr_t> LThreadLock;
+using LockAddress = std::uintptr_t;
+
+// 현재 소유하고 있는 LOCK
+extern thread_local std::stack<LockAddress> LHoldLock;

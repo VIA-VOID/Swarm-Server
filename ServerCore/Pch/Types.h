@@ -19,3 +19,7 @@ using ConditionVariable = std::condition_variable_any;
 #else
 using ConditionVariable = std::condition_variable;
 #endif
+
+//----------------------------------------------------------//
+// 타입 정의
+using ThreadId = std::thread::id;
