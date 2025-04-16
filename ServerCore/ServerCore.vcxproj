@@ -175,9 +175,7 @@
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Log\LogDispatcher.h" />
     <ClInclude Include="Thread\LockGuard.h" />
-    <ClInclude Include="Log\LogFile.h" />
     <ClInclude Include="Log\LogDefine.h" />
-    <ClInclude Include="Log\Logger.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
     <ClInclude Include="Memory\MemoryManger.h" />
     <ClInclude Include="Memory\MemoryAllocator.h" />
@@ -199,8 +197,6 @@
     <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
-    <ClCompile Include="Log\LogFile.cpp" />
-    <ClCompile Include="Log\Logger.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Memory\MemoryManger.cpp" />
     <ClCompile Include="Memory\MemoryAllocator.cpp" />

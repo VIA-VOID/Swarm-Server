@@ -11,8 +11,6 @@
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Container\LockStack.cpp" />
     <ClCompile Include="Pch\CoreTLS.cpp" />
-    <ClCompile Include="Log\Logger.cpp" />
-    <ClCompile Include="Log\LogFile.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
     <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
@@ -34,9 +32,7 @@
     <ClInclude Include="Memory\MemoryPool.h" />
     <ClInclude Include="Container\LockStack.h" />
     <ClInclude Include="Pch\CoreTLS.h" />
-    <ClInclude Include="Log\Logger.h" />
     <ClInclude Include="Log\LogDefine.h" />
-    <ClInclude Include="Log\LogFile.h" />
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Utils\Utils.h" />
