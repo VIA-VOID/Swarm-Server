@@ -13,6 +13,8 @@
 #include <thread>
 #include <mutex>
 
+#include <condition_variable>
+
 #include <queue>
 #include <map>
 #include <unordered_map>
@@ -22,6 +24,9 @@
 #include "Pch/CoreMacro.h"
 #include "Pch/CoreTLS.h"
 #include "Utils/Singleton.h"
+#include "Utils/CrashDump.h"
 #include "Thread/Lock.h"
 #include "Thread/LockGuard.h"
 #include "Thread/ThreadManager.h"
+#include "Container/EventLockQueue.h"
+#include "Log/LogDispatcher.h"
