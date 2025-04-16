@@ -17,29 +17,32 @@ private:
 };
 
 /*--------------------------------------------------------
-				LockDebugManager
+					DeadlockDetector
 
-- 데드락 확인은 DebugMode에서만 사용
+- LockDebugManger의 개선된 버전
+- Thread Local Storage 에서 요청한 lock, 소유한 lock 관리
+- 데드락 탐지를 위해 lock을 잡아 데드락이 걸리는 기이한? 현상 제거
 --------------------------------------------------------*/
-class LockDebugManger : public Singleton<LockDebugManger>
+class DeadlockDetector : public Singleton<DeadlockDetector>
 {
 public:
-	// 데드락 확인
-	void CheckDeadLock(Lock* lock, const char* name);
-	// 락 해제시 소유권 제거
-	void UnLock();
+	// lock 요청 & 데드락 체크
+	void LockRequest(Lock* lock, const char* name);
+	// lock 획득
+	void LockAcquired(Lock* lock);
+	// 소유하고 있는 lock 제거
+	void LockRelease();
 
 private:
 	// 교차상태(순환) 있는지 확인
-	void CheckCycle(std::thread::id threadId, std::uintptr_t lockAddr);
+	bool CycleCheck(LockAddress start, LockAddress current, std::vector<LockAddress>& visited);
+	// 데드락 발생시 CRASH
+	void CrashDeadLock(std::vector<LockAddress>& visited);
 
 private:
-	std::mutex _managerMutex;
-	// lock 요청한 스레드
-	std::unordered_map<std::thread::id, std::unordered_set<std::uintptr_t>> _reqLock;
-	// lock을 획득한 스레드
-	std::unordered_map<std::uintptr_t, std::thread::id> _owner;
-	// 사이클 경로 추적용도
-	std::vector<std::thread::id> _path;
-	std::unordered_map<std::thread::id, const char*> _namePath;
+	std::mutex _mutex;
+	// 락 순서 그래프
+	std::unordered_map<LockAddress, std::unordered_set<LockAddress>> _lockGraph;
+	// 로그용
+	std::unordered_map<LockAddress, std::pair<ThreadId, const char*>> _lockLog;
 };

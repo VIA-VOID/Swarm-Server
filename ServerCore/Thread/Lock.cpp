@@ -16,116 +16,104 @@ void Lock::ScopedUnlock()
 }
 
 /*----------------------------
-	LockDebugManger
+		DeadlockDetector
 ----------------------------*/
 
-// 교차상태(순환) 있는지 확인
-void LockDebugManger::CheckCycle(std::thread::id threadId, std::uintptr_t lockAddr)
+// lock 요청 & 데드락 체크
+void DeadlockDetector::LockRequest(Lock* lock, const char* name)
 {
-	// 락을 점유한 주인이 없다면 리턴
-	auto owner = _owner.find(lockAddr);
-	if (owner == _owner.end())
+	ThreadId threadId = std::this_thread::get_id();
+	LockAddress reqLockAddress = reinterpret_cast<LockAddress>(lock);
+	// 현재 소유하고 있는 lock이 있다면 사이클 체크
+	if (LHoldLock.empty() == false)
 	{
-		return;
-	}
+		LockAddress hold = LHoldLock.top();
 
-	// 락 점유한 주인의 스레드 ID
-	auto ownerId = owner->second;
-
-	// 이미 _path에 ownerId가 포함되어 있다면 사이클이 존재함 (데드락 감지)
-	if (std::find(_path.begin(), _path.end(), ownerId) != _path.end())
-	{
-		_path.push_back(threadId);
-		std::reverse(_path.begin(), _path.end());
-
-		std::wstringstream ws;
-		ws << L"====================================================\n";
-		ws << L"!!!!!!!!!!!! DEADLOCK_DETECTED !!!!!!!!!!!!\n";
-		ws << L"Cycle Path (Thread ID) : (Class Name)\n";
-
-		for (auto& id : _path)
+		std::lock_guard<std::mutex> guard(_mutex);
 		{
-			auto findPath = _namePath.find(id);
-			if (findPath != _namePath.end())
+			_lockGraph[hold].insert(reqLockAddress);
+			_lockLog.insert_or_assign(reqLockAddress, std::make_pair(threadId, name));
+
+			// 데드락 탐지
+			std::vector<LockAddress> visited;
+			if (CycleCheck(reqLockAddress, reqLockAddress, visited))
 			{
-				ws << L" → Thread " << id << L" : " << findPath->second << L"\n";
+				visited.push_back(reqLockAddress);
+				CrashDeadLock(visited);
 			}
 		}
-
-		ws << L"====================================================\n";
-		std::wcout << ws.str();
-		CRASH("DEADLOCK_DETECTED!!!");
 	}
-
-	// 방문 기록
-	_path.push_back(threadId);
-
-	// ownerId가 요청한 다른 락을 확인하고 재귀적으로 탐색
-	auto findReqId = _reqLock.find(ownerId);
-	if (findReqId != _reqLock.end())
-	{
-		auto& reqSet = findReqId->second;
-		for (auto& addr : reqSet)
-		{
-			CheckCycle(ownerId, addr);
-		}
-	}
-
-	// 사이클 미발생, 방문 기록 제거
-	_path.pop_back();
 }
 
-// 데드락 확인
-void LockDebugManger::CheckDeadLock(Lock* lock, const char* name)
+// lock 획득
+void DeadlockDetector::LockAcquired(Lock* lock)
 {
-	std::lock_guard<std::mutex> guard(_managerMutex);
-	// 스레드 ID
-	const std::thread::id threadId = std::this_thread::get_id();
-	// debug 편의를 위해 주소값으로 변환 후 map에 추가
-	const std::uintptr_t lockAddr = reinterpret_cast<std::uintptr_t>(lock);
-
-	// 만일 현재 스레드가 가지고 있는 lock 확인
-	if (LThreadLock.empty() == false)
-	{
-		// 가지고 있는 lock 비교, 새로운 lock이라면 사이클 체크
-		const std::uintptr_t getTopLock = LThreadLock.top();
-		if (getTopLock != lockAddr)
-		{
-			// 락 요청한 스레드 목록에 추가
-			auto& reqSet = _reqLock[threadId];
-			reqSet.insert(lockAddr);
-			// 로그용
-			_namePath.insert_or_assign(threadId, name);
-			// 사이클 체크
-			CheckCycle(threadId, lockAddr);
-		}
-	}
-
-	// lock 소유권 획득
-	_owner.insert({ lockAddr, threadId });
-
-	LThreadLock.push(lockAddr);
+	LockAddress addr = reinterpret_cast<LockAddress>(lock);
+	LHoldLock.push(addr);
 }
 
-// 락 해제시 소유권 제거
-void LockDebugManger::UnLock()
+// 소유하고 있는 lock 제거
+void DeadlockDetector::LockRelease()
 {
-	std::lock_guard<std::mutex> guard(_managerMutex);
-
-	auto lockAddr = LThreadLock.top();
-	_owner.erase(lockAddr);
-
-	const std::thread::id threadId = std::this_thread::get_id();
-	auto req = _reqLock.find(threadId);
-
-	if (req != _reqLock.end())
+	if (LHoldLock.empty() == false)
 	{
-		auto reqSet = req->second;
-		if (reqSet.find(lockAddr) != reqSet.end())
+		LHoldLock.pop();
+	}
+}
+
+// 교차상태(순환) 있는지 확인
+// 데드락 탐지
+bool DeadlockDetector::CycleCheck(LockAddress current, LockAddress cycleLock, std::vector<LockAddress>& visited)
+{
+	// 방문(체크)한 적이 있으다면 리턴
+	if (std::find(visited.begin(), visited.end(), cycleLock) != visited.end())
+	{
+		return false;
+	}
+	// 방문
+	visited.push_back(cycleLock);
+
+	// lock을 건적이 있는지 체크
+	const auto it = _lockGraph.find(cycleLock);
+	if (it == _lockGraph.end())
+	{
+		return false;
+	}
+	// 있다면 동일한 주소의 락이 있는지 사이클 체크
+	for (LockAddress lockAddr : it->second)
+	{
+		// 현재 시도하려는 lock과 일치하는 주소가 있다면 데드락
+		if (current == lockAddr)
 		{
-			reqSet.erase(lockAddr);
+			return true;
+		}
+		// dfs 반복
+		if (CycleCheck(current, lockAddr, visited))
+		{
+			return true;
 		}
 	}
+	return false;
+}
 
-	LThreadLock.pop();
+// 데드락 발생시 CRASH
+void DeadlockDetector::CrashDeadLock(std::vector<LockAddress>& visited)
+{
+	std::wstringstream ws;
+	ws << L"====================================================\n";
+	ws << L"[DEADLOCK_DETECTED]\n";
+	ws << L"Cycle Path (Thread ID) : (Class Name)\n";
+
+	for (LockAddress addr : visited)
+	{
+		auto log = _lockLog.find(addr);
+		ThreadId threadId = log->second.first;
+		const char* className = log->second.second;
+
+		ws << L" → Thread " << threadId << L" : " << className << L"\n";
+	}
+
+	ws << L"====================================================\n";
+	std::wcout << ws.str();
+	CRASH("DEADLOCK_DETECTED !!!!");
 }
