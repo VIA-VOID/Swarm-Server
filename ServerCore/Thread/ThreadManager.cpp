@@ -6,9 +6,15 @@ void ThreadManager::Push(std::function<void(void)> callback)
 {
 	LOCK_GUARD;
 
-	_threads.push_back(std::thread([=]() { callback(); }));
+	_threads.emplace_back(std::thread([=]()
+		{
+			callback();
+			DeleteTLSData();
+		}
+	));
 }
 
+// 스레드 실행 완료 대기
 void ThreadManager::Join()
 {
 	for (std::thread& thread : _threads)
@@ -19,4 +25,13 @@ void ThreadManager::Join()
 		}
 	}
 	_threads.clear();
+}
+
+// TLS 데이터 제거
+void ThreadManager::DeleteTLSData()
+{
+	while (LHoldLock.empty() == false)
+	{
+		LHoldLock.pop();
+	}
 }

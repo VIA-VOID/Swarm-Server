@@ -11,6 +11,8 @@ public:
 	void Push(std::function<void(void)> callback);
 	// 스레드 실행 완료 대기
 	void Join();
+	// TLS 데이터 제거
+	void DeleteTLSData();
 
 private:
 	USE_LOCK;
