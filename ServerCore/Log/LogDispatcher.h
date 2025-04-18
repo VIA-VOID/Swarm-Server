@@ -15,7 +15,7 @@ public:
 	// dispatcher 종료
 	void Shutdown();
 	// 로그 쌓기
-	void PushLog(const LogType& type, const std::wstring& msg);
+	void PushLog(const LogType& type, const std::wstring& msg, const char* fnName);
 	// 스레드 일감
 	void ProcessThread();
 
@@ -33,7 +33,7 @@ private:
 
 private:
 	bool _writing;
-	std::ofstream _file;
+	std::wofstream _file;
 	EventLockQueue<std::pair<LogType, std::wstring>> _queue;
 	std::vector<std::wstring> _buffer;
 	std::chrono::steady_clock::time_point _lastFlushTime;

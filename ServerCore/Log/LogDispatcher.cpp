@@ -19,6 +19,13 @@ void LogDispatcher::Init()
 	CreateLogFile();
 	_writing = true;
 	_lastFlushTime = NOW;
+
+	// 스레드 할당
+	THREAD_MANAGER.Push([=]
+		{
+			ProcessThread();
+		}
+	);
 }
 
 // dispatcher 종료
@@ -32,13 +39,14 @@ void LogDispatcher::Shutdown()
 }
 
 // 로그 쌓기
-void LogDispatcher::PushLog(const LogType& type, const std::wstring& msg)
+void LogDispatcher::PushLog(const LogType& type, const std::wstring& msg, const char* fnName)
 {
 	LogMessage log;
 	log._type = type;
 	log._message = msg;
 	log._timeStamp = CLOCK.GetFormattedTime();
 	log._threadId = std::this_thread::get_id();
+	log.functionName = fnName;
 
 	std::wstring logMessage = log.MakeLogWString();
 	_queue.Push({ type, logMessage });
@@ -83,7 +91,6 @@ void LogDispatcher::ProcessThread()
 			_lastFlushTime = NOW;
 		}
 	}
-	FlushBuffer();
 }
 
 // 파일 생성
@@ -94,25 +101,22 @@ void LogDispatcher::CreateLogFile()
 
 	std::wstring fileName = dir + L"\\Serverlog_" + CLOCK.GetFormattedDate(L'_') + L".log";
 
-	_file.open(fileName, std::ios::app | std::ios::binary);
+	_file.imbue(std::locale(_file.getloc(), new std::codecvt_utf8<wchar_t>));
+	_file.open(fileName, std::ios::app);
+
 	if (_file.tellp() == 0)
 	{
-		// UTF-8 BOM 추가
-		const char utf8BOM[] = "\xEF\xBB\xBF";
-		_file.write(utf8BOM, sizeof(utf8BOM) - 1);
+		// UTF-8 BOM
+		_file << L"\uFEFF";
 	}
 }
 
 // 파일 flush
 void LogDispatcher::FlushBuffer()
 {
-	// 한글 깨짐 방지, utf8 convert
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-
 	for (const auto& log : _buffer)
 	{
-		std::string utf8 = converter.to_bytes(log);
-		_file.write(utf8.c_str(), utf8.size());
+		_file << log;
 	}
 	_file.flush();
 	_buffer.clear();
@@ -139,6 +143,9 @@ void LogDispatcher::PrintColor(const LogType& level)
 		break;
 	case LogType::System:
 		::SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+		break;
+	case LogType::Warning:
+		::SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
 		break;
 	case LogType::Error:
 		::SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_INTENSITY);
