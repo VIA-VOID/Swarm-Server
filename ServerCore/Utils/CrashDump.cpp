@@ -15,6 +15,8 @@ void CrashDump::Init()
 {
 	// 프로세스에서 처리되지 않은 예외가 발생했을 때 호출할 사용자 정의 함수를 등록
 	::SetUnhandledExceptionFilter(ExceptionFilter);
+
+	LOG_SYSTEM(L"CrashDump instance initialized");
 }
 
 // Dump 파일명 지정
