@@ -9,6 +9,7 @@ enum class LogType : uint8
 {
 	Info,
 	System,
+	Warning,
 	Error,
 };
 
@@ -18,6 +19,7 @@ struct LogMessage
 	std::wstring _message;
 	std::wstring _timeStamp;
 	ThreadId _threadId;
+	const char* functionName;
 
 	std::wstring MakeLogWString()
 	{
@@ -27,17 +29,25 @@ struct LogMessage
 		switch (_type)
 		{
 		case LogType::Info:
-			ws << L" INFO   ";
+			ws << L" INFO    ";
 			break;
 		case LogType::System:
-			ws << L" SYSTEM ";
+			ws << L" SYSTEM  ";
+			break;
+		case LogType::Warning:
+			ws << L" WARNING ";
 			break;
 		case LogType::Error:
-			ws << L" ERROR  ";
+			ws << L" ERROR   ";
 			break;
 		}
 
-		ws << std::left << std::setw(6) << _threadId << L"--- " << _message << L"\n";
+		ws << std::left << std::setw(6)
+			<< _threadId << L"--- "
+			<< std::left << std::setw(30)
+			<< functionName
+			<< L" : "
+			<< _message << L"\n";
 		return ws.str();
 	}
 };
