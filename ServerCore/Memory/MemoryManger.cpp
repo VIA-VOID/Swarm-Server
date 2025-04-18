@@ -1,5 +1,5 @@
 #include "pch.h"
-#include "MemoryManger.h"
+#include "MemoryManager.h"
 
 // 블록단위 배열
 constexpr uint16 _blockArray[DIVIDED_NUM] = { 32, 64, 128, 256, 512, 1024, 2048 };
@@ -8,7 +8,7 @@ constexpr uint16 _blockArray[DIVIDED_NUM] = { 32, 64, 128, 256, 512, 1024, 2048 
 constexpr uint16 _ratioArray[DIVIDED_NUM] = { 16, 18, 18, 10, 8, 8, 6 };
 
 // BLOCK 개수만큼 해제
-MemoryManger::~MemoryManger()
+MemoryManager::~MemoryManager()
 {
 	for (uint16 i = 0; i < DIVIDED_NUM; i++)
 	{
@@ -19,7 +19,7 @@ MemoryManger::~MemoryManger()
 
 // 초기화
 // BLOCK 개수만큼 새로 할당
-void MemoryManger::Init()
+void MemoryManager::Init()
 {
 	for (uint16 i = 0; i < DIVIDED_NUM; i++)
 	{
@@ -29,11 +29,11 @@ void MemoryManger::Init()
 	// CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장
 	PushChunk();
 
-	LOG_SYSTEM(L"MemoryManger instance initialized");
+	LOG_SYSTEM(L"MemoryManager instance initialized");
 }
 
 // pool에서 메모리 꺼내기
-void* MemoryManger::Allocate(uint32 size)
+void* MemoryManager::Allocate(uint32 size)
 {
 	// MAX_BLOCK_SIZE 크기보다 클 경우 pool로 관리하지 않고 새로 할당
 	if (size > MAX_BLOCK_SIZE)
@@ -71,7 +71,7 @@ void* MemoryManger::Allocate(uint32 size)
 }
 
 // pool에 메모리 반납
-void MemoryManger::Release(void* ptr)
+void MemoryManager::Release(void* ptr)
 {
 	ASSERT_CRASH(ptr != nullptr);
 
@@ -92,7 +92,7 @@ void MemoryManger::Release(void* ptr)
 }
 
 // CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장
-void MemoryManger::PushChunk()
+void MemoryManager::PushChunk()
 {
 	// chunk 크기만큼 할당
 	void* chunk = ::VirtualAlloc(nullptr, CHUNK_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
@@ -144,7 +144,7 @@ void MemoryManger::PushChunk()
 }
 
 // size를 pool index번호로 변환
-uint16 MemoryManger::SizeToIndex(uint32 size)
+uint16 MemoryManager::SizeToIndex(uint32 size)
 {
 	for (uint16 index = 0; index < DIVIDED_NUM; index++)
 	{

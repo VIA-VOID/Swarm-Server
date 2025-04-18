@@ -10,7 +10,7 @@
 #define LOCK							DeadlockDetector::GetInstance()
 #define LOG								LogDispatcher::GetInstance()
 #define THREAD_MANAGER					ThreadManager::GetInstance()
-#define MEMORY_MANAGER					MemoryManger::GetInstance()
+#define MEMORY_MANAGER					MemoryManager::GetInstance()
 
 /*-------------------------------------
 	함수 매크로

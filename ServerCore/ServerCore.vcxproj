@@ -179,7 +179,7 @@
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Log\LogDefine.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
-    <ClInclude Include="Memory\MemoryManger.h" />
+    <ClInclude Include="Memory\MemoryManager.h" />
     <ClInclude Include="Pch\CoreTLS.h" />
     <ClInclude Include="Thread\ThreadManager.h" />
     <ClInclude Include="Utils\Utils.h" />

@@ -9,14 +9,14 @@ constexpr uint8 GUARD_PATTERN = 0xDF;		// 메모리값, 오염 감지용
 #endif
 
 /*-------------------------------------------------------
-				MemoryManger
+				MemoryManager
 
 - 서버시작시 1회 CHUNK_SIZE 만큼 한번에 할당
 - 이후 BLOCK 크기만큼 쪼개어 pool로 관리
 - MAX_BLOCK_SIZE 미만의 크기만 pool에 배치, 이상의 크기는 직접 할당(pool 관리 X)
 - 모니터링 지표에 따라 chunk, block 조절
 --------------------------------------------------------*/
-class MemoryManger : public Singleton<MemoryManger>
+class MemoryManager : public Singleton<MemoryManager>
 {
 	enum
 	{
@@ -27,7 +27,7 @@ class MemoryManger : public Singleton<MemoryManger>
 	};
 
 public:
-	virtual ~MemoryManger();
+	virtual ~MemoryManager();
 
 	// 초기화
 	// BLOCK 개수만큼 새로 할당

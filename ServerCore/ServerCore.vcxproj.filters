@@ -25,7 +25,7 @@
     <ClInclude Include="Thread\Lock.h" />
     <ClInclude Include="Utils\CrashDump.h" />
     <ClInclude Include="Thread\ThreadManager.h" />
-    <ClInclude Include="Memory\MemoryManger.h" />
+    <ClInclude Include="Memory\MemoryManager.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
     <ClInclude Include="Memory\MemoryLockStack.h" />
     <ClInclude Include="Pch\CoreTLS.h" />
