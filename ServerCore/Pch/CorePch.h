@@ -20,7 +20,6 @@
 #include "Thread/LockGuard.h"
 #include "Thread/ThreadManager.h"
 #include "Container/EventLockQueue.h"
-#include "Container/LockStack.h"
 #include "Log/LogDispatcher.h"
 #include "Memory/MemoryManger.h"
 
