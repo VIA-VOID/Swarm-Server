@@ -25,6 +25,8 @@ private:
 --------------------------------------------------------*/
 class DeadlockDetector : public Singleton<DeadlockDetector>
 {
+	using LockAddress = uint64;
+
 public:
 	// lock 요청 & 데드락 체크
 	void LockRequest(Lock* lock, const char* name);
