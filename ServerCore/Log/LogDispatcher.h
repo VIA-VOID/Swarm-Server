@@ -32,9 +32,9 @@ private:
 	void ResetColor();
 
 private:
-	bool _writing;
+	bool _writing = false;
 	std::wofstream _file;
 	EventLockQueue<std::pair<LogType, std::wstring>> _queue;
-	std::vector<std::wstring> _buffer;
+	Vector<std::wstring> _buffer;
 	std::chrono::steady_clock::time_point _lastFlushTime;
 };

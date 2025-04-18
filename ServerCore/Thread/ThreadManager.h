@@ -14,5 +14,5 @@ public:
 
 private:
 	USE_LOCK;
-	std::vector<std::thread> _threads;
+	Vector<std::thread> _threads;
 };

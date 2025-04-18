@@ -39,6 +39,6 @@ public:
 
 private:
 	USE_LOCK;
-	std::queue<T> _queue;
+	Queue<T> _queue;
 	ConditionVariable _cv;
 };
