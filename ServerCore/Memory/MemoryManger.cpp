@@ -1,11 +1,16 @@
 #include "pch.h"
 #include "MemoryManager.h"
+#include "MemoryHeader.h"
 
 // 블록단위 배열
 constexpr uint16 _blockArray[DIVIDED_NUM] = { 32, 64, 128, 256, 512, 1024, 2048 };
 // 비율단위 배열
 // - CHUNK_SIZE를 블록단위당 몇 %로 가져갈지 작성
 constexpr uint16 _ratioArray[DIVIDED_NUM] = { 16, 18, 18, 10, 8, 8, 6 };
+
+/*----------------------------
+		MemoryManager
+----------------------------*/
 
 // BLOCK 개수만큼 해제
 MemoryManager::~MemoryManager()
