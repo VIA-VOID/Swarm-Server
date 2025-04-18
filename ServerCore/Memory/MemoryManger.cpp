@@ -5,7 +5,7 @@
 constexpr uint16 _blockArray[DIVIDED_NUM] = { 32, 64, 128, 256, 512, 1024, 2048 };
 // 비율단위 배열
 // - CHUNK_SIZE를 블록단위당 몇 %로 가져갈지 작성
-constexpr uint16 _ratioArray[DIVIDED_NUM] = { 16, 18, 18, 10, 6, 6, 6 };
+constexpr uint16 _ratioArray[DIVIDED_NUM] = { 16, 18, 18, 10, 8, 8, 6 };
 
 // BLOCK 개수만큼 해제
 MemoryManger::~MemoryManger()
@@ -14,6 +14,7 @@ MemoryManger::~MemoryManger()
 	{
 		delete _poolTable[i];
 	}
+	::VirtualFree(_chunkPtr, 0, MEM_RELEASE);
 }
 
 // 초기화
@@ -27,6 +28,8 @@ void MemoryManger::Init()
 
 	// CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장
 	PushChunk();
+
+	LOG_SYSTEM(L"MemoryManger instance initialized");
 }
 
 // pool에서 메모리 꺼내기
@@ -95,6 +98,8 @@ void MemoryManger::PushChunk()
 	void* chunk = ::VirtualAlloc(nullptr, CHUNK_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	ASSERT_CRASH(chunk != nullptr);
 
+	_chunkPtr = chunk;
+
 	// 전체 비율
 	uint16 totalWeight = 0;
 	for (auto ratio : _ratioArray)
@@ -128,14 +133,14 @@ void MemoryManger::PushChunk()
 			void* dataPtr = MemoryHeader::AttachHeader(cursor, blockSize);
 
 			// 풀에 저장
-			_poolTable[div]->Push(dataPtr);
+			_poolTable[div]->Push(dataPtr, false);
 
 			// 포인터 이동
 			cursor += realBlockSize;
 			chunkSize -= realBlockSize;
 		}
 	}
-	LOG_INFO(L"남은 청크 사이즈 : chunkSize " + std::to_wstring(chunkSize));
+
 }
 
 // size를 pool index번호로 변환

@@ -48,8 +48,8 @@ private:
 	// 메모리 풀 테이블
 	// 크기에 따라 관리
 	MemoryPool* _poolTable[DIVIDED_NUM];
+	void* _chunkPtr = nullptr;
 };
-
 
 /*-------------------------------------------------------
 				MemoryHeader
@@ -92,15 +92,21 @@ struct MemoryHeader
 		::memset(nextHeaderPtr, GUARD_PATTERN, GUARD_SIZE);
 		// 아래쪽 guard 메모리 초기화
 		::memset(nextHeaderPtr + GUARD_SIZE + blockSize, GUARD_PATTERN, GUARD_SIZE);
-#endif
 
 		return static_cast<void*>(nextHeaderPtr + GUARD_SIZE);
+#else
+		return static_cast<void*>(header + 1);
+#endif 
 	}
 
 	// header 분리
 	static MemoryHeader* DetachHeader(void* ptr)
 	{
-		uint8* nextHeaderPtr = reinterpret_cast<uint8*>(ptr) - GUARD_SIZE;
+		uint8* nextHeaderPtr = reinterpret_cast<uint8*>(ptr);
+
+#ifdef _DEBUG
+		nextHeaderPtr -= GUARD_SIZE;
+#endif
 
 		MemoryHeader* header = reinterpret_cast<MemoryHeader*>(nextHeaderPtr) - 1;
 		uint32 size = header->allocSize;
