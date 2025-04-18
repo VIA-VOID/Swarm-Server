@@ -14,6 +14,7 @@
     <ClCompile Include="Utils\Utils.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
     <ClCompile Include="Memory\STLAllocator.cpp" />
+    <ClCompile Include="Memory\MemoryHeader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -36,5 +37,6 @@
     <ClInclude Include="Log\LogDispatcher.h" />
     <ClInclude Include="Memory\STLAllocator.h" />
     <ClInclude Include="Container\Container.h" />
+    <ClInclude Include="Memory\MemoryHeader.h" />
   </ItemGroup>
 </Project>

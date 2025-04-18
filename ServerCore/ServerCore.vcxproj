@@ -172,6 +172,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Container\Container.h" />
+    <ClInclude Include="Memory\MemoryHeader.h" />
     <ClInclude Include="Memory\MemoryLockStack.h" />
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Log\LogDispatcher.h" />
@@ -195,6 +196,7 @@
   <ItemGroup>
     <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
+    <ClCompile Include="Memory\MemoryHeader.cpp" />
     <ClCompile Include="Memory\STLAllocator.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
