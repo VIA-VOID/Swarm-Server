@@ -2,7 +2,6 @@
 #include "Memory/STLAllocator.h"
 
 #include <vector>
-#include <array>
 #include <list>
 #include <queue>
 #include <stack>
@@ -10,9 +9,6 @@
 #include <set>
 #include <unordered_map>
 #include <unordered_set>
-
-template <typename Type, unsigned __int32 Size>
-using Array = std::array<Type, Size>;
 
 template <typename Type>
 using Vector = std::vector<Type, STLAllocator<Type>>;
@@ -37,10 +33,6 @@ using Stack = std::stack<Type, Container>;
 
 template <typename Type, typename Container = Vector<Type>, typename Pred = std::less<typename Container::value_type>>
 using PriorityQueue = std::priority_queue<Type, Container, Pred>;
-
-using String = std::basic_string<char, std::char_traits<char>, STLAllocator<char>>;
-
-using WString = std::basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>>;
 
 template <typename Key, typename Type, typename Hasher = std::hash<Key>, typename KeyEq = std::equal_to<Key>>
 using HashMap = std::unordered_map<Key, Type, Hasher, KeyEq, STLAllocator<std::pair<const Key, Type>>>;
