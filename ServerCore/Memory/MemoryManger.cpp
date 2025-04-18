@@ -46,8 +46,6 @@ void* MemoryManager::Allocate(uint32 size)
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* virtualPtr = ::VirtualAlloc(nullptr, realSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-		LOG_SYSTEM(std::to_wstring(size) + L"bytes 만큼 VirtualAlloc 할당");
-
 		// 헤더 붙이기
 		return MemoryHeader::AttachHeader(virtualPtr, size);
 	}
@@ -61,12 +59,6 @@ void* MemoryManager::Allocate(uint32 size)
 		// 새로 할당해준다.
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* mallocPtr = ::malloc(realSize);
-
-		LOG_WARNING(
-			std::to_wstring(realSize) +
-			L"bytes 만큼 새로 할당. 요청 크기: " +
-			std::to_wstring(size) + L"bytes"
-		);
 
 		// 헤더 붙이기
 		return MemoryHeader::AttachHeader(mallocPtr, size);
