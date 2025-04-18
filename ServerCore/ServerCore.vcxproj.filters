@@ -6,7 +6,6 @@
     <ClCompile Include="Thread\Lock.cpp" />
     <ClCompile Include="Utils\CrashDump.cpp" />
     <ClCompile Include="Thread\ThreadManager.cpp" />
-    <ClCompile Include="Memory\MemoryAllocator.cpp" />
     <ClCompile Include="Memory\MemoryManger.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Container\LockStack.cpp" />
@@ -15,6 +14,7 @@
     <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
+    <ClCompile Include="Memory\STLAllocator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -27,7 +27,6 @@
     <ClInclude Include="Utils\CrashDump.h" />
     <ClInclude Include="Thread\ThreadManager.h" />
     <ClInclude Include="Memory\ObjectPool.h" />
-    <ClInclude Include="Memory\MemoryAllocator.h" />
     <ClInclude Include="Memory\MemoryManger.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
     <ClInclude Include="Container\LockStack.h" />
@@ -37,5 +36,7 @@
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Utils\Utils.h" />
     <ClInclude Include="Log\LogDispatcher.h" />
+    <ClInclude Include="Memory\STLAllocator.h" />
+    <ClInclude Include="Container\Container.h" />
   </ItemGroup>
 </Project>

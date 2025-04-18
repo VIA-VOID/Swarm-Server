@@ -171,14 +171,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Container\Container.h" />
     <ClInclude Include="Container\LockStack.h" />
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Log\LogDispatcher.h" />
+    <ClInclude Include="Memory\STLAllocator.h" />
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Log\LogDefine.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
     <ClInclude Include="Memory\MemoryManger.h" />
-    <ClInclude Include="Memory\MemoryAllocator.h" />
     <ClInclude Include="Memory\ObjectPool.h" />
     <ClInclude Include="Pch\CoreTLS.h" />
     <ClInclude Include="Thread\ThreadManager.h" />
@@ -196,10 +197,10 @@
     <ClCompile Include="Container\LockStack.cpp" />
     <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
+    <ClCompile Include="Memory\STLAllocator.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Memory\MemoryManger.cpp" />
-    <ClCompile Include="Memory\MemoryAllocator.cpp" />
     <ClCompile Include="Pch\CoreTLS.cpp" />
     <ClCompile Include="Thread\ThreadManager.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
