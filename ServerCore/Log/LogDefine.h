@@ -19,7 +19,17 @@ struct LogMessage
 	std::wstring _message;
 	std::wstring _timeStamp;
 	ThreadId _threadId;
-	const char* functionName;
+	const char* _functionName;
+
+	LogMessage()
+		: _type(LogType::Info), _message(L"\0"), _timeStamp(L"\0"), _threadId(std::this_thread::get_id()), _functionName(nullptr)
+	{
+	}
+
+	LogMessage(LogType type, std::wstring msg, std::wstring timeStamp, ThreadId id, const char* fnName)
+		: _type(type), _message(msg), _timeStamp(timeStamp), _threadId(id), _functionName(fnName)
+	{
+	}
 
 	std::wstring MakeLogWString()
 	{
@@ -45,7 +55,7 @@ struct LogMessage
 		ws << std::left << std::setw(6)
 			<< _threadId << L"--- "
 			<< std::left << std::setw(30)
-			<< functionName
+			<< _functionName
 			<< L" : "
 			<< _message << L"\n";
 		return ws.str();

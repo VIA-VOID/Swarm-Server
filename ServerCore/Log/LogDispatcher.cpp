@@ -26,6 +26,8 @@ void LogDispatcher::Init()
 			ProcessThread();
 		}
 	);
+
+	LOG_SYSTEM(L"LogManager instance initialized");
 }
 
 // dispatcher 종료
@@ -41,13 +43,7 @@ void LogDispatcher::Shutdown()
 // 로그 쌓기
 void LogDispatcher::PushLog(const LogType& type, const std::wstring& msg, const char* fnName)
 {
-	LogMessage log;
-	log._type = type;
-	log._message = msg;
-	log._timeStamp = CLOCK.GetFormattedTime();
-	log._threadId = std::this_thread::get_id();
-	log.functionName = fnName;
-
+	LogMessage log(type, msg, CLOCK.GetFormattedTime(), std::this_thread::get_id(), fnName);
 	std::wstring logMessage = log.MakeLogWString();
 	_queue.Push({ type, logMessage });
 }
