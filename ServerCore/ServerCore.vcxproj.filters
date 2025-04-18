@@ -10,7 +10,6 @@
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Pch\CoreTLS.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
-    <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
     <ClCompile Include="Memory\STLAllocator.cpp" />

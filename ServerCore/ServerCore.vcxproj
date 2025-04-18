@@ -194,7 +194,6 @@
     <ClInclude Include="Pch\Types.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Container\EventLockQueue.cpp" />
     <ClCompile Include="Log\LogDispatcher.cpp" />
     <ClCompile Include="Memory\MemoryHeader.cpp" />
     <ClCompile Include="Memory\STLAllocator.cpp" />
