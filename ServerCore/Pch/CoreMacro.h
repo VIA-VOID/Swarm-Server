@@ -11,6 +11,7 @@
 #define LOG								LogDispatcher::GetInstance()
 #define THREAD_MANAGER					ThreadManager::GetInstance()
 #define MEMORY_MANAGER					MemoryManager::GetInstance()
+#define OBJECT_POOL						ObjectPool::GetInstance()
 
 /*-------------------------------------
 	함수 매크로

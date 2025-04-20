@@ -22,6 +22,7 @@
 #include "Container/EventLockQueue.h"
 #include "Log/LogDispatcher.h"
 #include "Memory/MemoryManager.h"
+#include "Memory/ObjectPool.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
