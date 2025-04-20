@@ -30,6 +30,12 @@ public:
 	// 지정한 경로 리턴
 	std::wstring SetFilePath();
 
+	// UTF-16(wstring) -> UTF-8(string) 변환
+	std::string convertUtf8(const std::wstring& wstr);
+
+	// UTF-8(string) -> UTF-16(wstring) 변환
+	std::wstring convertUtf16(const std::string& str);
+
 private:
 	// 마지막 디렉토리 구분자 이전까지 자르기
 	std::wstring RemoveLastPathComponent(std::wstring& path);
