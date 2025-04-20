@@ -64,7 +64,7 @@ void LogDispatcher::ProcessThread()
 #if _DEBUG
 		// console log
 		PrintColor(pop.first);
-		std::wcout << pop.second;
+		std::cout << UTILS.convertUtf8(pop.second);
 		ResetColor();
 #endif
 
@@ -96,14 +96,13 @@ void LogDispatcher::CreateLogFile()
 	::CreateDirectoryW(dir.c_str(), nullptr);
 
 	std::wstring fileName = dir + L"\\Serverlog_" + CLOCK.GetFormattedDate(L'_') + L".log";
-
-	_file.imbue(std::locale(_file.getloc(), new std::codecvt_utf8<wchar_t>));
 	_file.open(fileName, std::ios::app);
 
 	if (_file.tellp() == 0)
 	{
-		// UTF-8 BOM
-		_file << L"\uFEFF";
+		// UTF-8 BOM 추가
+		const char utf8BOM[] = "\xEF\xBB\xBF";
+		_file.write(utf8BOM, sizeof(utf8BOM) - 1);
 	}
 }
 
@@ -112,7 +111,8 @@ void LogDispatcher::FlushBuffer()
 {
 	for (const auto& log : _buffer)
 	{
-		_file << log;
+		std::string utf8 = UTILS.convertUtf8(log);
+		_file.write(utf8.c_str(), utf8.size());
 	}
 	_file.flush();
 	_buffer.clear();

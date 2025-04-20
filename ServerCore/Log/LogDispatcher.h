@@ -33,7 +33,7 @@ private:
 
 private:
 	bool _writing = false;
-	std::wofstream _file;
+	std::ofstream _file;
 	EventLockQueue<std::pair<LogType, std::wstring>> _queue;
 	Vector<std::wstring> _buffer;
 	std::chrono::steady_clock::time_point _lastFlushTime;
