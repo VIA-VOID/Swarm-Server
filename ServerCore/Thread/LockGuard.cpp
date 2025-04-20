@@ -8,19 +8,28 @@
 LockGuard::LockGuard(Lock* lock, const char* name)
 	: _lock(lock), _className(name)
 {
+#ifdef _DEBUG
 	// Lock 요청 & 데드락 확인
 	LOCK.LockRequest(lock, name);
+#endif
+
 	// 락 걸기
 	_lock->ScopedLock();
+
+#ifdef _DEBUG
 	// Lock 획득
 	LOCK.LockAcquired(lock);
+#endif
 }
 
 LockGuard::~LockGuard()
 {
 	// 락 해제
 	_lock->ScopedUnlock();
+
+#ifdef _DEBUG
 	LOCK.LockRelease();
+#endif
 }
 
 /*----------------------------
@@ -84,7 +93,10 @@ void UniqueLockGuard::unlock()
 	{
 		// 락 해제
 		_lock->ScopedUnlock();
+
+#ifdef _DEBUG
 		LOCK.LockRelease();
+#endif
 		// 소유 해제
 		_owns = false;
 	}
@@ -93,12 +105,18 @@ void UniqueLockGuard::unlock()
 // lock() 호출, 데드락 확인 + 락 걸기 호출
 void UniqueLockGuard::CallLock()
 {
+#ifdef _DEBUG
 	// Lock 요청 & 데드락 확인
 	LOCK.LockRequest(_lock, _className);
+#endif
+
 	// 락 걸기
 	_lock->ScopedLock();
+
+#ifdef _DEBUG
 	// Lock 획득
 	LOCK.LockAcquired(_lock);
+#endif
 	// 소유중
 	_owns = true;
 }
