@@ -6,12 +6,12 @@
 
 - 공통적으로 사용하는 함수 모음
 --------------------------------------------------------*/
-class Utils : public Singleton<Utils>
+class Utils
 {
 public:
 	// min, max 사이 랜덤값 리턴
 	template <typename T>
-	T GetRandom(T min, T max)
+	static T GetRandom(T min, T max)
 	{
 		std::random_device randomDevice;
 		std::mt19937 engine(randomDevice());
@@ -28,18 +28,18 @@ public:
 	}
 
 	// 지정한 경로 리턴
-	std::wstring SetFilePath();
+	static std::wstring SetFilePath();
 
 	// UTF-16(wstring) -> UTF-8(string) 변환
-	std::string convertUtf8(const std::wstring& wstr);
+	static std::string convertUtf8(const std::wstring& wstr);
 
 	// UTF-8(string) -> UTF-16(wstring) 변환
-	std::wstring convertUtf16(const std::string& str);
+	static std::wstring convertUtf16(const std::string& str);
 
 private:
 	// 마지막 디렉토리 구분자 이전까지 자르기
-	std::wstring RemoveLastPathComponent(std::wstring& path);
+	static std::wstring RemoveLastPathComponent(std::wstring& path);
 	// 경로를 levels 상위로 이동
-	std::wstring GoUpDirectories(std::wstring& path, uint8 levels);
+	static std::wstring GoUpDirectories(std::wstring& path, uint8 levels);
 };
 

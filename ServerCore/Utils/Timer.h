@@ -8,17 +8,17 @@ using TimePoint = SteadyClock::time_point;
 /*--------------------------------------------------------
 					Clock
 --------------------------------------------------------*/
-class Clock : public Singleton<Clock>
+class Clock
 {
 public:
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-	std::wstring GetFormattedTime(wchar_t dateSep = '/', wchar_t timeSep = L':');
+	static std::wstring GetFormattedTime(wchar_t dateSep = '/', wchar_t timeSep = L':');
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd)
-	std::wstring GetFormattedDate(wchar_t dateSep = '/');
+	static std::wstring GetFormattedDate(wchar_t dateSep = '/');
 	// 일자 변경 여부
-	bool IsNewDay();
+	static bool IsNewDay();
 	// 두 시간 사이의 차이, 밀리초 반환
-	int64 GetTimeDiff(const TimePoint& start, const TimePoint& end = NOW);
+	static int64 GetTimeDiff(const TimePoint& start, const TimePoint& end = NOW);
 };
 
 /*--------------------------------------------------------
