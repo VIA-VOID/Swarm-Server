@@ -176,6 +176,7 @@
     <ClInclude Include="Memory\MemoryLockStack.h" />
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Log\LogDispatcher.h" />
+    <ClInclude Include="Memory\ObjectPool.h" />
     <ClInclude Include="Memory\STLAllocator.h" />
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Log\LogDefine.h" />

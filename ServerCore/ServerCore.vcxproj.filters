@@ -37,5 +37,6 @@
     <ClInclude Include="Memory\STLAllocator.h" />
     <ClInclude Include="Container\Container.h" />
     <ClInclude Include="Memory\MemoryHeader.h" />
+    <ClInclude Include="Memory\ObjectPool.h" />
   </ItemGroup>
 </Project>
