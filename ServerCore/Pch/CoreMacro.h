@@ -5,26 +5,23 @@
 /*-------------------------------------
 	싱글톤 패턴 적용된 클래스들 정의
 -------------------------------------*/
-#define CLOCK							Clock::GetInstance()
-#define UTILS							Utils::GetInstance()
-#define LOCK							DeadlockDetector::GetInstance()
-#define LOG								LogDispatcher::GetInstance()
-#define THREAD_MANAGER					ThreadManager::GetInstance()
-#define MEMORY_MANAGER					MemoryManager::GetInstance()
-#define OBJECT_POOL						ObjectPool::GetInstance()
+#define DeadLockMgr						DeadlockDetector::GetInstance()
+#define LogMgr							LogManager::GetInstance()
+#define ThreadMgr						ThreadManager::GetInstance()
+#define MemoryMgr						MemoryManager::GetInstance()
 
 /*-------------------------------------
 	함수 매크로
 -------------------------------------*/
 // 난수
-#define RAND(min, max)					UTILS.GetRandom<decltype(min)>(min, max)
+#define RAND(min, max)					Utils::GetRandom<decltype(min)>(min, max)
 // 현재시간
 #define NOW								std::chrono::steady_clock::now()
 // 로그
-#define LOG_INFO(msg)					LOG.PushLog(LogType::Info, msg, __FUNCTION__)
-#define LOG_SYSTEM(msg)					LOG.PushLog(LogType::System, msg, __FUNCTION__)
-#define LOG_WARNING(msg)				LOG.PushLog(LogType::Warning, msg, __FUNCTION__)
-#define LOG_ERROR(msg)					LOG.PushLog(LogType::Error, msg, __FUNCTION__)
+#define LOG_INFO(msg)					LogMgr.PushLog(LogType::Info, msg, __FUNCTION__)
+#define LOG_SYSTEM(msg)					LogMgr.PushLog(LogType::System, msg, __FUNCTION__)
+#define LOG_WARNING(msg)				LogMgr.PushLog(LogType::Warning, msg, __FUNCTION__)
+#define LOG_ERROR(msg)					LogMgr.PushLog(LogType::Error, msg, __FUNCTION__)
 
 
 /*-------------------------------------
