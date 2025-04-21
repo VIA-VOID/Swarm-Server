@@ -2,12 +2,12 @@
 #include <fstream>
 
 /*--------------------------------------------------------
-					LogDispatcher
+					LogManager
 
 - 로그파일 저장
 - [debug 모드] console에 로그 찍기
 --------------------------------------------------------*/
-class LogDispatcher : public Singleton<LogDispatcher>
+class LogManager : public Singleton<LogManager>
 {
 public:
 	// 파일생성, 초기화

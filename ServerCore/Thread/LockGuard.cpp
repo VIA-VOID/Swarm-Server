@@ -10,7 +10,7 @@ LockGuard::LockGuard(Lock* lock, const char* name)
 {
 #ifdef _DEBUG
 	// Lock 요청 & 데드락 확인
-	LOCK.LockRequest(lock, name);
+	DeadLockMgr.LockRequest(lock, name);
 #endif
 
 	// 락 걸기
@@ -18,7 +18,7 @@ LockGuard::LockGuard(Lock* lock, const char* name)
 
 #ifdef _DEBUG
 	// Lock 획득
-	LOCK.LockAcquired(lock);
+	DeadLockMgr.LockAcquired(lock);
 #endif
 }
 
@@ -28,7 +28,7 @@ LockGuard::~LockGuard()
 	_lock->ScopedUnlock();
 
 #ifdef _DEBUG
-	LOCK.LockRelease();
+	DeadLockMgr.LockRelease();
 #endif
 }
 
@@ -95,7 +95,7 @@ void UniqueLockGuard::unlock()
 		_lock->ScopedUnlock();
 
 #ifdef _DEBUG
-		LOCK.LockRelease();
+		DeadLockMgr.LockRelease();
 #endif
 		// 소유 해제
 		_owns = false;
@@ -107,7 +107,7 @@ void UniqueLockGuard::CallLock()
 {
 #ifdef _DEBUG
 	// Lock 요청 & 데드락 확인
-	LOCK.LockRequest(_lock, _className);
+	DeadLockMgr.LockRequest(_lock, _className);
 #endif
 
 	// 락 걸기
@@ -115,7 +115,7 @@ void UniqueLockGuard::CallLock()
 
 #ifdef _DEBUG
 	// Lock 획득
-	LOCK.LockAcquired(_lock);
+	DeadLockMgr.LockAcquired(_lock);
 #endif
 	// 소유중
 	_owns = true;

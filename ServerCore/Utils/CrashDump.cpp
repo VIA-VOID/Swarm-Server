@@ -22,12 +22,12 @@ void CrashDump::Init()
 // Dump 파일명 지정
 std::wstring CrashDump::MakeDumpFileName()
 {
-	std::wstring dumpPath = UTILS.SetFilePath() + L"\\Dumps";
+	std::wstring dumpPath = Utils::SetFilePath() + L"\\Dumps";
 
 	// 폴더가 없으면 생성
 	::CreateDirectoryW(dumpPath.c_str(), nullptr);
 
-	return dumpPath + L"\\dump_" + CLOCK.GetFormattedTime(L'_', L'_') + L".dmp";
+	return dumpPath + L"\\dump_" + Clock::GetFormattedTime(L'_', L'_') + L".dmp";
 }
 
 // dump 파일 생성

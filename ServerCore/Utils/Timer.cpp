@@ -105,7 +105,7 @@ bool Timer::IsExpired()
 		return false;
 	}
 
-	int64 elapsed = CLOCK.GetTimeDiff(_startTime);
+	int64 elapsed = Clock::GetTimeDiff(_startTime);
 	return elapsed >= _durationMs;
 }
 
@@ -126,7 +126,7 @@ int64 Timer::Elapsed()
 		return 0;
 	}
 
-	return CLOCK.GetTimeDiff(_startTime);
+	return Clock::GetTimeDiff(_startTime);
 }
 
 // 남은 시간

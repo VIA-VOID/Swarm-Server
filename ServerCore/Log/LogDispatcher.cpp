@@ -4,7 +4,7 @@
 #include <codecvt>
 
 /*----------------------------
-		LogDispatcher
+		LogManager
 ----------------------------*/
 
 // flush() 하는 조건
@@ -14,14 +14,14 @@ constexpr uint8 _flushSize = 10;
 constexpr std::chrono::seconds _flushTime = std::chrono::seconds(2);
 
 // 파일생성, 초기화
-void LogDispatcher::Init()
+void LogManager::Init()
 {
 	CreateLogFile();
 	_writing = true;
 	_lastFlushTime = NOW;
 
 	// 스레드 할당
-	THREAD_MANAGER.Push([=]
+	ThreadMgr.Push([=]
 		{
 			ProcessThread();
 		}
@@ -31,7 +31,7 @@ void LogDispatcher::Init()
 }
 
 // dispatcher 종료
-void LogDispatcher::Shutdown()
+void LogManager::Shutdown()
 {
 	_writing = false;
 	// 스레드 wake 유도
@@ -41,15 +41,15 @@ void LogDispatcher::Shutdown()
 }
 
 // 로그 쌓기
-void LogDispatcher::PushLog(const LogType& type, const std::wstring& msg, const char* fnName)
+void LogManager::PushLog(const LogType& type, const std::wstring& msg, const char* fnName)
 {
-	LogMessage log(type, msg, CLOCK.GetFormattedTime(), std::this_thread::get_id(), fnName);
+	LogMessage log(type, msg, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
 	std::wstring logMessage = log.MakeLogWString();
 	_queue.Push({ type, logMessage });
 }
 
 // 스레드 일감
-void LogDispatcher::ProcessThread()
+void LogManager::ProcessThread()
 {
 	while (_writing)
 	{
@@ -64,12 +64,12 @@ void LogDispatcher::ProcessThread()
 #if _DEBUG
 		// console log
 		PrintColor(pop.first);
-		std::cout << UTILS.convertUtf8(pop.second);
+		std::cout << Utils::convertUtf8(pop.second);
 		ResetColor();
 #endif
 
 		// 일자 변경 확인
-		if (CLOCK.IsNewDay())
+		if (Clock::IsNewDay())
 		{
 			// 일자 변경시 파일 close후 새로 생성
 			CloseLogFile();
@@ -90,12 +90,12 @@ void LogDispatcher::ProcessThread()
 }
 
 // 파일 생성
-void LogDispatcher::CreateLogFile()
+void LogManager::CreateLogFile()
 {
-	std::wstring dir = UTILS.SetFilePath() + L"\\Logs";
+	std::wstring dir = Utils::SetFilePath() + L"\\Logs";
 	::CreateDirectoryW(dir.c_str(), nullptr);
 
-	std::wstring fileName = dir + L"\\Serverlog_" + CLOCK.GetFormattedDate(L'_') + L".log";
+	std::wstring fileName = dir + L"\\Serverlog_" + Clock::GetFormattedDate(L'_') + L".log";
 	_file.open(fileName, std::ios::app);
 
 	if (_file.tellp() == 0)
@@ -107,11 +107,11 @@ void LogDispatcher::CreateLogFile()
 }
 
 // 파일 flush
-void LogDispatcher::FlushBuffer()
+void LogManager::FlushBuffer()
 {
 	for (const auto& log : _buffer)
 	{
-		std::string utf8 = UTILS.convertUtf8(log);
+		std::string utf8 = Utils::convertUtf8(log);
 		_file.write(utf8.c_str(), utf8.size());
 	}
 	_file.flush();
@@ -119,7 +119,7 @@ void LogDispatcher::FlushBuffer()
 }
 
 // 파일 닫기
-void LogDispatcher::CloseLogFile()
+void LogManager::CloseLogFile()
 {
 	if (_file.is_open())
 	{
@@ -129,7 +129,7 @@ void LogDispatcher::CloseLogFile()
 }
 
 // LogType에 따라 색 지정
-void LogDispatcher::PrintColor(const LogType& level)
+void LogManager::PrintColor(const LogType& level)
 {
 	HANDLE hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
 	switch (level)
@@ -150,7 +150,7 @@ void LogDispatcher::PrintColor(const LogType& level)
 }
 
 // 색 초기화
-void LogDispatcher::ResetColor()
+void LogManager::ResetColor()
 {
 	HANDLE hConsole = ::GetStdHandle(STD_OUTPUT_HANDLE);
 	::SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
