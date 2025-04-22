@@ -38,7 +38,6 @@ public:
 	void Shutdown() override;
 
 private:
-	USE_LOCK;
 	// 작업을 큐에 추가
 	void Push(JobRef job);
 	// 작업 큐에서 가져옴
