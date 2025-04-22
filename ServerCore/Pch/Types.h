@@ -1,4 +1,6 @@
 #pragma once
+#include <functional>
+#include <chrono>
 
 //----------------------------------------------------------//
 // 자료형 정의
@@ -23,3 +25,14 @@ using ConditionVariable = std::condition_variable;
 //----------------------------------------------------------//
 // 타입 정의
 using ThreadId = std::thread::id;
+using CallbackVoid = std::function<void()>;
+template <typename T>
+using CallbackType = std::function<T>;
+using SteadyClock = std::chrono::steady_clock;
+using TimePoint = SteadyClock::time_point;
+
+//----------------------------------------------------------//
+// 스마트포인터
+#define SHARED_PTR(name)		using name##Ref = std::shared_ptr<class name>;
+
+SHARED_PTR(Job);
