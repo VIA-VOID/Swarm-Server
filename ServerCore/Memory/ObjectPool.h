@@ -12,7 +12,7 @@ class ObjectPool
 public:
 	// 메모리 대여
 	template <typename ...Args>
-	static void* Allocate(Args&&... args);
+	static T* Allocate(Args&&... args);
 	// 메모리 반납
 	static void Release(T* object);
 	// 스마트포인터로 생성/소멸
@@ -23,9 +23,9 @@ public:
 // 메모리 대여
 template <typename T>
 template <typename ...Args>
-inline void* ObjectPool<T>::Allocate(Args&&... args)
+inline T* ObjectPool<T>::Allocate(Args&&... args)
 {
-	T* memory = MemoryMgr.Allocate(sizeof(T));
+	T* memory = static_cast<T*>(MemoryMgr.Allocate(sizeof(T)));
 	// placement new
 	new(memory)T(std::forward<Args>(args)...);
 	return memory;
