@@ -1,10 +1,5 @@
 #pragma once
 
-#include <chrono>
-
-using SteadyClock = std::chrono::steady_clock;
-using TimePoint = SteadyClock::time_point;
-
 /*--------------------------------------------------------
 					Clock
 --------------------------------------------------------*/
