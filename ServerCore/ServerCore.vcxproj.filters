@@ -11,9 +11,10 @@
     <ClCompile Include="Pch\CoreTLS.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
     <ClCompile Include="Utils\Utils.cpp" />
-    <ClCompile Include="Log\LogDispatcher.cpp" />
+    <ClCompile Include="Log\LogManager.cpp" />
     <ClCompile Include="Memory\STLAllocator.cpp" />
     <ClCompile Include="Memory\MemoryHeader.cpp" />
+    <ClCompile Include="Job\Job.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -33,10 +34,11 @@
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Utils\Utils.h" />
-    <ClInclude Include="Log\LogDispatcher.h" />
+    <ClInclude Include="Log\LogManager.h" />
     <ClInclude Include="Memory\STLAllocator.h" />
     <ClInclude Include="Container\Container.h" />
     <ClInclude Include="Memory\MemoryHeader.h" />
     <ClInclude Include="Memory\ObjectPool.h" />
+    <ClInclude Include="Job.h" />
   </ItemGroup>
 </Project>
