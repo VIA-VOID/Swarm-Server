@@ -4,8 +4,10 @@ template <typename T>
 class Singleton
 {
 protected:
-	Singleton() {}
-	virtual ~Singleton() {}
+	Singleton() {};
+	virtual ~Singleton() {};
+	virtual void Init() = 0;
+	virtual void Shutdown() = 0;
 
 public:
 	// 복사, 복사 대입 방지
