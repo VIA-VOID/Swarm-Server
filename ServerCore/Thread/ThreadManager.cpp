@@ -1,30 +1,53 @@
 #include "pch.h"
 #include "ThreadManager.h"
 
-// 스레드 생성 & 일감 투척
-void ThreadManager::Push(std::function<void(void)> callback)
+/*----------------------------
+		ThreadManager
+----------------------------*/
+
+// 초기화
+void ThreadManager::Init()
+{
+	_activeThreadCount.store(0, std::memory_order::memory_order_relaxed);
+}
+
+// 그룹별 스레드 생성 & 일감 투척
+void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType<void(JobGroupType)> jobCallback)
 {
 	LOCK_GUARD;
 
-	_threads.emplace_back(std::thread([=]()
-		{
-			callback();
-			DeleteTLSData();
-		}
-	));
+	_groupThreads[group].reserve(count);
+	std::string groupName = JobGroupNames[static_cast<uint16>(group)];
+
+	for (uint16 thread = 0; thread < count; thread++)
+	{
+		_groupThreads[group].emplace_back([=]()
+			{
+				std::string name = groupName + "-" + std::to_string(thread);
+				SetThreadName(name);
+				jobCallback(group);
+			}
+		);
+	}
 }
 
-// 스레드 실행 완료 대기
-void ThreadManager::Join()
+// 그룹별 스레드 실행 완료 대기
+void ThreadManager::JoinGroup(JobGroupType group)
 {
-	for (std::thread& thread : _threads)
+	LOCK_GUARD;
+
+	auto it = _groupThreads.find(group);
+	if (it != _groupThreads.end())
 	{
-		if (thread.joinable())
+		for (auto& t : it->second)
 		{
-			thread.join();
+			if (t.joinable())
+			{
+				t.join();
+			}
 		}
+		_groupThreads.erase(it);
 	}
-	_threads.clear();
 }
 
 // TLS 데이터 제거
@@ -34,4 +57,70 @@ void ThreadManager::DeleteTLSData()
 	{
 		LHoldLock.pop();
 	}
+}
+
+// 전체 스레드 실행 완료 대기
+void ThreadManager::JoinAll()
+{
+	LOCK_GUARD;
+
+	for (auto& threads : _groupThreads)
+	{
+		for (auto& t : threads.second)
+		{
+			if (t.joinable())
+			{
+				t.join();
+			}
+		}
+	}
+	_activeThreadCount.store(0, std::memory_order::memory_order_relaxed);
+	_groupThreads.clear();
+}
+
+// 활성 스레드 카운트 증가
+void ThreadManager::PlusActiveThreadCount()
+{
+	_activeThreadCount.fetch_add(1, std::memory_order::memory_order_relaxed);
+}
+
+// 활성 스레드 카운트 감소
+void ThreadManager::MinusActiveThreadCount()
+{
+	_activeThreadCount.fetch_sub(1, std::memory_order::memory_order_relaxed);
+}
+
+// 종료
+void ThreadManager::Shutdown()
+{
+	JoinAll();
+	DeleteTLSData();
+}
+
+// 스레드 이름 붙이기
+// https://learn.microsoft.com/en-us/visualstudio/debugger/tips-for-debugging-threads?view=vs-2022&tabs=csharp
+void ThreadManager::SetThreadName(const std::string& name)
+{
+	const DWORD MS_VC_EXCEPTION = 0x406D1388;
+#pragma pack(push,8)
+	struct THREADNAME_INFO
+	{
+		DWORD dwType;
+		LPCSTR szName;
+		DWORD dwThreadID;
+		DWORD dwFlags;
+	};
+#pragma pack(pop)
+
+	LThreadName = name;
+	THREADNAME_INFO info;
+	info.dwType = 0x1000;
+	info.szName = name.c_str();
+	info.dwThreadID = GetCurrentThreadId();
+	info.dwFlags = 0;
+
+	__try {
+		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+	}
+	__except (EXCEPTION_EXECUTE_HANDLER) {}
 }
