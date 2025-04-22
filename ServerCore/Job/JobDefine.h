@@ -19,7 +19,7 @@ enum class JobGroupType : uint16
 
 // Job 그룹 이름
 // - 스레드 이름 지정을 위함
-const char* JobGroupNames[] =
+static const char* JobGroupNames[] =
 {
 	"System",
 	"Log",
