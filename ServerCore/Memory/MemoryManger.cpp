@@ -12,16 +12,6 @@ constexpr uint16 _ratioArray[DIVIDED_NUM] = { 16, 18, 18, 10, 8, 8, 6 };
 		MemoryManager
 ----------------------------*/
 
-// BLOCK 개수만큼 해제
-MemoryManager::~MemoryManager()
-{
-	for (uint16 i = 0; i < DIVIDED_NUM; i++)
-	{
-		delete _poolTable[i];
-	}
-	::VirtualFree(_chunkPtr, 0, MEM_RELEASE);
-}
-
 // 초기화
 // BLOCK 개수만큼 새로 할당
 void MemoryManager::Init()
@@ -86,6 +76,16 @@ void MemoryManager::Release(void* ptr)
 	// 메모리 반납
 	uint16 idx = SizeToIndex(size);
 	_poolTable[idx]->Push(ptr);
+}
+
+// 종료
+void MemoryManager::Shutdown()
+{
+	for (uint16 i = 0; i < DIVIDED_NUM; i++)
+	{
+		delete _poolTable[i];
+	}
+	::VirtualFree(_chunkPtr, 0, MEM_RELEASE);
 }
 
 // CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장

@@ -28,12 +28,14 @@ class DeadlockDetector : public Singleton<DeadlockDetector>
 	using LockAddress = uint64;
 
 public:
+	void Init() override {};
 	// lock 요청 & 데드락 체크
 	void LockRequest(Lock* lock, const char* name);
 	// lock 획득
 	void LockAcquired(Lock* lock);
 	// 소유하고 있는 lock 제거
 	void LockRelease();
+	void Shutdown() override {};
 
 private:
 	// 교차상태(순환) 있는지 확인

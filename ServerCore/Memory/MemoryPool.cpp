@@ -13,8 +13,8 @@ void* MemoryPool::Pop()
 		// MemoryManger에서 새로 할당
 		return nullptr;
 	}
-	_useCount.fetch_add(1);
-	_remainCount.fetch_sub(1);
+	_useCount.fetch_add(1, std::memory_order_relaxed);
+	_remainCount.fetch_sub(1, std::memory_order_relaxed);
 	return _poolList.Pop();
 }
 
@@ -23,9 +23,9 @@ void MemoryPool::Push(void* ptr, bool counting /*= true*/)
 {
 	if (counting)
 	{
-		_useCount.fetch_sub(1);
+		_useCount.fetch_sub(1, std::memory_order_relaxed);
 	}
-	_remainCount.fetch_add(1);
+	_remainCount.fetch_add(1, std::memory_order_relaxed);
 	_poolList.Push(ptr);
 }
 
