@@ -9,6 +9,7 @@
 #define LogMgr							LogManager::GetInstance()
 #define ThreadMgr						ThreadManager::GetInstance()
 #define MemoryMgr						MemoryManager::GetInstance()
+#define JobQ							JobQueue::GetInstance()
 
 /*-------------------------------------
 	함수 매크로
@@ -22,7 +23,6 @@
 #define LOG_SYSTEM(msg)					LogMgr.PushLog(LogType::System, msg, __FUNCTION__)
 #define LOG_WARNING(msg)				LogMgr.PushLog(LogType::Warning, msg, __FUNCTION__)
 #define LOG_ERROR(msg)					LogMgr.PushLog(LogType::Error, msg, __FUNCTION__)
-
 
 /*-------------------------------------
 	커스텀 함수 매크로
@@ -44,6 +44,10 @@
 		__analysis_assume(expr);			\
 	}										\
 }
+
+// JobQueue 타입-그룹 매핑
+#define JOB_MAPPING(Type, Group)				\
+    JobQ.RegisterTypeMapping<Type>(Group)		\
 
 
 /*-------------------------------------
