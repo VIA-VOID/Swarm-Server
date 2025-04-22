@@ -172,7 +172,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Container\Container.h" />
-    <ClInclude Include="Job.h" />
+    <ClInclude Include="Job\JobQueue.h" />
+    <ClInclude Include="Job\Job.h" />
+    <ClInclude Include="Job\JobDefine.h" />
     <ClInclude Include="Memory\MemoryHeader.h" />
     <ClInclude Include="Memory\MemoryLockStack.h" />
     <ClInclude Include="Container\EventLockQueue.h" />
@@ -196,6 +198,7 @@
     <ClInclude Include="Pch\Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Job\JobQueue.cpp" />
     <ClCompile Include="Job\Job.cpp" />
     <ClCompile Include="Log\LogManager.cpp" />
     <ClCompile Include="Memory\MemoryHeader.cpp" />
