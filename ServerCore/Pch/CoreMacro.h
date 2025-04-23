@@ -9,7 +9,8 @@
 #define LogMgr							LogManager::GetInstance()
 #define ThreadMgr						ThreadManager::GetInstance()
 #define MemoryMgr						MemoryManager::GetInstance()
-#define JobQ							JobQueue::GetInstance()
+#define JobQ							JobEventQueue::GetInstance()
+#define GameServerMgr					GameServerManager::GetInstance()
 
 /*-------------------------------------
 	함수 매크로
@@ -45,7 +46,7 @@
 	}										\
 }
 
-// JobQueue 타입-그룹 매핑
+// JobEventQueue 타입-그룹 매핑
 #define JOB_MAPPING(Type, Group)				\
     JobQ.RegisterTypeMapping<Type>(Group)		\
 
