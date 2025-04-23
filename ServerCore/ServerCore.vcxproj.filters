@@ -15,7 +15,8 @@
     <ClCompile Include="Memory\STLAllocator.cpp" />
     <ClCompile Include="Memory\MemoryHeader.cpp" />
     <ClCompile Include="Job\Job.cpp" />
-    <ClCompile Include="Job\JobQueue.cpp" />
+    <ClCompile Include="Job\JobEventQueue.cpp" />
+    <ClCompile Include="Job\JobDefine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Pch\CoreMacro.h" />
@@ -33,7 +34,6 @@
     <ClInclude Include="Pch\CoreTLS.h" />
     <ClInclude Include="Log\LogDefine.h" />
     <ClInclude Include="Thread\LockGuard.h" />
-    <ClInclude Include="Container\EventLockQueue.h" />
     <ClInclude Include="Utils\Utils.h" />
     <ClInclude Include="Log\LogManager.h" />
     <ClInclude Include="Memory\STLAllocator.h" />
@@ -42,6 +42,6 @@
     <ClInclude Include="Memory\ObjectPool.h" />
     <ClInclude Include="Job\Job.h" />
     <ClInclude Include="Job\JobDefine.h" />
-    <ClInclude Include="Job\JobQueue.h" />
+    <ClInclude Include="Job\JobEventQueue.h" />
   </ItemGroup>
 </Project>
