@@ -1,5 +1,4 @@
 #pragma once
-#include "Pch/Types.h"
 #include <typeindex>
 
 // Job 우선순위
@@ -15,6 +14,8 @@ enum class JobGroupType : uint16
 {
 	System = 0,
 	Log,
+	Dungeon,
+	Player,
 };
 
 // Job 그룹 이름
@@ -23,18 +24,23 @@ static const char* JobGroupNames[] =
 {
 	"System",
 	"Log",
+	"Dungeon",
+	"Player",
 };
 
 // 그룹별 우선순위
-const HashMap<JobGroupType, JobPriority> GROUP_PRIORITY =
+const std::unordered_map<JobGroupType, std::pair<JobPriority, uint16 /*threadCount*/>> GROUP_PRIORITY =
 {
-	{ JobGroupType::System, JobPriority::Normal },
-	{ JobGroupType::Log, JobPriority::Low },
+	{ JobGroupType::System, { JobPriority::Normal, 1 } },
+	{ JobGroupType::Log, { JobPriority::Low, 1 } },
+	{ JobGroupType::Dungeon, { JobPriority::Low, 3 } },
+	{ JobGroupType::Player, { JobPriority::High, 3 } },
 };
 
 // 타입에 따른 JobGroupType으로 매핑
 class TypeToGroupMapper
 {
+public:
 	// JobGroupType의 타입을 추론해서 저장
 	// RegisterTypeMapping 함수 사용
 	template <typename T>
@@ -60,7 +66,6 @@ class TypeToGroupMapper
 	}
 
 private:
-	static HashMap<std::type_index, JobGroupType> _typeMap;
+	static std::unordered_map<std::type_index, JobGroupType> _typeMap;
 };
 
-HashMap<std::type_index, JobGroupType> TypeToGroupMapper::_typeMap;

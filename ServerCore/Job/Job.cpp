@@ -6,9 +6,8 @@
 ----------------------------*/
 
 // 우선순위에 따라 즉시 처리용 생성자
-Job::Job(CallbackVoid&& callback, JobPriority priority, JobGroupType group, uint64 delayMs)
+Job::Job(CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/, uint64 delayMs)
 	: _callback(std::move(callback)),
-	_priority(priority),
 	_group(group),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())
@@ -17,7 +16,7 @@ Job::Job(CallbackVoid&& callback, JobPriority priority, JobGroupType group, uint
 	auto it = GROUP_PRIORITY.find(_group);
 	if (it != GROUP_PRIORITY.end())
 	{
-		_priority = it->second;
+		_priority = it->second.first;
 	}
 }
 
