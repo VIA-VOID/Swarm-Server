@@ -24,14 +24,14 @@ std::wstring Utils::SetFilePath()
 }
 
 // UTF-16(wstring) -> UTF-8(string) 변환
-std::string Utils::convertUtf8(const std::wstring& wstr)
+std::string Utils::ConvertUtf8(const std::wstring& wstr)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.to_bytes(wstr);
 }
 
 // UTF-8(string) -> UTF-16(wstring) 변환
-std::wstring Utils::convertUtf16(const std::string& str)
+std::wstring Utils::ConvertUtf16(const std::string& str)
 {
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	return converter.from_bytes(str);

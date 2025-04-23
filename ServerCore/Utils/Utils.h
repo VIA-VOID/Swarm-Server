@@ -31,10 +31,10 @@ public:
 	static std::wstring SetFilePath();
 
 	// UTF-16(wstring) -> UTF-8(string) 변환
-	static std::string convertUtf8(const std::wstring& wstr);
+	static std::string ConvertUtf8(const std::wstring& wstr);
 
 	// UTF-8(string) -> UTF-16(wstring) 변환
-	static std::wstring convertUtf16(const std::string& str);
+	static std::wstring ConvertUtf16(const std::string& str);
 
 private:
 	// 마지막 디렉토리 구분자 이전까지 자르기
