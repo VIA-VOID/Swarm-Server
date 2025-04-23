@@ -1,92 +1,77 @@
 #include "pch.h"
+#include "Service/GameServerManager.h"
 
-class ComplexWorker
+class Player
 {
 public:
-	ComplexWorker(int id) : _id(id) {}
-
-	void A()
+	void UseSkill(int skillId, int targetId)
 	{
-		LOCK_GUARD;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		std::cout << "A  \n";
-		LOG_INFO(L"[A] THREAD");
-		LOG_SYSTEM(L"[A] THREAD");
+		LOG_INFO(L"Player used skill " + std::to_wstring(skillId) + L" on target");
 	}
 
-	void B()
+	void SkillCooldownComplete(int skillId)
 	{
-		LOCK_GUARD;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		std::cout << "B  \n";
-		LOG_SYSTEM(L"[A] THREAD");
-		LOG_INFO(L"[B] THREAD");
+		LOG_INFO(L"Skill " + std::to_wstring(skillId) + L" cooldown complete, ready to use again!");
 	}
+};
 
-	void C()
+class Dungeon
+{
+public:
+	void SpawnMonster(int monsterId, int count)
 	{
-		LOCK_GUARD;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		std::cout << "C  \n";
-		LOG_ERROR(L"[C] THREAD");
+		LOG_INFO(L"Spawned " + std::to_wstring(count) + L" monsters of type " + std::to_wstring(monsterId));
 	}
-
-	void D()
-	{
-		LOCK_GUARD;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		std::cout << "D  \n";
-		LOG_SYSTEM(L"[D] THREAD");
-		LOG_INFO(L"[D] THREAD");
-	}
-
-	void RunLoop()
-	{
-		while (true)
-		{
-			A();
-			B();
-			C();
-			D();
-			std::this_thread::sleep_for(std::chrono::milliseconds(5)); // 약간 쉬어감
-		}
-	}
-
-private:
-	USE_LOCK;
-	int _id;
 };
 
 int wmain()
 {
-	std::wcout.imbue(std::locale("kor"));
+	GameServerMgr.Init();
 
-	CrashDump::Init();
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
-	LOG.Init();
+	JobQ.RegisterTypeMapping<Dungeon>(JobGroupType::Dungeon);
+	JobQ.RegisterTypeMapping<Player>(JobGroupType::Player);
 
-	constexpr int ThreadCount = 8;
+	auto player = ObjectPool<Player>::MakeShared();
+	auto dungeon = ObjectPool<Dungeon>::MakeShared();
 
-	std::vector<std::unique_ptr<ComplexWorker>> workers;
+	/*
+	JobQ.DoAsync([=]()
+		{
+		// 메모리풀 테스트
+			Vector<int> v;
+			for (int i = 0; i < 100; i++)
+			{
+				v.push_back(i);
+				LOG_INFO(L" 1 "); std::this_thread::sleep_for(std::chrono::milliseconds(500));
+			}
+			v.clear();
+		}
+	);
+	*/
 
-	for (int i = 0; i < ThreadCount; ++i)
+	// 우선순위 테스트
+	JobQ.DoAsync(dungeon, &Dungeon::SpawnMonster, 111, 10);
+	JobQ.DoAsync(player, &Player::UseSkill, 1, 100);
+	JobQ.DoAsync(dungeon, &Dungeon::SpawnMonster, 1, 2);
+	JobQ.DoAsync(dungeon, &Dungeon::SpawnMonster, 3, 4);
+	JobQ.DoAsync(player, &Player::UseSkill, 2, 200);
+
+	std::this_thread::sleep_for(std::chrono::seconds(5));
+
+	while (1)
 	{
-		workers.emplace_back(std::make_unique<ComplexWorker>(i));
+		JobQ.DoAsyncAfter(2000, player, &Player::SkillCooldownComplete, 3);
+		JobQ.DoAsync(player, &Player::UseSkill, 1, 100);
+		JobQ.DoAsyncAfter(2002, dungeon, &Dungeon::SpawnMonster, 5, 10);
 
-		THREAD_MANAGER.Push([&, i]() {
-			workers[i]->RunLoop();
-			});
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
-	THREAD_MANAGER.Push([] {
-		LOG.ProcessThread();
-		});
 
-
-
-
-	THREAD_MANAGER.Join();
-	LOG.Shutdown();
+	GameServerMgr.Shutdown();
 
 	return 0;
 }
