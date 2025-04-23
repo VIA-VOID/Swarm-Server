@@ -25,9 +25,7 @@ using ConditionVariable = std::condition_variable;
 //----------------------------------------------------------//
 // 타입 정의
 using ThreadId = std::thread::id;
-using CallbackVoid = std::function<void()>;
-template <typename T>
-using CallbackType = std::function<T>;
+using CallbackType = std::function<void()>;
 using SteadyClock = std::chrono::steady_clock;
 using TimePoint = SteadyClock::time_point;
 
