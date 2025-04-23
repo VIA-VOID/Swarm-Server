@@ -168,7 +168,7 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 				// 활성화된 스레드 카운트 증가시킴
 				ThreadMgr.PlusActiveThreadCount();
 			}
-		}
+		} // UNIQUE_LOCK_GUARD 종료
 
 		// job이 있음
 		if (hasJob)
@@ -219,6 +219,11 @@ JobGroupType JobEventQueue::GetNextGroupIndex(JobGroupType myGroup)
 		}
 		// 낮은 작업들은 굳이 훔치지 않음
 		if (pair.first == JobPriority::Low)
+		{
+			continue;
+		}
+		// 이전에 처리한 그룹외의 것을 가져옴
+		if (group == static_cast<JobGroupType>(LStealJobIndex))
 		{
 			continue;
 		}
