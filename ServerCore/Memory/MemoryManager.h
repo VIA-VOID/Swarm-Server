@@ -47,6 +47,6 @@ private:
 private:
 	// 메모리 풀 테이블
 	// 크기에 따라 관리
-	MemoryPool* _poolTable[DIVIDED_NUM];
+	MemoryPool* _poolTable[DIVIDED_NUM] = {};
 	void* _chunkPtr = nullptr;
 };

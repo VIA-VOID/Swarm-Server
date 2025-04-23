@@ -36,6 +36,8 @@ void* MemoryManager::Allocate(uint32 size)
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* virtualPtr = ::VirtualAlloc(nullptr, realSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
+		LOG_SYSTEM(std::to_wstring(size) + L"bytes 만큼 VirtualAlloc 할당");
+
 		// 헤더 붙이기
 		return MemoryHeader::AttachHeader(virtualPtr, size);
 	}
@@ -49,6 +51,12 @@ void* MemoryManager::Allocate(uint32 size)
 		// 새로 할당해준다.
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* mallocPtr = ::malloc(realSize);
+
+		LOG_WARNING(
+			std::to_wstring(realSize) +
+			L"bytes 만큼 새로 할당. 요청 크기: " +
+			std::to_wstring(size) + L"bytes"
+		);
 
 		// 헤더 붙이기
 		return MemoryHeader::AttachHeader(mallocPtr, size);
@@ -81,11 +89,6 @@ void MemoryManager::Release(void* ptr)
 // 종료
 void MemoryManager::Shutdown()
 {
-	for (uint16 i = 0; i < DIVIDED_NUM; i++)
-	{
-		delete _poolTable[i];
-	}
-	::VirtualFree(_chunkPtr, 0, MEM_RELEASE);
 }
 
 // CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장
