@@ -28,14 +28,16 @@ class DeadlockDetector : public Singleton<DeadlockDetector>
 	using LockAddress = uint64;
 
 public:
-	void Init() override {};
+	// 초기화
+	void Init() override;
 	// lock 요청 & 데드락 체크
 	void LockRequest(Lock* lock, const char* name);
 	// lock 획득
 	void LockAcquired(Lock* lock);
 	// 소유하고 있는 lock 제거
 	void LockRelease();
-	void Shutdown() override {};
+	// 종료
+	void Shutdown() override;
 
 private:
 	// 교차상태(순환) 있는지 확인
@@ -45,6 +47,9 @@ private:
 
 private:
 	std::mutex _mutex;
+	// 데드락 체크 여부
+	// - debug에서만 활성화
+	std::atomic<bool> IsCheck = false;
 	// 락 순서 그래프
 	std::unordered_map<LockAddress, std::unordered_set<LockAddress>> _lockGraph;
 	// 로그용

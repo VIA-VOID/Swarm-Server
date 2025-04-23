@@ -19,27 +19,39 @@ void Lock::ScopedUnlock()
 		DeadlockDetector
 ----------------------------*/
 
+// 초기화
+void DeadlockDetector::Init()
+{
+#ifdef _DEBUG
+	IsCheck.store(true, std::memory_order::memory_order_relaxed);
+	LOG_SYSTEM(L"DeadlockDetector instance initialized");
+#endif;
+}
+
 // lock 요청 & 데드락 체크
 void DeadlockDetector::LockRequest(Lock* lock, const char* name)
 {
-	ThreadId threadId = std::this_thread::get_id();
-	LockAddress reqLockAddress = reinterpret_cast<LockAddress>(lock);
-	// 현재 소유하고 있는 lock이 있다면 사이클 체크
-	if (LHoldLock.empty() == false)
+	if (IsCheck.load())
 	{
-		LockAddress hold = LHoldLock.top();
-
-		std::lock_guard<std::mutex> guard(_mutex);
+		ThreadId threadId = std::this_thread::get_id();
+		LockAddress reqLockAddress = reinterpret_cast<LockAddress>(lock);
+		// 현재 소유하고 있는 lock이 있다면 사이클 체크
+		if (LHoldLock.empty() == false)
 		{
-			_lockGraph[hold].insert(reqLockAddress);
-			_lockLog.insert_or_assign(reqLockAddress, std::make_pair(threadId, name));
+			LockAddress hold = LHoldLock.top();
 
-			// 데드락 탐지
-			std::vector<LockAddress> visited;
-			if (CycleCheck(reqLockAddress, reqLockAddress, visited))
+			std::lock_guard<std::mutex> guard(_mutex);
 			{
-				visited.push_back(reqLockAddress);
-				CrashDeadLock(visited);
+				_lockGraph[hold].insert(reqLockAddress);
+				_lockLog.insert_or_assign(reqLockAddress, std::make_pair(threadId, name));
+
+				// 데드락 탐지
+				std::vector<LockAddress> visited;
+				if (CycleCheck(reqLockAddress, reqLockAddress, visited))
+				{
+					visited.push_back(reqLockAddress);
+					CrashDeadLock(visited);
+				}
 			}
 		}
 	}
@@ -48,17 +60,31 @@ void DeadlockDetector::LockRequest(Lock* lock, const char* name)
 // lock 획득
 void DeadlockDetector::LockAcquired(Lock* lock)
 {
-	LockAddress addr = reinterpret_cast<LockAddress>(lock);
-	LHoldLock.push(addr);
+	if (IsCheck.load())
+	{
+		LockAddress addr = reinterpret_cast<LockAddress>(lock);
+		LHoldLock.push(addr);
+	}
 }
 
 // 소유하고 있는 lock 제거
 void DeadlockDetector::LockRelease()
 {
-	if (LHoldLock.empty() == false)
+	if (IsCheck.load())
 	{
-		LHoldLock.pop();
+		if (LHoldLock.empty() == false)
+		{
+			LHoldLock.pop();
+		}
 	}
+}
+
+// 종료
+void DeadlockDetector::Shutdown()
+{
+#ifdef _DEBUG
+	IsCheck.store(false, std::memory_order::memory_order_relaxed);
+#endif;
 }
 
 // 교차상태(순환) 있는지 확인
