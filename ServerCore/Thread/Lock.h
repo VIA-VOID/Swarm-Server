@@ -53,5 +53,5 @@ private:
 	// 락 순서 그래프
 	std::unordered_map<LockAddress, std::unordered_set<LockAddress>> _lockGraph;
 	// 로그용
-	std::unordered_map<LockAddress, std::pair<ThreadId, const char*>> _lockLog;
+	std::unordered_map<LockAddress, const char*> _lockLog;
 };

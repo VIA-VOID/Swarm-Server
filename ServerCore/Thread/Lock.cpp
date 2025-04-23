@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Lock.h"
+#include "Utils/Utils.h"
 
 /*----------------------------
 		Lock
@@ -43,7 +44,7 @@ void DeadlockDetector::LockRequest(Lock* lock, const char* name)
 			std::lock_guard<std::mutex> guard(_mutex);
 			{
 				_lockGraph[hold].insert(reqLockAddress);
-				_lockLog.insert_or_assign(reqLockAddress, std::make_pair(threadId, name));
+				_lockLog.insert_or_assign(reqLockAddress, name);
 
 				// 데드락 탐지
 				std::vector<LockAddress> visited;
@@ -133,10 +134,10 @@ void DeadlockDetector::CrashDeadLock(std::vector<LockAddress>& visited)
 	for (LockAddress addr : visited)
 	{
 		auto log = _lockLog.find(addr);
-		ThreadId threadId = log->second.first;
-		const char* className = log->second.second;
+		const char* className = log->second;
+		std::wstring threadName = Utils::ConvertUtf16(LThreadName);
 
-		ws << L" → Thread " << threadId << L" : " << className << L"\n";
+		ws << L" → Thread " << threadName << L" : " << className << L"\n";
 	}
 
 	ws << L"====================================================\n";
