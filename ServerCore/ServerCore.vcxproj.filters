@@ -1,47 +1,150 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Utils\Timer.cpp" />
-    <ClCompile Include="Thread\Lock.cpp" />
-    <ClCompile Include="Utils\CrashDump.cpp" />
-    <ClCompile Include="Thread\ThreadManager.cpp" />
-    <ClCompile Include="Memory\MemoryManger.cpp" />
-    <ClCompile Include="Memory\MemoryPool.cpp" />
-    <ClCompile Include="Pch\CoreTLS.cpp" />
-    <ClCompile Include="Thread\LockGuard.cpp" />
-    <ClCompile Include="Utils\Utils.cpp" />
-    <ClCompile Include="Log\LogManager.cpp" />
-    <ClCompile Include="Memory\STLAllocator.cpp" />
-    <ClCompile Include="Memory\MemoryHeader.cpp" />
-    <ClCompile Include="Job\Job.cpp" />
-    <ClCompile Include="Job\JobEventQueue.cpp" />
-    <ClCompile Include="Job\JobDefine.cpp" />
+    <ClCompile Include="Job\Job.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Job\JobDefine.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Job\JobEventQueue.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Log\LogManager.cpp">
+      <Filter>Log</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\MemoryHeader.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\MemoryManger.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\MemoryPool.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Memory\STLAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Pch\CoreTLS.cpp">
+      <Filter>Pch</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Pch</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread\Lock.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread\LockGuard.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread\ThreadManager.cpp">
+      <Filter>Thread</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\CrashDump.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Timer.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils\Utils.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Pch\CoreMacro.h" />
-    <ClInclude Include="Pch\CorePch.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Pch\Types.h" />
-    <ClInclude Include="Utils\Timer.h" />
-    <ClInclude Include="Utils\Singleton.h" />
-    <ClInclude Include="Thread\Lock.h" />
-    <ClInclude Include="Utils\CrashDump.h" />
-    <ClInclude Include="Thread\ThreadManager.h" />
-    <ClInclude Include="Memory\MemoryManager.h" />
-    <ClInclude Include="Memory\MemoryPool.h" />
-    <ClInclude Include="Memory\MemoryLockStack.h" />
-    <ClInclude Include="Pch\CoreTLS.h" />
-    <ClInclude Include="Log\LogDefine.h" />
-    <ClInclude Include="Thread\LockGuard.h" />
-    <ClInclude Include="Utils\Utils.h" />
-    <ClInclude Include="Log\LogManager.h" />
-    <ClInclude Include="Memory\STLAllocator.h" />
-    <ClInclude Include="Container\Container.h" />
-    <ClInclude Include="Memory\MemoryHeader.h" />
-    <ClInclude Include="Memory\ObjectPool.h" />
-    <ClInclude Include="Job\Job.h" />
-    <ClInclude Include="Job\JobDefine.h" />
-    <ClInclude Include="Job\JobEventQueue.h" />
+    <ClInclude Include="Container\Container.h">
+      <Filter>Container</Filter>
+    </ClInclude>
+    <ClInclude Include="Job\Job.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Job\JobDefine.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Job\JobEventQueue.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Log\LogDefine.h">
+      <Filter>Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Log\LogManager.h">
+      <Filter>Log</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\MemoryHeader.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\MemoryLockStack.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\MemoryManager.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\MemoryPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\ObjectPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Memory\STLAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Pch\CoreMacro.h">
+      <Filter>Pch</Filter>
+    </ClInclude>
+    <ClInclude Include="Pch\CorePch.h">
+      <Filter>Pch</Filter>
+    </ClInclude>
+    <ClInclude Include="Pch\CoreTLS.h">
+      <Filter>Pch</Filter>
+    </ClInclude>
+    <ClInclude Include="Pch\Types.h">
+      <Filter>Pch</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Pch</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread\Lock.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread\LockGuard.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Singleton.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread\ThreadManager.h">
+      <Filter>Thread</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\CrashDump.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Timer.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils\Utils.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Container">
+      <UniqueIdentifier>{b00f5bb6-78c7-49ab-9185-8b1f3b643de8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Job">
+      <UniqueIdentifier>{cd44318a-8380-4ba5-84f8-7db1c368bf4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Log">
+      <UniqueIdentifier>{988295aa-c705-4f6f-ada8-262aa7bc5a3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{8e0c4ef6-4b63-413d-ad18-1f9a378da188}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pch">
+      <UniqueIdentifier>{7944b3ac-6123-48bb-a7f1-845ea0aa41ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Thread">
+      <UniqueIdentifier>{ebaaa5e1-1861-4b3d-8ebb-f1ccbc283bf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{548cdd63-3796-4dcb-887b-bea19525f31f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>
