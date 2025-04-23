@@ -13,9 +13,9 @@ public:
 	// 파일생성, 초기화
 	void Init() override;
 	// 로그 쌓기
-	void PushLog(const LogType type, const std::wstring& msg, const char* fnName);
+	void PushLog(const LogType type, const std::wstring& message, const char* fnName);
 	// 스레드 일감
-	void ProcessThread(const LogType type, const std::wstring message);
+	void ProcessThread(const LogType type, const std::wstring& message);
 	// 종료
 	void Shutdown() override;
 

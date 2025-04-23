@@ -17,6 +17,8 @@ constexpr std::chrono::seconds _flushTime = std::chrono::seconds(2);
 // 파일생성, 초기화
 void LogManager::Init()
 {
+	_buffer.resize(32);
+
 	CreateLogFile();
 	_lastFlushTime = NOW;
 
@@ -31,17 +33,17 @@ void LogManager::Shutdown()
 }
 
 // 로그 쌓기
-void LogManager::PushLog(const LogType type, const std::wstring& msg, const char* fnName)
+void LogManager::PushLog(const LogType type, const std::wstring& message, const char* fnName)
 {
-	LogMessage log(type, msg, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
-	std::wstring logMessage = log.MakeLogWString();
-	JobQ.DoAsync([this, type, logMessage]() {
-		ProcessThread(type, logMessage);
+	LogMessage log(type, message, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
+
+	JobQ.DoAsync([this, log = std::move(log)]() {
+		ProcessThread(log._type, log.ToWString());
 		}, JobGroupType::Log);
 }
 
 // 스레드 일감
-void LogManager::ProcessThread(const LogType type, const std::wstring message)
+void LogManager::ProcessThread(const LogType type, const std::wstring& message)
 {
 #if _DEBUG
 	// console log
@@ -92,7 +94,7 @@ void LogManager::FlushBuffer()
 {
 	for (const auto& log : _buffer)
 	{
-		std::string utf8 = Utils::ConvertUtf8(log);
+		std::string utf8 = Utils::ConvertUtf8(log.c_str());
 		_file.write(utf8.c_str(), utf8.size());
 	}
 	_file.flush();
