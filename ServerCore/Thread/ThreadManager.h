@@ -13,7 +13,7 @@ public:
 	// 초기화
 	void Init() override;
 	// 그룹별 스레드 생성 & 일감 투척
-	void LaunchGroup(JobGroupType group, uint16 count, CallbackType<void(JobGroupType)> jobCallback);
+	void LaunchGroup(JobGroupType group, uint16 count, CallbackType jobCallback);
 	// 그룹별 스레드 실행 완료 대기
 	void JoinGroup(JobGroupType group);
 	// TLS 데이터 제거

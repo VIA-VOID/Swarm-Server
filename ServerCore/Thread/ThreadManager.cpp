@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ThreadManager.h"
+#include "Utils/Utils.h"
 
 /*----------------------------
 		ThreadManager
@@ -9,10 +10,12 @@
 void ThreadManager::Init()
 {
 	_activeThreadCount.store(0, std::memory_order::memory_order_relaxed);
+
+	LOG_SYSTEM(L"ThreadManager instance initialized");
 }
 
 // 그룹별 스레드 생성 & 일감 투척
-void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType<void(JobGroupType)> jobCallback)
+void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType jobCallback)
 {
 	LOCK_GUARD;
 
@@ -21,13 +24,16 @@ void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType<v
 
 	for (uint16 thread = 0; thread < count; thread++)
 	{
+		std::string name = groupName + "-" + std::to_string(thread);
+
 		_groupThreads[group].emplace_back([=]()
 			{
-				std::string name = groupName + "-" + std::to_string(thread);
 				SetThreadName(name);
-				jobCallback(group);
+				jobCallback();
 			}
 		);
+
+		LOG_INFO(L"Thread Created :: " + Utils::ConvertUtf16(name));
 	}
 }
 
