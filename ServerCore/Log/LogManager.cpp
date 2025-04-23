@@ -18,15 +18,7 @@ constexpr std::chrono::seconds _flushTime = std::chrono::seconds(2);
 void LogManager::Init()
 {
 	CreateLogFile();
-	_writing = true;
 	_lastFlushTime = NOW;
-
-	// 스레드 할당
-	ThreadMgr.Push([=]
-		{
-			ProcessThread();
-		}
-	);
 
 	LOG_SYSTEM(L"LogManager instance initialized");
 }
@@ -34,59 +26,47 @@ void LogManager::Init()
 // dispatcher 종료
 void LogManager::Shutdown()
 {
-	_writing = false;
-	// 스레드 wake 유도
-	_queue.Push({ LogType::System, L"" });
 	// 파일 닫기
 	CloseLogFile();
 }
 
 // 로그 쌓기
-void LogManager::PushLog(const LogType& type, const std::wstring& msg, const char* fnName)
+void LogManager::PushLog(const LogType type, const std::wstring& msg, const char* fnName)
 {
 	LogMessage log(type, msg, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
 	std::wstring logMessage = log.MakeLogWString();
-	_queue.Push({ type, logMessage });
+	JobQ.DoAsync([this, type, logMessage]() {
+		ProcessThread(type, logMessage);
+		}, JobGroupType::Log);
 }
 
 // 스레드 일감
-void LogManager::ProcessThread()
+void LogManager::ProcessThread(const LogType type, const std::wstring message)
 {
-	while (_writing)
-	{
-		auto pop = _queue.Pop();
-
-		// 기다리는동안 _writing 변경 될수도 있음
-		if (_writing == false)
-		{
-			break;
-		}
-
 #if _DEBUG
-		// console log
-		PrintColor(pop.first);
-		std::cerr << Utils::convertUtf8(pop.second);
-		ResetColor();
+	// console log
+	PrintColor(type);
+	std::cerr << Utils::ConvertUtf8(message);
+	ResetColor();
 #endif
 
-		// 일자 변경 확인
-		if (Clock::IsNewDay())
-		{
-			// 일자 변경시 파일 close후 새로 생성
-			CloseLogFile();
-			CreateLogFile();
-		}
+	// 일자 변경 확인
+	if (Clock::IsNewDay())
+	{
+		// 일자 변경시 파일 close후 새로 생성
+		CloseLogFile();
+		CreateLogFile();
+	}
 
-		_buffer.push_back(pop.second);
+	_buffer.push_back(message);
 
-		// 조건에 맞게 flush
-		// 1. _buffer에 쌓아두고, _flushSize 크기 이상
-		// 2. _flushTime 이상
-		if (_buffer.size() >= _flushSize || (NOW - _lastFlushTime) >= _flushTime)
-		{
-			FlushBuffer();
-			_lastFlushTime = NOW;
-		}
+	// 조건에 맞게 flush
+	// 1. _buffer에 쌓아두고, _flushSize 크기 이상
+	// 2. _flushTime 이상
+	if (_buffer.size() >= _flushSize || (NOW - _lastFlushTime) >= _flushTime)
+	{
+		FlushBuffer();
+		_lastFlushTime = NOW;
 	}
 }
 
@@ -112,7 +92,7 @@ void LogManager::FlushBuffer()
 {
 	for (const auto& log : _buffer)
 	{
-		std::string utf8 = Utils::convertUtf8(log);
+		std::string utf8 = Utils::ConvertUtf8(log);
 		_file.write(utf8.c_str(), utf8.size());
 	}
 	_file.flush();

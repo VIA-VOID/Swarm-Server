@@ -11,13 +11,13 @@ class LogManager : public Singleton<LogManager>
 {
 public:
 	// 파일생성, 초기화
-	void Init();
-	// dispatcher 종료
-	void Shutdown();
+	void Init() override;
 	// 로그 쌓기
-	void PushLog(const LogType& type, const std::wstring& msg, const char* fnName);
+	void PushLog(const LogType type, const std::wstring& msg, const char* fnName);
 	// 스레드 일감
-	void ProcessThread();
+	void ProcessThread(const LogType type, const std::wstring message);
+	// 종료
+	void Shutdown() override;
 
 private:
 	// 파일 생성
@@ -32,9 +32,7 @@ private:
 	void ResetColor();
 
 private:
-	bool _writing = false;
 	std::ofstream _file;
-	EventLockQueue<std::pair<LogType, std::wstring>> _queue;
 	Vector<std::wstring> _buffer;
 	std::chrono::steady_clock::time_point _lastFlushTime;
 };
