@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "ThreadManager.h"
 #include "Utils/Utils.h"
+#include "Network/NetworkDefine.h"
 
 /*----------------------------
 		ThreadManager
@@ -9,7 +10,8 @@
 // 초기화
 void ThreadManager::Init()
 {
-	_activeThreadCount.store(0, std::memory_order::memory_order_relaxed);
+	uint16 doubleThreadCount = CPU_THREAD_COUNT * 2;
+	_threads.reserve(doubleThreadCount);
 
 	LOG_SYSTEM(L"ThreadManager instance initialized");
 }
@@ -19,14 +21,12 @@ void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType j
 {
 	LOCK_GUARD;
 
-	_groupThreads[group].reserve(count);
 	std::string groupName = JobGroupNames[static_cast<uint16>(group)];
-
 	for (uint16 thread = 0; thread < count; thread++)
 	{
 		std::string name = groupName + "-" + std::to_string(thread);
 
-		_groupThreads[group].emplace_back([=]()
+		_threads.emplace_back([=]()
 			{
 				SetThreadName(name);
 				jobCallback();
@@ -37,22 +37,23 @@ void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType j
 	}
 }
 
-// 그룹별 스레드 실행 완료 대기
-void ThreadManager::JoinGroup(JobGroupType group)
+// 네트워크 I/O 스레드 생성 & 일감 투척
+void ThreadManager::LaunchNetwork(uint16 count, CallbackType callback)
 {
 	LOCK_GUARD;
 
-	auto it = _groupThreads.find(group);
-	if (it != _groupThreads.end())
+	for (uint16 thread = 0; thread < count; thread++)
 	{
-		for (auto& t : it->second)
-		{
-			if (t.joinable())
+		std::string name = "Network-" + std::to_string(thread);
+
+		_threads.emplace_back([=]()
 			{
-				t.join();
+				SetThreadName(name);
+				callback();
 			}
-		}
-		_groupThreads.erase(it);
+		);
+
+		LOG_INFO(L"Thread Created :: " + Utils::ConvertUtf16(name));
 	}
 }
 
@@ -70,30 +71,13 @@ void ThreadManager::JoinAll()
 {
 	LOCK_GUARD;
 
-	for (auto& threads : _groupThreads)
+	for (auto& thread : _threads)
 	{
-		for (auto& t : threads.second)
+		if (thread.joinable())
 		{
-			if (t.joinable())
-			{
-				t.join();
-			}
+			thread.join();
 		}
 	}
-	_activeThreadCount.store(0, std::memory_order::memory_order_relaxed);
-	_groupThreads.clear();
-}
-
-// 활성 스레드 카운트 증가
-void ThreadManager::PlusActiveThreadCount()
-{
-	_activeThreadCount.fetch_add(1, std::memory_order::memory_order_relaxed);
-}
-
-// 활성 스레드 카운트 감소
-void ThreadManager::MinusActiveThreadCount()
-{
-	_activeThreadCount.fetch_sub(1, std::memory_order::memory_order_relaxed);
 }
 
 // 종료
