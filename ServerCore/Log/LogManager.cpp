@@ -33,7 +33,7 @@ void LogManager::Shutdown()
 }
 
 // 로그 쌓기
-void LogManager::PushLog(const LogType type, const std::wstring& message, const char* fnName)
+void LogManager::PushLog(const LogType type, const WString& message, const char* fnName)
 {
 	LogMessage log(type, message, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
 
@@ -43,7 +43,7 @@ void LogManager::PushLog(const LogType type, const std::wstring& message, const 
 }
 
 // 스레드 일감
-void LogManager::ProcessThread(const LogType type, const std::wstring& message)
+void LogManager::ProcessThread(const LogType type, WString& message)
 {
 #if _DEBUG
 	// console log

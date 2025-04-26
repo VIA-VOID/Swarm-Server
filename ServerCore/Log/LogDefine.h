@@ -18,8 +18,8 @@ enum class LogType : uint8
 struct LogMessage
 {
 	LogType _type = LogType::Info;
-	std::wstring _message;
-	std::wstring _timeStamp;
+	WString _message;
+	WString _timeStamp;
 	const char* _functionName;
 
 	LogMessage()
@@ -27,17 +27,17 @@ struct LogMessage
 	{
 	}
 
-	LogMessage(LogType type, std::wstring msg, std::wstring timeStamp, ThreadId id, const char* fnName)
+	LogMessage(LogType type, WString msg, WString timeStamp, ThreadId id, const char* fnName)
 		: _type(type), _message(msg), _timeStamp(timeStamp), _functionName(fnName)
 	{
 	}
 
-	std::wstring ToWString() const
+	WString ToWString() const
 	{
-		wchar_t buffer[512];
+		StringStream ss;
 
 		// 로그 타입 문자열
-		const wchar_t* typeStr = L"UNKNOWN";
+		WString typeStr = L"UNKNOWN";
 		switch (_type)
 		{
 		case LogType::Info:
@@ -55,24 +55,21 @@ struct LogMessage
 		}
 
 		// threadName 좌측 정렬 (6자 고정 너비)
-		std::wstringstream tnStream;
-		tnStream << std::left << std::setw(6) << std::wstring(LThreadName.begin(), LThreadName.end());
-		std::wstring threadNameStr = tnStream.str();
+		StringStream tnStream;
+		tnStream << std::left << std::setw(6) << WString(LThreadName.begin(), LThreadName.end());
+		WString threadNameStr = tnStream.str();
 
 		// function name 좌측 정렬 (30자 고정 너비)
-		std::wstringstream fnStream;
-		fnStream << std::left << std::setw(30) << std::wstring(_functionName, _functionName + strlen(_functionName));
-		std::wstring fnStr = fnStream.str();
+		StringStream fnStream;
+		fnStream << std::left << std::setw(30) << WString(_functionName, _functionName + strlen(_functionName));
+		WString fnStr = fnStream.str();
 
-		swprintf_s(buffer, sizeof(buffer) / sizeof(wchar_t),
-			L"%s %-6s %s--- %s : %s\n",
-			_timeStamp.c_str(),     // 시각
-			typeStr,                // 로그 타입
-			threadNameStr.c_str(),  // 스레드명
-			fnStr.c_str(),          // 함수명
-			_message.c_str()        // 메시지
-		);
+		ss << _timeStamp << L" "
+			<< typeStr << L" "
+			<< threadNameStr << L"--- "
+			<< fnStr << L" : "
+			<< _message << L"\n";
 
-		return std::wstring(buffer);
+		return ss.str();
 	}
 };
