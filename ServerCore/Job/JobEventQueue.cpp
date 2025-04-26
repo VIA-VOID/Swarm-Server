@@ -165,8 +165,6 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 			if (job != nullptr)
 			{
 				hasJob = true;
-				// 활성화된 스레드 카운트 증가시킴
-				ThreadMgr.PlusActiveThreadCount();
 			}
 		} // UNIQUE_LOCK_GUARD 종료
 
@@ -175,8 +173,6 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 		{
 			// 작업 실행
 			job->Execute();
-			// 작업 완료 후 활성 스레드 카운트 감소
-			ThreadMgr.MinusActiveThreadCount();
 		}
 
 	} // while 종료
