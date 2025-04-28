@@ -61,8 +61,6 @@ void JobEventQueue::Shutdown()
 	_running.store(false);
 	// 모든 대기 스레드 깨우기
 	_cv.notify_all();
-	// 종료 대기
-	ThreadMgr.JoinAll();
 }
 
 // 작업을 큐에 추가
