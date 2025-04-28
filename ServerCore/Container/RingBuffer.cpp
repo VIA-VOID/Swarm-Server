@@ -39,11 +39,11 @@ uint32 RingBuffer::GetDirectEnqueSize()
 {
 	if (_readPos > _writePos)
 	{
-		return _readPos - _writePos;
+		return _readPos - _writePos - 1;
 	}
 	else
 	{
-		return _bufferSize - _writePos;
+		return (_readPos == 0) ? (_bufferSize - _writePos - 1) : (_bufferSize - _writePos);
 	}
 }
 
@@ -74,20 +74,20 @@ void RingBuffer::MoveWritePos(uint32 size)
 
 // 길이만큼 데이터 빼오기
 // read, write Pos 이동하지 않음
-void RingBuffer::Peek(BYTE* dest, uint32 size)
+void RingBuffer::Peek(BYTE* dest, uint32 destSize, uint32 size)
 {
 	// 앞뒤로 사용 공간이 있으면 두번에 거처 빼내어 합쳐서 전달
 	uint32 firstDequeSize = GetDirectDequeSize();
 	if (size > firstDequeSize)
 	{
 		// 나누어 삽입
-		::memcpy_s(dest, firstDequeSize, &_buffer[_readPos], firstDequeSize);
-		::memcpy_s(dest + firstDequeSize, size - firstDequeSize, &_buffer[0], size - firstDequeSize);
+		::memcpy_s(dest, destSize, &_buffer[_readPos], firstDequeSize);
+		::memcpy_s(dest + firstDequeSize, destSize - firstDequeSize, &_buffer[0], size - firstDequeSize);
 	}
 	else
 	{
 		// 용량이 충분하면 한번에 삽입
-		::memcpy_s(dest, size, &_buffer[_readPos], size);
+		::memcpy_s(dest, destSize, &_buffer[_readPos], size);
 	}
 }
 
@@ -98,17 +98,19 @@ bool RingBuffer::Enqueue(const BYTE* src, uint32 size)
 	{
 		return false;
 	}
+	uint32 firstEnqueSize = GetDirectEnqueSize();
 	// 사이즈가 충분
-	if (_bufferSize >= _writePos + size)
-	{
-		::memcpy_s(&_buffer[_writePos], size, src, size);
-	}
-	else
+	if (size > firstEnqueSize)
 	{
 		// 나누어 삽입
 		uint32 firstEnqueSize = GetDirectEnqueSize();
 		::memcpy_s(&_buffer[_writePos], firstEnqueSize, src, firstEnqueSize);
 		::memcpy_s(&_buffer[0], size - firstEnqueSize, src + firstEnqueSize, size - firstEnqueSize);
+	}
+	else
+	{
+		// 용량이 충분하면 한번에 삽입
+		::memcpy_s(&_buffer[_writePos], firstEnqueSize, src, size);
 	}
 
 	MoveWritePos(size);
@@ -136,4 +138,9 @@ BYTE* RingBuffer::GetReadPtr()
 BYTE* RingBuffer::GetWritePtr()
 {
 	return &_buffer[_writePos];
+}
+
+BYTE* RingBuffer::GetBufferStart()
+{
+	return _buffer.data();
 }
