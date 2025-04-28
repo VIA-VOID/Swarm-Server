@@ -49,6 +49,13 @@
     <ClCompile Include="Utils\Utils.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Container\RingBuffer.cpp" />
+    <ClCompile Include="Network\Session.cpp" />
+    <ClCompile Include="Network\RecvBuffer.cpp" />
+    <ClCompile Include="Network\SendBuffer.cpp" />
+    <ClCompile Include="Network\IocpServer.cpp" />
+    <ClCompile Include="Network\SessionManager.cpp" />
+    <ClCompile Include="Network\SocketUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Container\Container.h">
@@ -123,6 +130,14 @@
     <ClInclude Include="Utils\Utils.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Network\NetworkDefine.h" />
+    <ClInclude Include="Container\RingBuffer.h" />
+    <ClInclude Include="Network\Session.h" />
+    <ClInclude Include="Network\RecvBuffer.h" />
+    <ClInclude Include="Network\SendBuffer.h" />
+    <ClInclude Include="Network\IocpServer.h" />
+    <ClInclude Include="Network\SessionManager.h" />
+    <ClInclude Include="Network\SocketUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Container">
