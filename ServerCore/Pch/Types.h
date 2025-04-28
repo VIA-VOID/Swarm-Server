@@ -34,3 +34,5 @@ using TimePoint = SteadyClock::time_point;
 #define SHARED_PTR(name)		using name##Ref = std::shared_ptr<class name>;
 
 SHARED_PTR(Job);
+SHARED_PTR(Session);
+SHARED_PTR(SendBuffer);
