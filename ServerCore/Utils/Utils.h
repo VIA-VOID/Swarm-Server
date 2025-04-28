@@ -27,6 +27,16 @@ public:
 		return dist(engine);
 	}
 
+	// 숫자타입을 wstring으로 변환
+	template <typename T>
+	typename std::enable_if<std::is_arithmetic<T>::value, std::wstring>::type
+		static ToWString(const T& value)
+	{
+		std::wstringstream ss;
+		ss << value;
+		return ss.str();
+	}
+
 	// 지정한 경로 리턴
 	static std::wstring SetFilePath();
 
