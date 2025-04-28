@@ -2,7 +2,7 @@
 #include <typeindex>
 
 // Job 우선순위
-enum class JobPriority : uint8
+enum class JobPriority : uint16
 {
 	Low = 0,
 	Normal = 1,
@@ -13,6 +13,7 @@ enum class JobPriority : uint8
 enum class JobGroupType : uint16
 {
 	System = 0,
+	Network,
 	Log,
 	Dungeon,
 	Player,
@@ -23,6 +24,7 @@ enum class JobGroupType : uint16
 static const char* JobGroupNames[] =
 {
 	"System",
+	"Network",
 	"Log",
 	"Dungeon",
 	"Player",
@@ -32,6 +34,7 @@ static const char* JobGroupNames[] =
 const std::unordered_map<JobGroupType, std::pair<JobPriority, uint16 /*threadCount*/>> GROUP_PRIORITY =
 {
 	{ JobGroupType::System, { JobPriority::Normal, 1 } },
+	{ JobGroupType::Network, { JobPriority::High, 8 } },
 	{ JobGroupType::Log, { JobPriority::Low, 1 } },
 	{ JobGroupType::Dungeon, { JobPriority::Low, 3 } },
 	{ JobGroupType::Player, { JobPriority::High, 3 } },
