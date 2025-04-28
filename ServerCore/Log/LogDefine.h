@@ -1,13 +1,14 @@
 #pragma once
 #include "Pch/Types.h"
 #include "Pch/CoreTLS.h"
+#include "Container/Container.h"
 #include <string>
 #include <sstream>
 #include <thread>
 #include <iomanip>
 #include <iostream>
 
-enum class LogType : uint8
+enum class LogType : uint16
 {
 	Info,
 	System,
@@ -18,26 +19,21 @@ enum class LogType : uint8
 struct LogMessage
 {
 	LogType _type = LogType::Info;
-	WString _message;
-	WString _timeStamp;
+	std::wstring _message;
+	std::wstring _timeStamp;
 	const char* _functionName;
 
-	LogMessage()
-		: _type(LogType::Info), _message(L"\0"), _timeStamp(L"\0"), _functionName(nullptr)
-	{
-	}
-
-	LogMessage(LogType type, WString msg, WString timeStamp, ThreadId id, const char* fnName)
+	LogMessage(LogType type, std::wstring msg, std::wstring timeStamp, ThreadId id, const char* fnName)
 		: _type(type), _message(msg), _timeStamp(timeStamp), _functionName(fnName)
 	{
 	}
 
-	WString ToWString() const
+	std::wstring ToWString() const
 	{
-		StringStream ss;
+		std::wstringstream ss;
 
 		// 로그 타입 문자열
-		WString typeStr = L"UNKNOWN";
+		std::wstring typeStr = L"UNKNOWN";
 		switch (_type)
 		{
 		case LogType::Info:
@@ -55,14 +51,14 @@ struct LogMessage
 		}
 
 		// threadName 좌측 정렬 (6자 고정 너비)
-		StringStream tnStream;
-		tnStream << std::left << std::setw(6) << WString(LThreadName.begin(), LThreadName.end());
-		WString threadNameStr = tnStream.str();
+		std::wstringstream tnStream;
+		tnStream << std::left << std::setw(6) << std::wstring(LThreadName.begin(), LThreadName.end());
+		std::wstring threadNameStr = tnStream.str();
 
 		// function name 좌측 정렬 (30자 고정 너비)
-		StringStream fnStream;
-		fnStream << std::left << std::setw(30) << WString(_functionName, _functionName + strlen(_functionName));
-		WString fnStr = fnStream.str();
+		std::wstringstream fnStream;
+		fnStream << std::left << std::setw(30) << std::wstring(_functionName, _functionName + strlen(_functionName));
+		std::wstring fnStr = fnStream.str();
 
 		ss << _timeStamp << L" "
 			<< typeStr << L" "
