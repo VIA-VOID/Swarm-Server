@@ -37,26 +37,6 @@ void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType j
 	}
 }
 
-// 네트워크 I/O 스레드 생성 & 일감 투척
-void ThreadManager::LaunchNetwork(uint16 count, CallbackType callback)
-{
-	LOCK_GUARD;
-
-	for (uint16 thread = 0; thread < count; thread++)
-	{
-		std::string name = "Network-" + std::to_string(thread);
-
-		_threads.emplace_back([=]()
-			{
-				SetThreadName(name);
-				callback();
-			}
-		);
-
-		LOG_INFO(L"Thread Created :: " + Utils::ConvertUtf16(name));
-	}
-}
-
 // TLS 데이터 제거
 void ThreadManager::DeleteTLSData()
 {

@@ -14,8 +14,6 @@ public:
 	void Init() override;
 	// 그룹별 스레드 생성 & 일감 투척
 	void LaunchGroup(JobGroupType group, uint16 count, CallbackType jobCallback);
-	// 네트워크 I/O 스레드 생성 & 일감 투척
-	void LaunchNetwork(uint16 count, CallbackType callback);
 	// TLS 데이터 제거
 	void DeleteTLSData();
 	// 전체 스레드 실행 완료 대기
