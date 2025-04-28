@@ -32,5 +32,5 @@ BYTE* SendBuffer::GetSendPtr()
 uint32 SendBuffer::GetDirectSendSize()
 {
 	LOCK_GUARD;
-	return GetDirectEnqueSize();
+	return GetDirectDequeSize();
 }
