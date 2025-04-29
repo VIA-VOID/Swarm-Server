@@ -18,6 +18,8 @@ public:
 	// 스마트포인터로 생성/소멸
 	template <typename ...Args>
 	static std::shared_ptr<T> MakeShared(Args&&... args);
+	template <typename ...Args>
+	static std::unique_ptr<T> MakeUniqueShared(Args&&... args);
 };
 
 // 메모리 대여
@@ -43,6 +45,13 @@ inline void ObjectPool<T>::Release(T* object)
 template<typename T>
 template<typename ...Args>
 inline std::shared_ptr<T> ObjectPool<T>::MakeShared(Args&&... args)
+{
+	return { Allocate(std::forward<Args>(args)...), Release };
+}
+
+template<typename T>
+template<typename ...Args>
+inline std::unique_ptr<T> ObjectPool<T>::MakeUniqueShared(Args&&... args)
 {
 	return { Allocate(std::forward<Args>(args)...), Release };
 }
