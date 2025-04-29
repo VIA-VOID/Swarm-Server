@@ -188,6 +188,7 @@
     <ClInclude Include="Network\SendBuffer.h" />
     <ClInclude Include="Network\SessionManager.h" />
     <ClInclude Include="Network\SocketUtil.h" />
+    <ClInclude Include="ServerCoreService.h" />
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Log\LogDefine.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
@@ -218,6 +219,7 @@
     <ClCompile Include="Network\SendBuffer.cpp" />
     <ClCompile Include="Network\SessionManager.cpp" />
     <ClCompile Include="Network\SocketUtil.cpp" />
+    <ClCompile Include="ServerCoreService.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Memory\MemoryManger.cpp" />

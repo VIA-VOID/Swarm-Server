@@ -49,13 +49,28 @@
     <ClCompile Include="Utils\Utils.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Container\RingBuffer.cpp" />
-    <ClCompile Include="Network\Session.cpp" />
-    <ClCompile Include="Network\RecvBuffer.cpp" />
-    <ClCompile Include="Network\SendBuffer.cpp" />
-    <ClCompile Include="Network\IocpServer.cpp" />
-    <ClCompile Include="Network\SessionManager.cpp" />
-    <ClCompile Include="Network\SocketUtil.cpp" />
+    <ClCompile Include="Network\IocpServer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\RecvBuffer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\SendBuffer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\Session.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\SessionManager.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Network\SocketUtil.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Container\RingBuffer.cpp">
+      <Filter>Container</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerCoreService.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Container\Container.h">
@@ -130,14 +145,31 @@
     <ClInclude Include="Utils\Utils.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Network\NetworkDefine.h" />
-    <ClInclude Include="Container\RingBuffer.h" />
-    <ClInclude Include="Network\Session.h" />
-    <ClInclude Include="Network\RecvBuffer.h" />
-    <ClInclude Include="Network\SendBuffer.h" />
-    <ClInclude Include="Network\IocpServer.h" />
-    <ClInclude Include="Network\SessionManager.h" />
-    <ClInclude Include="Network\SocketUtil.h" />
+    <ClInclude Include="Network\IocpServer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\NetworkDefine.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\RecvBuffer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\SendBuffer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\Session.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\SessionManager.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Network\SocketUtil.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Container\RingBuffer.h">
+      <Filter>Container</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerCoreService.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Container">
@@ -160,6 +192,9 @@
     </Filter>
     <Filter Include="Utils">
       <UniqueIdentifier>{548cdd63-3796-4dcb-887b-bea19525f31f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{eb6d348e-70c1-4c80-bc59-d7532644540a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
