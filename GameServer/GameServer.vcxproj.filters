@@ -3,15 +3,9 @@
   <ItemGroup>
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Service\GameServerManager.cpp">
-      <Filter>Service</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Service\GameServerManager.h">
-      <Filter>Service</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Service">
