@@ -30,6 +30,4 @@
 #include <mswsock.h>
 #include <ws2tcpip.h>
 
-#include "Network/SessionManager.h"
-#include "Network/IocpServer.h"
-#include "Network/Session.h"
+#include "ServerCoreService.h"

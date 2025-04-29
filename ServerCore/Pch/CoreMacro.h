@@ -10,9 +10,7 @@
 #define ThreadMgr						ThreadManager::GetInstance()
 #define MemoryMgr						MemoryManager::GetInstance()
 #define JobQ							JobEventQueue::GetInstance()
-#define GameServerMgr					GameServerManager::GetInstance()
 #define SessionMgr						SessionManager::GetInstance()
-#define IocpServ						IocpServer::GetInstance()
 
 /*-------------------------------------
 	함수 매크로
