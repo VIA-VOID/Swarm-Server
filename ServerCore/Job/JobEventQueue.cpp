@@ -43,14 +43,14 @@ uint16 JobEventQueue::GetPendingJobCount()
 // 즉시 처리용 작업 등록 (일반 콜백)
 void JobEventQueue::DoAsync(CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/)
 {
-	JobRef job = ObjectPool<Job>::MakeShared(std::move(callback), group, 0);
+	Job* job = Job::Allocate(std::move(callback), group, 0);
 	Push(job);
 }
 
 // 시간 지연 처리용 작업 등록 (일반 콜백)
 void JobEventQueue::DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/)
 {
-	JobRef job = ObjectPool<Job>::MakeShared(std::move(callback), group, delayMs);
+	Job* job = Job::Allocate(std::move(callback), group, delayMs);
 	Push(job);
 }
 
@@ -64,7 +64,7 @@ void JobEventQueue::Shutdown()
 }
 
 // 작업을 큐에 추가
-void JobEventQueue::Push(JobRef job)
+void JobEventQueue::Push(Job* job)
 {
 	JobGroupType group = job->GetGroup();
 	{
@@ -86,13 +86,13 @@ void JobEventQueue::Push(JobRef job)
 
 // 작업 큐에서 가져옴
 // LOCK은 호출하는 함수에서 건다.
-JobRef JobEventQueue::Pop(JobGroupType group)
+Job* JobEventQueue::Pop(JobGroupType group)
 {
 	// 우선순위 큐
 	auto& groupQueue = _groupJobs[group];
 	if (groupQueue.empty() == false)
 	{
-		JobRef job = groupQueue.top();
+		Job* job = groupQueue.top();
 		groupQueue.pop();
 		return job;
 	}
@@ -105,7 +105,7 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 {
 	while (_running.load())
 	{
-		JobRef job = nullptr;
+		Job* job = nullptr;
 		// 일감이 있는지 확인하는 flag
 		bool hasJob = false;
 		{
@@ -171,6 +171,8 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 		{
 			// 작업 실행
 			job->Execute();
+			// 완료후 해제
+			Job::Release(job);
 		}
 
 	} // while 종료
@@ -178,7 +180,7 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 
 // 타 그룹에서 작업 훔쳐오기
 // - 그룹을 처리하는 스레드가 쉬고있을때 바쁜 타 스레드를 도와줌
-JobRef JobEventQueue::StealJob(JobGroupType group)
+Job* JobEventQueue::StealJob(JobGroupType group)
 {
 	// 훔칠 group 가져오기
 	JobGroupType groupType = GetNextGroupIndex(group);
@@ -186,7 +188,7 @@ JobRef JobEventQueue::StealJob(JobGroupType group)
 	// 작업이 남아있다면 확인
 	if (groupQueue.empty() == false)
 	{
-		JobRef job = groupQueue.top();
+		Job* job = groupQueue.top();
 		// 실행가능한 작업만 가져온다
 		if (job->IsExecute())
 		{

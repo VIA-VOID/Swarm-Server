@@ -13,7 +13,7 @@ class Job
 public:
 	// 멤버 함수 포인터를 이용한 생성자
 	template <typename T, typename Ret, typename... Args>
-	Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), uint64 delayMs = 0, Args... args);
+	Job(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs = 0, Args... args);
 	// 우선순위에 따라 즉시 처리용 생성자
 	Job(CallbackType&& callback, JobGroupType group = JobGroupType::System, uint64 delayMs = 0);
 	// 작업 실행
@@ -21,10 +21,16 @@ public:
 	// 실행가능여부
 	bool IsExecute();
 	// getter
-	JobPriority GetPriority();
-	TimePoint GetExecuteTime();
-	uint64 GetCreationOrder();
-	JobGroupType GetGroup();
+	JobPriority GetPriority() const;
+	TimePoint GetExecuteTime() const;
+	uint64 GetCreationOrder() const;
+	JobGroupType GetGroup() const;
+
+	// 객체 생성/소멸 처리를 위한 함수
+	template <typename T, typename Ret, typename... Args>
+	static Job* Allocate(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs = 0, Args... args);
+	static Job* Allocate(CallbackType&& callback, JobGroupType group = JobGroupType::System, uint64 delayMs = 0);
+	static void Release(Job* job);
 
 private:
 	// 작업 생성 순서를 위한 카운터
@@ -45,7 +51,7 @@ private:
 
 // 멤버 함수 포인터를 이용한 생성자
 template<typename T, typename Ret, typename ...Args>
-inline Job::Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args ...args)
+inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args ...args)
 	: _priority(JobPriority::Normal),
 	_group(TypeToGroupMapper::GetGroupType<T>()),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
@@ -62,4 +68,11 @@ inline Job::Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), uint64 del
 	{
 		_priority = it->second.first;
 	}
+}
+
+// 정적 객체 생성
+template <typename T, typename Ret, typename... Args>
+inline Job* Job::Allocate(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args... args)
+{
+	return ObjectPool<Job>::Allocate(owner, memFunc, delayMs, std::forward<Args>(args)...);
 }

@@ -8,11 +8,9 @@
 ----------------------------*/
 
 Session::Session()
-	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _recvBuffer(BUFFER_SIZE)
+	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _recvBuffer(BUFFER_SIZE), _sessionID(SessionID::Generate()),
+	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr)
 {
-	_sessionID = SessionID::Generate();
-	_lastRecvTime = NOW;
-	_connectedTime = NOW;
 	_connected.store(0, std::memory_order_relaxed);
 	_recvOverlappedEx.type = NetworkIOType::Recv;
 	_sendOverlappedEx.type = NetworkIOType::Send;
@@ -42,17 +40,16 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 	if (::getpeername(_socket, reinterpret_cast<SOCKADDR*>(&_clientAddress), &addrLen) == SOCKET_ERROR)
 	{
 		// 주소 저장 실패시 세션 종료
-		LogError(L"getpeername 실패", LogType::Warning);
+		int32 errorCode = ::WSAGetLastError();
+		LogError(L"getpeername 실패", errorCode, LogType::Warning);
 		_connected.store(false, std::memory_order_relaxed);
 		return false;
 	}
-	// 세션 매니저에 등록
-	SessionMgr.Add(std::static_pointer_cast<Session>(shared_from_this()));
 	// 비동기 수신 시작
 	ProcessRecv();
 	// 접속 이벤트 호출
 	// 컨텐츠 로직에서 구현
-	OnConnected();
+	_service->OnConnected(this);
 
 	return true;
 }
@@ -60,6 +57,7 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 // 세션 종료
 void Session::Close()
 {
+	// 이미 종료된 세션이면 리턴
 	if (_connected.exchange(false) == false)
 	{
 		return;
@@ -77,18 +75,25 @@ void Session::Close()
 		LOCK_GUARD;
 		while (_sendQueue.empty() == false)
 		{
+			SendBuffer* buffer = _sendQueue.front();
 			_sendQueue.pop();
+			// 자원 해제
+			if (buffer != nullptr)
+			{
+				ObjectPool<SendBuffer>::Release(buffer);
+			}
 		}
 	}
 	// 연결 종료 이벤트 호출
 	// 컨텐츠 로직에서 구현
-	OnDisconnected();
+	_service->OnDisconnected(this);
 }
 
 // 소켓만 먼저 설정
-void Session::PreAccept(SOCKET socket)
+void Session::PreAccept(SOCKET socket, ServerCoreService* service)
 {
 	_socket = socket;
+	_service = service;
 	_lastRecvTime = NOW;
 	_connectedTime = NOW;
 }
@@ -108,11 +113,13 @@ void Session::Send(const BYTE* data, int32 len)
 		return;
 	}
 	// 버퍼 할당 및 데이터 복사
-	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(len);
+	SendBuffer* sendBuffer = ObjectPool<SendBuffer>::Allocate(len);
 	if (sendBuffer->Write(data, len) == false)
 	{
 		// 세션종료
-		LogError(L"SendBuffer Write 실패, 해당 세션 종료");
+		int32 errorCode = ::WSAGetLastError();
+		LogError(L"SendBuffer Write 실패, 해당 세션 종료", errorCode);
+		ObjectPool<SendBuffer>::Release(sendBuffer);
 		Close();
 		return;
 	}
@@ -163,7 +170,8 @@ void Session::ProcessRecv()
 		if (errorCode != WSA_IO_PENDING)
 		{
 			// 세션종료
-			LogError(L"WSARecv 실패, 해당 세션 종료");
+			int32 errorCode = ::WSAGetLastError();
+			LogError(L"WSARecv 실패, 해당 세션 종료", errorCode);
 			Close();
 		}
 	}
@@ -190,7 +198,7 @@ void Session::ProcessSend()
 		uint32 maxCount = min(MAX_SEND_BUFFER_COUNT, static_cast<uint32>(_sendQueue.size()));
 		for (uint32 count = 0; count < maxCount; count++)
 		{
-			SendBufferRef& buffer = _sendQueue.front();
+			SendBuffer* buffer = _sendQueue.front();
 			if (buffer == nullptr)
 			{
 				continue;
@@ -233,7 +241,17 @@ void Session::ProcessSend()
 		int32 errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
 		{
-			LogError(L"WSASend 실패, 해당 세션 종료");
+			// 전송실패 - 모든 버퍼 해제
+			for (SendBuffer* buffer : sendContext->buffers)
+			{
+				if (buffer != nullptr)
+				{
+					ObjectPool<SendBuffer>::Release(buffer);
+				}
+			}
+			ObjectPool<SendContext>::Release(sendContext);
+			int32 errorCode = ::WSAGetLastError();
+			LogError(L"WSASend 실패, 해당 세션 종료", errorCode);
 			_sending.store(false, std::memory_order_relaxed);
 			Close();
 			return;
@@ -267,10 +285,9 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 {
 	// SendContext 복원
 	SendContext* sendContext = reinterpret_cast<SendContext*>(overlappedEx);
-
 	// 각 버퍼마다 ReadPos 이동 처리
 	int32 transferred = bytesTransferred;
-	for (SendBufferRef& buffer : sendContext->buffers)
+	for (SendBuffer* buffer : sendContext->buffers)
 	{
 		if (transferred == 0)
 		{
@@ -295,10 +312,16 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 			buffer->CommitSend(transferred);
 			transferred = 0;
 		}
+
+		// 모든 데이터가 전송되었을 경우 해제
+		if (buffer->GetUseSize() == 0)
+		{
+			ObjectPool<SendBuffer>::Release(buffer);
+		}
 	}
 	// 송신 이벤트 호출
 	// 컨텐츠 로직에서 구현
-	OnSend(bytesTransferred);
+	_service->OnSend(this, bytesTransferred);
 	// 컨텍스트 정리
 	ObjectPool<SendContext>::Release(sendContext);
 	// 큐에 남은 데이터가 있으면 이어서 전송
@@ -333,10 +356,9 @@ SOCKET Session::GetSocket()
 
 // 로그 찍기
 // ERROR, WARNING
-void Session::LogError(const std::wstring& msg, const LogType type /*= LogType::Error*/)
+void Session::LogError(const std::wstring& msg, const  int32 errorCode, const LogType type /*= LogType::Error*/)
 {
 	std::wstring errorMsg = msg;
-	int32 errorCode = ::WSAGetLastError();
 	errorMsg += L" [errorCode: " + Utils::ToWString(errorCode) + L"]";
 
 	if (type == LogType::Error)

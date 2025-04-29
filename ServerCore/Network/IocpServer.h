@@ -1,19 +1,26 @@
 #pragma once
+#include "NetworkDefine.h"
+
+class ServerCoreService;
 
 /*-------------------------------------------------------
-				IocpCore
+				IocpServer
+
+- WorkerThraed, AcceptThread 생성
+- Iocp 네트워크 서비스
 --------------------------------------------------------*/
 
-class IocpServer : public Singleton<IocpServer>
+class IocpServer
 {
 public:
-	// 초기화
-	void Init() override;
+	IocpServer();
 	// 종료
-	void Shutdown() override;
+	void Shutdown();
 	// IocpServer 시작
 	// Accept & Worker Thread 생성
 	bool Start(uint16 port);
+	// 서비스 연결
+	void ConnectService(ServerCoreService* service);
 
 private:
 	// 입출력 완료 포트 새로 생성 & 소켓과 연결
@@ -21,7 +28,7 @@ private:
 	// acceptEx 함수 로딩
 	bool WSAIoctlAcceptEx();
 	// AcceptEx 요청
-	void ProcessAccept(SessionRef session);
+	void ProcessAccept(Session* session);
 	// Accept 스레드
 	void AcceptThread();
 	// Accept 완료
@@ -35,11 +42,12 @@ private:
 	// HeartBeat 작업 등록
 	void StartHeartbeatTask();
 	// 로그 찍기
-	void LogError(const std::wstring& msg);
+	void LogError(const std::wstring& msg, const int32 errorCode);
 
 private:
 	LPFN_ACCEPTEX _acceptEx;
 	std::atomic<bool> _running;
 	SOCKET _listenSocket;
 	HANDLE _iocpHandle;
+	ServerCoreService* _service;
 };

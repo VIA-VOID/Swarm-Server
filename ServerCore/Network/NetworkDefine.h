@@ -1,5 +1,7 @@
 #pragma once
 #include "pch/Types.h"
+class SendBuffer;
+class Session;
 
 // CPU 스레드 개수
 const uint16 CPU_THREAD_COUNT = std::thread::hardware_concurrency();
@@ -29,20 +31,20 @@ enum class NetworkIOType : uint16
 struct OverlappedEx
 {
 	OVERLAPPED overlapped = {};
-	NetworkIOType type;
+	NetworkIOType type = NetworkIOType::Accept;
 };
 // 비동기 Send 구조체
 struct SendContext
 {
 	OverlappedEx overlappedEx;
-	Vector<SendBufferRef> buffers;
+	Vector<SendBuffer*> buffers;
 };
 // 비동기 Accept 구조체
 struct AcceptContext
 {
 	OverlappedEx overlappedEx;
-	SessionRef session;
-	Array<BYTE, ACCEPT_BUFFER_SIZE> acceptBuffer;
+	Session* session = nullptr;
+	Array<BYTE, ACCEPT_BUFFER_SIZE> acceptBuffer = {};
 };
 // 세션 ID 클래스
 class SessionID

@@ -3,22 +3,27 @@
 #include "Network/RecvBuffer.h"
 #include "Network/SendBuffer.h"
 
+class ServerCoreService;
+
 /*-------------------------------------------------------
 					Session
+
+- 클라이언트 정보 관리
+- Send, Recv
 --------------------------------------------------------*/
 
-class Session : public std::enable_shared_from_this<Session>
+class Session
 {
 public:
 	Session();
-	virtual ~Session();
+	~Session();
 
 	// 초기화
 	bool Init(SOCKET socket, HANDLE iocpHandle);
 	// 종료
 	void Close();
-	// 소켓만 먼저 설정
-	void PreAccept(SOCKET socket);
+	// Accept전 세션에 소켓, 서비스 설정
+	void PreAccept(SOCKET socket, ServerCoreService* service);
 	// WSASend 실행전 유효성, 버퍼 할당
 	void Send(const BYTE* data, int32 len);
 	// WSARecv 실행
@@ -38,16 +43,10 @@ public:
 	// 소켓 가져오기
 	SOCKET GetSocket();
 
-	// 컨텐츠 로직에서 구현하여 사용
-	virtual void OnConnected() = 0;
-	virtual void OnDisconnected() = 0;
-	virtual void OnRecv(const BYTE* buffer, int32 len) = 0;
-	virtual void OnSend(int32 len) = 0;
-
 private:
 	// 로그 찍기
 	// ERROR, WARNING
-	void LogError(const std::wstring& msg, const LogType type = LogType::Error);
+	void LogError(const std::wstring& msg, const int32 errorCode, const LogType type = LogType::Error);
 
 private:
 	USE_LOCK;
@@ -66,6 +65,9 @@ private:
 
 	// 버퍼 관련
 	RecvBuffer _recvBuffer;
-	Queue<SendBufferRef> _sendQueue;
+	Queue<SendBuffer*> _sendQueue;
 	std::atomic<bool> _sending;
+
+	// 서비스
+	ServerCoreService* _service;
 };
