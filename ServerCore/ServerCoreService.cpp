@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "ServerCoreService.h"
-
+#include "Network/Session.h"
+#include "Network/SessionManager.h"
+#include "Network/IocpServer.h"
 
 /*----------------------------
 		NetworkService
