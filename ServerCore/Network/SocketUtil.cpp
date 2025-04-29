@@ -17,14 +17,13 @@ SOCKET SocketUtil::CreateSocket()
 }
 
 // Bind & Listen
-bool SocketUtil::BindAndListenSocket(SOCKET socket, UINT port)
+bool SocketUtil::BindAndListenSocket(SOCKET socket, uint16 port)
 {
 	// 소켓 옵션 설정
-	if (SetSockOpt(socket))
+	if (SetSockOpt(socket) == false)
 	{
 		return false;
 	}
-
 	// bind
 	SOCKADDR_IN serverAddr = {};
 	serverAddr.sin_family = AF_INET;

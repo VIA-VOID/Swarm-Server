@@ -14,7 +14,7 @@ public:
 	// Socket 생성
 	static SOCKET CreateSocket();
 	// Bind & Listen
-	static bool BindAndListenSocket(SOCKET socket, UINT port);
+	static bool BindAndListenSocket(SOCKET socket, uint16 port);
 
 private:
 	// 소켓 옵션 설정
