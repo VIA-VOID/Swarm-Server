@@ -4,9 +4,6 @@
     <ClCompile Include="Job\Job.cpp">
       <Filter>Job</Filter>
     </ClCompile>
-    <ClCompile Include="Job\JobDefine.cpp">
-      <Filter>Job</Filter>
-    </ClCompile>
     <ClCompile Include="Job\JobEventQueue.cpp">
       <Filter>Job</Filter>
     </ClCompile>
@@ -71,15 +68,18 @@
       <Filter>Container</Filter>
     </ClCompile>
     <ClCompile Include="ServerCoreService.cpp" />
+    <ClCompile Include="Job\JobGroupType.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Job\JobGroupManager.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Container\Container.h">
       <Filter>Container</Filter>
     </ClInclude>
     <ClInclude Include="Job\Job.h">
-      <Filter>Job</Filter>
-    </ClInclude>
-    <ClInclude Include="Job\JobDefine.h">
       <Filter>Job</Filter>
     </ClInclude>
     <ClInclude Include="Job\JobEventQueue.h">
@@ -170,6 +170,12 @@
       <Filter>Container</Filter>
     </ClInclude>
     <ClInclude Include="ServerCoreService.h" />
+    <ClInclude Include="Job\JobGroupType.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Job\JobGroupManager.h">
+      <Filter>Job</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Container">
