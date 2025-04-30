@@ -23,13 +23,13 @@ public:
 	template <typename Other>
 	STLAllocator(const STLAllocator<Other>&) {}
 
-	T* allocate(size_t count)
+	T* allocate(uint64 count)
 	{
 		const int32 size = static_cast<int32>(count * sizeof(T));
 		return static_cast<T*>(PoolAllocator::Alloc(size));
 	}
 
-	void deallocate(T* ptr, size_t count)
+	void deallocate(T* ptr, uint64 count)
 	{
 		PoolAllocator::Release(ptr);
 	}

@@ -19,7 +19,7 @@ constexpr uint32 ACCEPT_NUM = 10;
 // Scatter-Gather
 constexpr uint32 MAX_SEND_BUFFER_COUNT = 10;
 // GQCS WorkerThread 개수
-const uint16 MAX_WORKER_THREAD_NUM = CPU_THREAD_COUNT;
+const uint16 MAX_WORKER_THREAD_NUM = static_cast<uint16>(CPU_THREAD_COUNT * 1.5);
 // 삭제 대기 Session 정리 주기
 constexpr std::chrono::milliseconds CLEANUP_INTERVAL = std::chrono::milliseconds(1500);
 // 네트워크 I/O 타입
@@ -74,7 +74,7 @@ namespace std {
 	template<>
 	struct hash<SessionID>
 	{
-		size_t operator()(const SessionID& id) const noexcept
+		uint64 operator()(const SessionID& id) const noexcept
 		{
 			return hash<uint64>()(id.GetID());
 		}

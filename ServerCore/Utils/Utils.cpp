@@ -40,7 +40,7 @@ std::wstring Utils::ConvertUtf16(const std::string& str)
 // 마지막 디렉토리 구분자 이전까지 자르기
 std::wstring Utils::RemoveLastPathComponent(std::wstring& path)
 {
-	size_t pos = path.find_last_of(L'\\');
+	uint64 pos = path.find_last_of(L'\\');
 	if (pos != std::wstring::npos)
 	{
 		return path.substr(0, pos);
