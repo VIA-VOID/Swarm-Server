@@ -15,11 +15,11 @@ void ThreadManager::Init()
 }
 
 // 그룹별 스레드 생성 & 일감 투척
-void ThreadManager::LaunchGroup(JobGroupType group, uint16 count, CallbackType jobCallback)
+void ThreadManager::LaunchGroup(JobGroupId groupId, uint16 count, CallbackType jobCallback)
 {
 	LOCK_GUARD;
 
-	std::string groupName = JobGroupNames[static_cast<uint16>(group)];
+	std::string groupName = JobGroupMgr.GetGroupName(groupId);
 	for (uint16 thread = 0; thread < count; thread++)
 	{
 		std::string name = groupName + "-" + std::to_string(thread);

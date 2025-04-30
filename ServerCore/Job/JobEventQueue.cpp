@@ -10,35 +10,39 @@
 void JobEventQueue::Init()
 {
 	_running.store(true, std::memory_order::memory_order_relaxed);
-	_groupJobs.reserve(512);
+	_groupJobs.reserve(128);
 
 	// 스레드 할당
-	for (auto& groupPriority : GROUP_PRIORITY)
+	const auto& allGroups = JobGroupMgr.GetAllGroups();
+	for (const auto& pair : allGroups)
 	{
-		JobGroupType group = groupPriority.first;
-		auto& pair = groupPriority.second;
-		JobPriority priority = pair.first;
-		uint16 threadCount = pair.second;
+		JobGroupId groupId = pair.first;
+		const JobGroupType* groupType = pair.second;
 
-		ThreadMgr.LaunchGroup(group, threadCount, [this, group]()
-			{
-				WorkerThread(group);
-			}
-		);
+		// 등록여부가 true면 스레드 등록
+		if (groupType->GetGroupIsInit())
+		{
+			ThreadMgr.LaunchGroup(groupId, groupType->GetGroupThreadCount(),
+				[this, groupId]()
+				{
+					WorkerThread(groupId);
+				}
+			);
+		}
 	}
 }
 
 // 즉시 처리용 작업 등록 (일반 콜백)
-void JobEventQueue::DoAsync(CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/)
+void JobEventQueue::DoAsync(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/)
 {
-	Job* job = Job::Allocate(std::move(callback), group, 0);
+	Job* job = Job::Allocate(std::move(callback), groupId, 0);
 	Push(job);
 }
 
 // 시간 지연 처리용 작업 등록 (일반 콜백)
-void JobEventQueue::DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/)
+void JobEventQueue::DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/)
 {
-	Job* job = Job::Allocate(std::move(callback), group, delayMs);
+	Job* job = Job::Allocate(std::move(callback), groupId, delayMs);
 	Push(job);
 }
 
@@ -54,10 +58,10 @@ void JobEventQueue::Shutdown()
 // 작업을 큐에 추가
 void JobEventQueue::Push(Job* job)
 {
-	JobGroupType group = job->GetGroup();
+	JobGroupId groupId = job->GetGroupId();
 	{
 		LOCK_GUARD;
-		_groupJobs[group].push(job);
+		_groupJobs[groupId].push(job);
 	}
 	// 우선순위에 따라 스레드 깨우기
 	if (job->GetPriority() == JobPriority::Low)
@@ -74,7 +78,7 @@ void JobEventQueue::Push(Job* job)
 
 // 작업 큐에서 가져옴
 // LOCK은 호출하는 함수에서 건다.
-Job* JobEventQueue::Pop(JobGroupType group)
+Job* JobEventQueue::Pop(JobGroupId group)
 {
 	// 우선순위 큐
 	auto& groupQueue = _groupJobs[group];
@@ -89,7 +93,7 @@ Job* JobEventQueue::Pop(JobGroupType group)
 }
 
 // 워커 스레드
-void JobEventQueue::WorkerThread(JobGroupType group)
+void JobEventQueue::WorkerThread(JobGroupId groupId)
 {
 	while (_running.load())
 	{
@@ -99,11 +103,11 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 		{
 			UNIQUE_LOCK_GUARD;
 			// cv 대기
-			_cv.wait(ulockGuard, [this, group]()
+			_cv.wait(ulockGuard, [this, groupId]()
 				{
 					// 해당 그룹에 실행 가능한 작업이 있는지 확인
 					bool hasExecuteWork = false;
-					auto& groupQueue = _groupJobs[group];
+					auto& groupQueue = _groupJobs[groupId];
 					if (groupQueue.empty() == false && groupQueue.top()->IsExecute())
 					{
 						hasExecuteWork = true;
@@ -113,7 +117,7 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 					bool hasOtherExecuteWork = false;
 					for (const auto& pair : _groupJobs)
 					{
-						if (pair.first != group && pair.second.empty() == false)
+						if (pair.first != groupId && pair.second.empty() == false)
 						{
 							auto& otherGroupQueue = pair.second;
 							if (otherGroupQueue.empty() == false && otherGroupQueue.top()->IsExecute())
@@ -135,7 +139,7 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 			}
 
 			// 자신의 그룹에서 작업 확인
-			auto& groupQueue = _groupJobs[group];
+			auto& groupQueue = _groupJobs[groupId];
 			if (groupQueue.empty() == false && groupQueue.top()->IsExecute())
 			{
 				job = groupQueue.top();
@@ -144,7 +148,7 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 			else
 			{
 				// 자신의 그룹에 실행 가능한 작업이 없다면 다른 그룹에서 훔쳐온다.
-				job = StealJob(group);
+				job = StealJob(groupId);
 			}
 
 			// job이 있음
@@ -168,11 +172,16 @@ void JobEventQueue::WorkerThread(JobGroupType group)
 
 // 타 그룹에서 작업 훔쳐오기
 // - 그룹을 처리하는 스레드가 쉬고있을때 바쁜 타 스레드를 도와줌
-Job* JobEventQueue::StealJob(JobGroupType group)
+Job* JobEventQueue::StealJob(JobGroupId groupId)
 {
 	// 훔칠 group 가져오기
-	JobGroupType groupType = GetNextGroupIndex(group);
-	auto& groupQueue = _groupJobs[group];
+	JobGroupId stealGroupId = GetNextGroupIndex(groupId);
+	// 자신의 그룹이면 훔치지 않는다
+	if (stealGroupId == groupId)
+	{
+		return nullptr;
+	}
+	auto& groupQueue = _groupJobs[groupId];
 	// 작업이 남아있다면 확인
 	if (groupQueue.empty() == false)
 	{
@@ -190,30 +199,31 @@ Job* JobEventQueue::StealJob(JobGroupType group)
 
 // Job을 훔칠때 공정하게? 훔치기 위해 라운드 로빈 기반의 group 가져오기
 // JobPriority::Low는 제외한다.
-JobGroupType JobEventQueue::GetNextGroupIndex(JobGroupType myGroup)
+JobGroupId JobEventQueue::GetNextGroupIndex(JobGroupId groupId)
 {
-	for (const auto& groupPriority : GROUP_PRIORITY)
+	const auto& allGroups = JobGroupMgr.GetAllGroups();
+	for (const auto& pair : allGroups)
 	{
-		JobGroupType group = groupPriority.first;
-		auto& pair = groupPriority.second;
+		JobGroupId getGroupId = pair.first;
+		JobGroupType* groupType = pair.second;
 		// 내 그룹이 아닌것들만 가져온다.
-		if (group == myGroup)
+		if (getGroupId == groupId)
 		{
 			continue;
 		}
 		// 낮은 작업들은 굳이 훔치지 않음
-		if (pair.first == JobPriority::Low)
+		if (groupType->GetGroupPriority() == JobPriority::Low)
 		{
 			continue;
 		}
 		// 이전에 처리한 그룹외의 것을 가져옴
-		if (group == static_cast<JobGroupType>(LStealJobIndex))
+		if (getGroupId == LStealJobGroupId)
 		{
 			continue;
 		}
-		LStealJobIndex = static_cast<uint16>(group);
-		return group;
+		LStealJobGroupId = getGroupId;
+		return getGroupId;
 	}
-	// 못훔쳤으면 자기그룹
-	return myGroup;
+	// 못훔쳤으면 자기그룹 ID
+	return groupId;
 }

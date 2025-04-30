@@ -12,25 +12,16 @@ class JobEventQueue : public Singleton<JobEventQueue>
 {
 public:
 	void Init() override;
-
 	// 즉시 처리용 작업 등록 (일반 콜백)
-	void DoAsync(CallbackType&& callback, JobGroupType group = JobGroupType::System);
-
+	void DoAsync(CallbackType&& callback, JobGroupId groupId = JobGroups::System);
 	// 시간 지연 처리용 작업 등록 (일반 콜백)
-	void DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupType group = JobGroupType::System);
-
+	void DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupId groupId = JobGroups::System);
 	// 멤버 함수를 이용한 작업 등록
 	template <typename T, typename Ret, typename... Args>
 	void DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args... args);
-
 	// 멤버 함수를 이용한 시간 지연 처리용 작업 등록
 	template <typename T, typename Ret, typename... Args>
 	void DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args... args);
-
-	// 기본 타입-그룹 매핑 등록
-	template<typename T>
-	void RegisterTypeMapping(JobGroupType group);
-
 	// 종료
 	void Shutdown() override;
 
@@ -39,15 +30,15 @@ private:
 	void Push(Job* job);
 	// 작업 큐에서 가져옴
 	// LOCK은 호출하는 함수에서 건다.
-	Job* Pop(JobGroupType group);
+	Job* Pop(JobGroupId group);
 	// 워커 스레드
-	void WorkerThread(JobGroupType group);
+	void WorkerThread(JobGroupId group);
 	// 타 그룹에서 작업 훔쳐오기
 	// - 그룹을 처리하는 스레드가 쉬고있을때 바쁜 타 스레드를 도와줌
-	Job* StealJob(JobGroupType group);
+	Job* StealJob(JobGroupId group);
 	// Job을 훔칠때 공정하게? 훔치기 위해 라운드 로빈 기반의 group 가져오기
 	// JobPriority::Low는 제외한다.
-	JobGroupType GetNextGroupIndex(JobGroupType myGroup);
+	JobGroupId GetNextGroupIndex(JobGroupId myGroup);
 
 private:
 	// 우선순위 비교 연산자
@@ -75,7 +66,7 @@ private:
 	// 우선순위 큐 타입
 	using JobType = PriorityQueue<Job*, Vector<Job*>, JobComparator>;
 	// 그룹별 작업 큐
-	HashMap<JobGroupType, JobType> _groupJobs;
+	HashMap<JobGroupId, JobType> _groupJobs;
 	// 조건변수(그룹 전체 관리)
 	ConditionVariable _cv;
 	// 스레드 실행중 플래그
@@ -96,11 +87,4 @@ inline void JobEventQueue::DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFu
 {
 	Job* job = ObjectPool<Job>::MakeShared(owner, memFunc, delayMs, std::forward<Args>(args)...);
 	Push(job);
-}
-
-// 기본 타입-그룹 매핑 등록
-template<typename T>
-inline void JobEventQueue::RegisterTypeMapping(JobGroupType group)
-{
-	TypeToGroupMapper::RegisterType<T>(group);
 }

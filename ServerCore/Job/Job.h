@@ -1,4 +1,6 @@
 #pragma once
+#include "JobGroupType.h"
+#include "Job/JobGroupManager.h"
 
 /*-------------------------------------------------------
 					Job
@@ -15,21 +17,21 @@ public:
 	template <typename T, typename Ret, typename... Args>
 	Job(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs = 0, Args... args);
 	// 우선순위에 따라 즉시 처리용 생성자
-	Job(CallbackType&& callback, JobGroupType group = JobGroupType::System, uint64 delayMs = 0);
+	Job(CallbackType&& callback, JobGroupId groupId = JobGroups::System, uint64 delayMs = 0);
 	// 작업 실행
 	void Execute();
 	// 실행가능여부
 	bool IsExecute();
 	// getter
 	JobPriority GetPriority() const;
+	JobGroupId GetGroupId() const;
 	TimePoint GetExecuteTime() const;
 	uint64 GetCreationOrder() const;
-	JobGroupType GetGroup() const;
 
 	// 객체 생성/소멸 처리를 위한 함수
 	template <typename T, typename Ret, typename... Args>
 	static Job* Allocate(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs = 0, Args... args);
-	static Job* Allocate(CallbackType&& callback, JobGroupType group = JobGroupType::System, uint64 delayMs = 0);
+	static Job* Allocate(CallbackType&& callback, JobGroupId groupId = JobGroups::System, uint64 delayMs = 0);
 	static void Release(Job* job);
 
 private:
@@ -42,7 +44,7 @@ private:
 	// 작업 우선순위
 	JobPriority _priority;
 	// 작업 그룹
-	JobGroupType _group;
+	JobGroupId _groupId;
 	// 실행 시간
 	TimePoint _executeTime;
 	// 작업 생성 순서
@@ -53,7 +55,7 @@ private:
 template<typename T, typename Ret, typename ...Args>
 inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args ...args)
 	: _priority(JobPriority::Normal),
-	_group(TypeToGroupMapper::GetGroupType<T>()),
+	_groupId(JobGroupMgr.GetGroupIdByType<T>()),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())
 {
@@ -63,10 +65,10 @@ inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args ...ar
 		};
 
 	// 우선순위 지정
-	auto it = GROUP_PRIORITY.find(_group);
-	if (it != GROUP_PRIORITY.end())
+	const JobGroupType* groupInfo = JobGroupMgr.GetGroupInfo(_groupId);
+	if (groupInfo)
 	{
-		_priority = it->second.first;
+		_priority = groupInfo->GetGroupPriority();
 	}
 }
 

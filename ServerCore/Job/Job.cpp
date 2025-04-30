@@ -6,17 +6,21 @@
 ----------------------------*/
 
 // 우선순위에 따라 즉시 처리용 생성자
-Job::Job(CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/, uint64 delayMs)
+Job::Job(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/, uint64 delayMs /*= 0*/)
 	: _callback(std::move(callback)),
-	_group(group),
+	_groupId(groupId),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())
 {
 	// 우선순위 지정
-	auto it = GROUP_PRIORITY.find(_group);
-	if (it != GROUP_PRIORITY.end())
+	const JobGroupType* groupInfo = JobGroupMgr.GetGroupInfo(_groupId);
+	if (groupInfo)
 	{
-		_priority = it->second.first;
+		_priority = groupInfo->GetGroupPriority();
+	}
+	else
+	{
+		_priority = JobPriority::Normal;
 	}
 }
 
@@ -50,9 +54,9 @@ uint64 Job::GetCreationOrder() const
 	return _orderNum;
 }
 
-JobGroupType Job::GetGroup() const
+JobGroupId Job::GetGroupId() const
 {
-	return _group;
+	return _groupId;
 }
 
 // 작업 생성 순서를 위한 카운터
@@ -63,9 +67,9 @@ uint64 Job::GetNextOrderNum()
 }
 
 // 정적 생성 함수
-Job* Job::Allocate(CallbackType&& callback, JobGroupType group /*= JobGroupType::System*/, uint64 delayMs /*= 0*/)
+Job* Job::Allocate(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/, uint64 delayMs /*= 0*/)
 {
-	return ObjectPool<Job>::Allocate(std::move(callback), group, delayMs);
+	return ObjectPool<Job>::Allocate(std::move(callback), groupId, delayMs);
 }
 
 // 객체 해제 함수

@@ -105,7 +105,7 @@ bool IocpServer::Start(uint16 port)
 		RequestAccept();
 	}
 	// IO 워커 스레드 시작
-	ThreadMgr.LaunchGroup(JobGroupType::Network, MAX_WORKER_THREAD_NUM, [this]() { IOWorkerThread(); });
+	ThreadMgr.LaunchGroup(JobGroups::Network, MAX_WORKER_THREAD_NUM, [this]() { IOWorkerThread(); });
 	// HeartBeat 작업 등록
 	StartHeartbeatTask();
 
@@ -162,7 +162,7 @@ void IocpServer::RequestAccept()
 	{
 		// 다시 accept 걸어줌
 		LOG_WARNING(L"세션 생성 실패");
-		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroupType::Network);
+		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
 		return;
 	}
 
@@ -173,7 +173,7 @@ void IocpServer::RequestAccept()
 		// 다시 accept 걸어줌
 		LogError(L"클라이언트 소켓 생성 실패", -1);
 		SessionMgr.Release(session);
-		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroupType::Network);
+		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
 		return;
 	}
 
@@ -207,7 +207,7 @@ void IocpServer::ProcessAccept(Session* session)
 			ObjectPool<AcceptContext>::Release(acceptContext);
 			SessionMgr.Release(session);
 			// 다시 accept 걸어줌
-			JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroupType::Network);
+			JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
 			return;
 		}
 	}

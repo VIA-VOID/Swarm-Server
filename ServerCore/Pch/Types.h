@@ -28,6 +28,7 @@ using ThreadId = std::thread::id;
 using CallbackType = std::function<void()>;
 using SteadyClock = std::chrono::steady_clock;
 using TimePoint = SteadyClock::time_point;
+using JobGroupId = uint16;
 
 //----------------------------------------------------------//
 // 스마트포인터
