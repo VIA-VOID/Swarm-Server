@@ -23,6 +23,7 @@
 #include "Memory/MemoryManager.h"
 #include "Memory/ObjectPool.h"
 #include "Job/JobEventQueue.h"
+#include "Job/JobGroupManager.h"
 
 #pragma comment(lib, "ws2_32.lib")
 

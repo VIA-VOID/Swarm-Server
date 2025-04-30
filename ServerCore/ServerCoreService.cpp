@@ -16,6 +16,7 @@ NetworkService::NetworkService()
 	::SetConsoleOutputCP(CP_UTF8);
 	DeadLockMgr.Init();
 #endif
+	JobGroupMgr.Init();
 	ThreadMgr.Init();
 	JobQ.Init();
 	SessionMgr.Init();
@@ -56,6 +57,7 @@ void ServerCoreService::CloseServer()
 	LogMgr.Shutdown();
 	JobQ.Shutdown();
 	SessionMgr.Shutdown();
+	JobGroupMgr.Shutdown();
 	ThreadMgr.Shutdown();
 	MemoryMgr.Shutdown();
 }
