@@ -23,8 +23,6 @@ void MemoryManager::Init()
 
 	// CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장
 	PushChunk();
-
-	LOG_SYSTEM(L"MemoryManager instance initialized");
 }
 
 // pool에서 메모리 꺼내기
@@ -36,7 +34,8 @@ void* MemoryManager::Allocate(uint32 size)
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* virtualPtr = ::VirtualAlloc(nullptr, realSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-		LOG_SYSTEM(std::to_wstring(size) + L"bytes 만큼 VirtualAlloc 할당");
+		// TODO: 차후 모니터링 수치로 반영
+		// LOG_SYSTEM(std::to_wstring(size) + L"bytes 만큼 VirtualAlloc 할당");
 
 		// 헤더 붙이기
 		return MemoryHeader::AttachHeader(virtualPtr, size);
@@ -52,12 +51,14 @@ void* MemoryManager::Allocate(uint32 size)
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* mallocPtr = ::malloc(realSize);
 
+		// TODO: 차후 모니터링 수치로 반영
+		/*
 		LOG_WARNING(
 			std::to_wstring(realSize) +
 			L"bytes 만큼 새로 할당. 요청 크기: " +
 			std::to_wstring(size) + L"bytes"
 		);
-
+		*/
 		// 헤더 붙이기
 		return MemoryHeader::AttachHeader(mallocPtr, size);
 	}

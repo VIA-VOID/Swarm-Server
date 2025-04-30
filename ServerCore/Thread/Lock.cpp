@@ -25,7 +25,6 @@ void DeadlockDetector::Init()
 {
 #ifdef _DEBUG
 	IsCheck.store(true, std::memory_order::memory_order_relaxed);
-	LOG_SYSTEM(L"DeadlockDetector instance initialized");
 #endif;
 }
 
@@ -84,7 +83,7 @@ void DeadlockDetector::LockRelease()
 void DeadlockDetector::Shutdown()
 {
 #ifdef _DEBUG
-	IsCheck.store(false, std::memory_order::memory_order_relaxed);
+	IsCheck.store(false);
 #endif;
 }
 
@@ -126,21 +125,20 @@ bool DeadlockDetector::CycleCheck(LockAddress current, LockAddress cycleLock, st
 // 데드락 발생시 CRASH
 void DeadlockDetector::CrashDeadLock(std::vector<LockAddress>& visited)
 {
-	std::wstringstream ws;
-	ws << L"====================================================\n";
-	ws << L"[DEADLOCK_DETECTED]\n";
-	ws << L"Cycle Path (Thread ID) : (Class Name)\n";
+	std::stringstream ss;
+	ss << "====================================================\n";
+	ss << "[DEADLOCK_DETECTED]\n";
+	ss << "Cycle Path (Thread ID) : (Class Name)\n";
 
 	for (LockAddress addr : visited)
 	{
 		auto log = _lockLog.find(addr);
 		const char* className = log->second;
-		std::wstring threadName = Utils::ConvertUtf16(LThreadName);
 
-		ws << L" → Thread " << threadName << L" : " << className << L"\n";
+		ss << " --> Thread " << LThreadName << " : " << className << "\n";
 	}
 
-	ws << L"====================================================\n";
-	std::wcout << ws.str();
+	ss << L"====================================================\n";
+	std::cerr << ss.str();
 	CRASH("DEADLOCK_DETECTED !!!!");
 }

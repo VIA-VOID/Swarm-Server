@@ -21,8 +21,6 @@ void LogManager::Init()
 
 	CreateLogFile();
 	_lastFlushTime = NOW;
-
-	LOG_SYSTEM(L"LogManager instance initialized");
 }
 
 // dispatcher 종료

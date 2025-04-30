@@ -12,8 +12,6 @@ void ThreadManager::Init()
 {
 	uint16 doubleThreadCount = CPU_THREAD_COUNT * 2;
 	_threads.reserve(doubleThreadCount);
-
-	LOG_SYSTEM(L"ThreadManager instance initialized");
 }
 
 // 그룹별 스레드 생성 & 일감 투척
