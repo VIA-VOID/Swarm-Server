@@ -293,6 +293,9 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 	SendContext* sendContext = reinterpret_cast<SendContext*>(overlappedEx);
 	// 각 버퍼마다 ReadPos 이동 처리
 	int32 transferred = bytesTransferred;
+	// 부분 전송된 버퍼
+	Vector<SendBuffer*> partialSendArray;
+
 	for (SendBuffer* buffer : sendContext->buffers)
 	{
 		if (transferred == 0)
@@ -311,18 +314,18 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 			buffer->CommitSend(useSize);
 			buffer->CleanPos();
 			transferred -= useSize;
+			// 모든 데이터가 전송되었을 경우 해제
+			if (buffer->GetUseSize() == 0)
+			{
+				ObjectPool<SendBuffer>::Release(buffer);
+			}
 		}
 		else
 		{
 			// 부분 전송
 			buffer->CommitSend(transferred);
+			partialSendArray.push_back(buffer);
 			transferred = 0;
-		}
-
-		// 모든 데이터가 전송되었을 경우 해제
-		if (buffer->GetUseSize() == 0)
-		{
-			ObjectPool<SendBuffer>::Release(buffer);
 		}
 	}
 	// 송신 이벤트 호출
@@ -330,16 +333,44 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 	_service->OnSend(this, bytesTransferred);
 	// 컨텍스트 정리
 	ObjectPool<SendContext>::Release(sendContext);
-	// 큐에 남은 데이터가 있으면 이어서 전송
+
+	// 큐에 남은 데이터가 있거나 부분 전송된 버퍼가 있으면 이어서 전송
 	{
 		LOCK_GUARD;
-		if (_sendQueue.empty())
+
+		// 부분 전송된 버퍼가 있다면, 다음에 전송하기 위해 _sendQueue 앞쪽에 삽입함
+		if (partialSendArray.empty() == false)
 		{
-			_sending.store(false);
+			// 임시버퍼
+			Vector<SendBuffer*> tempBuffer;
+			tempBuffer.reserve(_sendQueue.size() + partialSendArray.size());
+			// 임시버퍼에 sendQueue에 담겨있는 데이터를 빼낸다.
+			while (_sendQueue.empty() == false)
+			{
+				tempBuffer.push_back(_sendQueue.front());
+				_sendQueue.pop();
+			}
+			// 순서대로 다시 조립한다.
+			// 부분 전송된 버퍼 + 임시버퍼(sendQueue에 원래 있던 데이터)
+			for (auto it = partialSendArray.rbegin(); it != partialSendArray.rend(); ++it)
+			{
+				_sendQueue.push(*it);
+			}
+			for (SendBuffer* buffer : tempBuffer)
+			{
+				_sendQueue.push(buffer);
+			}
+		}
+
+		if (_sendQueue.empty() == false)
+		{
+			_sending.store(true);
+			// 남아있는 데이터 send
+			ProcessSend();
 		}
 		else
 		{
-			ProcessSend();
+			_sending.store(false);
 		}
 	}
 }
