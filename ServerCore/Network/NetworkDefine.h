@@ -13,13 +13,15 @@ constexpr std::chrono::seconds TIMEOUT_SECONDS(300);
 constexpr uint32 MAX_PACKET_SIZE = 2048;
 // Accept 버퍼 크기
 constexpr uint32 ACCEPT_BUFFER_SIZE = 128;
-// AcceptThread 개수
-constexpr uint32 ACCEPT_THREAD_NUM = 1;
+// Accept 처리 개수
+constexpr uint32 ACCEPT_NUM = 10;
 // WSABUF로 한번에 보낼 조각 개수
 // Scatter-Gather
 constexpr uint32 MAX_SEND_BUFFER_COUNT = 10;
 // GQCS WorkerThread 개수
 const uint16 MAX_WORKER_THREAD_NUM = CPU_THREAD_COUNT;
+// 삭제 대기 Session 정리 주기
+constexpr std::chrono::milliseconds CLEANUP_INTERVAL = std::chrono::milliseconds(1500);
 // 네트워크 I/O 타입
 enum class NetworkIOType : uint16
 {
