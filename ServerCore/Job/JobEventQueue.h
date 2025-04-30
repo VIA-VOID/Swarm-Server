@@ -13,9 +13,6 @@ class JobEventQueue : public Singleton<JobEventQueue>
 public:
 	void Init() override;
 
-	// 대기중인 작업 수
-	uint16 GetPendingJobCount();
-
 	// 즉시 처리용 작업 등록 (일반 콜백)
 	void DoAsync(CallbackType&& callback, JobGroupType group = JobGroupType::System);
 

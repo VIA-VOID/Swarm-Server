@@ -10,6 +10,7 @@
 void JobEventQueue::Init()
 {
 	_running.store(true, std::memory_order::memory_order_relaxed);
+	_groupJobs.reserve(512);
 
 	// 스레드 할당
 	for (auto& groupPriority : GROUP_PRIORITY)
@@ -25,19 +26,6 @@ void JobEventQueue::Init()
 			}
 		);
 	}
-
-	LOG_SYSTEM(L"JobEventQueue instance initialized");
-}
-
-// 대기중인 작업 수
-uint16 JobEventQueue::GetPendingJobCount()
-{
-	uint16 count = 0;
-	for (const auto& pair : _groupJobs)
-	{
-		count += static_cast<uint16>(pair.second.size());
-	}
-	return count;
 }
 
 // 즉시 처리용 작업 등록 (일반 콜백)
