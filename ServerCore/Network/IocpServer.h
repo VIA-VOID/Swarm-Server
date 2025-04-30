@@ -27,10 +27,10 @@ private:
 	bool InitIocp();
 	// acceptEx 함수 로딩
 	bool WSAIoctlAcceptEx();
-	// AcceptEx 요청
+	// Accept 요청
+	void RequestAccept();
+	// AcceptEx 실행
 	void ProcessAccept(Session* session);
-	// Accept 스레드
-	void AcceptThread();
 	// Accept 완료
 	bool OnAcceptCompleted(OverlappedEx* overlappedEx);
 	// GQCS 워커 스레드

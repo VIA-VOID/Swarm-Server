@@ -98,9 +98,12 @@ bool IocpServer::Start(uint16 port)
 	}
 
 	// 스레드 시작
-	_running.store(true, std::memory_order_release);
-	// Accept 스레드 시작
-	ThreadMgr.LaunchGroup(JobGroupType::Network, ACCEPT_THREAD_NUM, [this]() { AcceptThread(); });
+	_running.store(true);
+	// Accept 시작
+	for (int32 acceptCount = 0; acceptCount < ACCEPT_NUM; acceptCount++)
+	{
+		RequestAccept();
+	}
 	// IO 워커 스레드 시작
 	ThreadMgr.LaunchGroup(JobGroupType::Network, MAX_WORKER_THREAD_NUM, [this]() { IOWorkerThread(); });
 	// HeartBeat 작업 등록
@@ -150,7 +153,37 @@ bool IocpServer::WSAIoctlAcceptEx()
 	return true;
 }
 
-// AcceptEx 요청
+// Accept 요청
+void IocpServer::RequestAccept()
+{
+	// 세션 생성
+	Session* session = SessionMgr.Create();
+	if (session == nullptr)
+	{
+		// 다시 accept 걸어줌
+		LOG_WARNING(L"세션 생성 실패");
+		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroupType::Network);
+		return;
+	}
+
+	// 클라이언트 소켓 생성
+	SOCKET clientSocket = ::WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+	if (clientSocket == INVALID_SOCKET)
+	{
+		// 다시 accept 걸어줌
+		LogError(L"클라이언트 소켓 생성 실패", -1);
+		SessionMgr.Release(session);
+		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroupType::Network);
+		return;
+	}
+
+	// Accept전 세션에 소켓, 서비스 설정
+	session->PreAccept(clientSocket, _service);
+	// AcceptEx 요청
+	ProcessAccept(session);
+}
+
+// AcceptEx 실행
 void IocpServer::ProcessAccept(Session* session)
 {
 	// AcceptContext 생성 및 초기화 
@@ -170,41 +203,13 @@ void IocpServer::ProcessAccept(Session* session)
 		if (errorCode != ERROR_IO_PENDING)
 		{
 			LogError(L"AcceptEx 실패", errorCode);
+			::closesocket(clientSocket);
 			ObjectPool<AcceptContext>::Release(acceptContext);
-			session->Close();
+			SessionMgr.Release(session);
+			// 다시 accept 걸어줌
+			JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroupType::Network);
 			return;
 		}
-	}
-}
-
-// Accept 스레드
-void IocpServer::AcceptThread()
-{
-	while (_running)
-	{
-		// 세션 생성
-		Session* session = SessionMgr.Create();
-		if (session == nullptr)
-		{
-			// 일정시간뒤에 다시 생성 시도
-			LOG_WARNING(L"세션 생성 실패");
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-			continue;
-		}
-
-		// 클라이언트 소켓 생성
-		SOCKET clientSocket = ::WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-		if (clientSocket == INVALID_SOCKET)
-		{
-			LogError(L"클라이언트 소켓 생성 실패", -1);
-			SessionMgr.Release(session);
-			continue;
-		}
-
-		// Accept전 세션에 소켓, 서비스 설정
-		session->PreAccept(clientSocket, _service);
-		// AcceptEx 요청
-		ProcessAccept(session);
 	}
 }
 
@@ -224,16 +229,18 @@ bool IocpServer::OnAcceptCompleted(OverlappedEx* overlappedEx)
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"SO_UPDATE_ACCEPT_CONTEXT 설정 실패", errorCode);
 		ObjectPool<AcceptContext>::Release(acceptContext);
-		session->Close();
+		::closesocket(clientSocket);
 		SessionMgr.Release(session);
+		// 다시 accept 걸어줌
+		RequestAccept();
 		return false;
 	}
 	// 세션 초기화
 	if (session->Init(clientSocket, _iocpHandle) == false)
 	{
 		// 초기화 실패
-		// AcceptContext 해제
 		ObjectPool<AcceptContext>::Release(acceptContext);
+		::closesocket(clientSocket);
 		// 다시 AcceptEx 요청
 		ProcessAccept(session);
 		return false;
@@ -242,6 +249,8 @@ bool IocpServer::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	SessionMgr.Add(session);
 	// AcceptContext 해제
 	ObjectPool<AcceptContext>::Release(acceptContext);
+	// 다시 accept 걸어줌
+	RequestAccept();
 	return true;
 }
 
@@ -333,7 +342,6 @@ void IocpServer::CheckTickTimeout()
 void IocpServer::StartHeartbeatTask()
 {
 	JobQ.DoAsync([this]() { CheckTickTimeout(); });
-	LOG_SYSTEM(L"StartHeartbeatTask 작업 등록 완료");
 }
 
 // 로그 찍기
