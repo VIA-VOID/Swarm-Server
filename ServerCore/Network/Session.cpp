@@ -11,10 +11,10 @@ Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _recvBuffer(BUFFER_SIZE), _sessionID(SessionID::Generate()),
 	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr)
 {
-	_connected.store(0, std::memory_order_relaxed);
 	_recvOverlappedEx.type = NetworkIOType::Recv;
 	_sendOverlappedEx.type = NetworkIOType::Send;
 	_sending.store(0, std::memory_order_relaxed);
+	_state.store(SessionState::Active, std::memory_order_relaxed);
 }
 
 Session::~Session()
@@ -28,9 +28,9 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 	_socket = socket;
 	_lastRecvTime = NOW;
 	_connectedTime = NOW;
-	_connected.store(0, std::memory_order_relaxed);
 	_iocpHandle = iocpHandle;
 	_sending.store(0, std::memory_order_relaxed);
+	_state.store(SessionState::Active, std::memory_order_relaxed);
 
 	// IOCP에 등록
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(_socket), _iocpHandle, reinterpret_cast<ULONG_PTR>(this), 0);
@@ -42,7 +42,6 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 		// 주소 저장 실패시 세션 종료
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"getpeername 실패", errorCode, LogType::Warning);
-		_connected.store(false, std::memory_order_relaxed);
 		return false;
 	}
 	// 비동기 수신 시작
@@ -57,13 +56,15 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 // 세션 종료
 void Session::Close()
 {
-	// 이미 종료된 세션이면 리턴
-	if (_connected.exchange(false) == false)
+	// 이미 종료 요청된 세션이면 리턴
+	SessionState currentState = _state.load();
+	if (currentState == SessionState::CloseRequest || currentState == SessionState::Closed)
 	{
 		return;
 	}
-	// 세션 매니저에서 제거
-	SessionMgr.Remove(_sessionID);
+	// 세션 상태를 종료 요청으로 변경
+	_state.store(SessionState::CloseRequest);
+	_closeRequestTime = NOW;
 	// 소켓 닫기
 	if (_socket != INVALID_SOCKET)
 	{
@@ -87,6 +88,8 @@ void Session::Close()
 	// 연결 종료 이벤트 호출
 	// 컨텐츠 로직에서 구현
 	_service->OnDisconnected(this);
+	// 지연삭제
+	SessionMgr.OnSessionClosed(this);
 }
 
 // 소켓만 먼저 설정
@@ -96,12 +99,14 @@ void Session::PreAccept(SOCKET socket, ServerCoreService* service)
 	_service = service;
 	_lastRecvTime = NOW;
 	_connectedTime = NOW;
+	_state.store(SessionState::Active, std::memory_order_relaxed);
 }
 
 // WSASend 실행전 유효성, 버퍼 할당
 void Session::Send(const BYTE* data, int32 len)
 {
-	if (_connected.load() == false)
+	// 활성 상태가 아니면 리턴
+	if (IsActive() == false)
 	{
 		return;
 	}
@@ -131,7 +136,7 @@ void Session::Send(const BYTE* data, int32 len)
 		// WSASend 실행
 		if (_sending.load() == false)
 		{
-			_sending.store(true, std::memory_order_acquire);
+			_sending.store(true);
 			ProcessSend();
 		}
 	}
@@ -140,7 +145,8 @@ void Session::Send(const BYTE* data, int32 len)
 // WSARecv 실행
 void Session::ProcessRecv()
 {
-	if (_connected.load() == false)
+	// 활성 상태가 아니면 리턴
+	if (IsActive() == false)
 	{
 		return;
 	}
@@ -180,11 +186,11 @@ void Session::ProcessRecv()
 // WSASend 실행
 void Session::ProcessSend()
 {
-	if (_connected.load() == false)
+	// 활성 상태가 아니면 리턴
+	if (IsActive() == false)
 	{
 		return;
 	}
-
 	SendContext* sendContext = ObjectPool<SendContext>::Allocate();
 	ZeroMemory(&sendContext->overlappedEx, sizeof(sendContext->overlappedEx));
 	sendContext->overlappedEx.type = NetworkIOType::Send;
@@ -230,7 +236,7 @@ void Session::ProcessSend()
 	if (sendCount == 0)
 	{
 		ObjectPool<SendContext>::Release(sendContext);
-		_sending.store(false, std::memory_order_relaxed);
+		_sending.store(false);
 		return;
 	}
 
@@ -252,7 +258,7 @@ void Session::ProcessSend()
 			ObjectPool<SendContext>::Release(sendContext);
 			int32 errorCode = ::WSAGetLastError();
 			LogError(L"WSASend 실패, 해당 세션 종료", errorCode);
-			_sending.store(false, std::memory_order_relaxed);
+			_sending.store(false);
 			Close();
 			return;
 		}
@@ -329,7 +335,7 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 		LOCK_GUARD;
 		if (_sendQueue.empty())
 		{
-			_sending.store(false, std::memory_order_release);
+			_sending.store(false);
 		}
 		else
 		{
@@ -341,17 +347,42 @@ void Session::OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx
 // 타임아웃 체크
 bool Session::IsTimeout(std::chrono::seconds timeout /*= TIMEOUT_SECONDS*/)
 {
-	return _connected.load() && (NOW - _lastRecvTime) > timeout;
+	return IsActive() && (NOW - _lastRecvTime) > timeout;
 }
 
+// 세션 ID 얻기
 SessionID Session::GetSessionID()
 {
 	return _sessionID;
 }
 
+// 소켓 가져오기
 SOCKET Session::GetSocket()
 {
 	return _socket;
+}
+
+// 세션 상태
+SessionState Session::GetState()
+{
+	return _state.load();
+}
+
+// 세션 상태 변경
+void Session::SetState(SessionState state)
+{
+	// 세션 상태 변경 이후 시간 업데이트
+	SessionState prevState = _state.exchange(state);
+	if (prevState != state && state == SessionState::CloseRequest)
+	{
+		_closeRequestTime = NOW;
+	}
+}
+
+// 활성상태 여부
+bool Session::IsActive()
+{
+	return _state.load() == SessionState::Active;
 }
 
 // 로그 찍기

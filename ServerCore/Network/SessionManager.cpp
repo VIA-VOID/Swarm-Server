@@ -8,7 +8,7 @@
 
 void SessionManager::Init()
 {
-	LOG_SYSTEM(L"SessionManager instance initialized");
+	_lastCleanUpTime = NOW;
 }
 
 void SessionManager::Shutdown()
@@ -17,10 +17,19 @@ void SessionManager::Shutdown()
 	{
 		LOCK_GUARD;
 
+		// 삭제 대기 세션 정리
+		for (auto session : _deleteSessions)
+		{
+			ObjectPool<Session>::Release(session);
+		}
+		_deleteSessions.clear();
+
+		// 남아있는 세션 정리
 		for (auto& pair : _sessions)
 		{
-			pair.second->Close();
-			ObjectPool<Session>::Release(pair.second);
+			Session* session = pair.second;
+			session->SetState(SessionState::Closed);
+			ObjectPool<Session>::Release(session);
 		}
 		_sessions.clear();
 	}
@@ -44,8 +53,8 @@ void SessionManager::Add(Session* session)
 	_sessions.insert({ sessionID, session });
 }
 
-// 세션 해제
-// 등록되지 않은 세션용
+// _sessions에 등록되지 않은 세션용
+// 세션 해제 + 자원 해제
 void SessionManager::Release(Session* session)
 {
 	if (session == nullptr)
@@ -64,17 +73,47 @@ void SessionManager::Release(Session* session)
 	ObjectPool<Session>::Release(session);
 }
 
-// 세션 삭제
+// 세션이 종료된 후 호출
+void SessionManager::OnSessionClosed(Session* session)
+{
+	if (session == nullptr)
+	{
+		return;
+	}
+
+	LOCK_GUARD;
+
+	auto it = _sessions.find(session->GetSessionID());
+	if (it != _sessions.end() && it->second == session)
+	{
+		// 세션 목록에서 제거
+		_sessions.erase(it);
+
+		// 세션 상태가 CloseRequest 상태가 아니면 설정
+		if (session->GetState() != SessionState::CloseRequest)
+		{
+			session->SetState(SessionState::CloseRequest);
+		}
+
+		// 삭제 대기 추가
+		_deleteSessions.push_back(session);
+	}
+}
+
+// 활성상태인 세션 지연삭제
 void SessionManager::Remove(SessionID sessionID)
 {
 	LOCK_GUARD;
 
-	auto findIt = _sessions.find(sessionID);
-	if (findIt != _sessions.end())
+	auto it = _sessions.find(sessionID);
+	if (it != _sessions.end())
 	{
-		Session* removeSession = findIt->second;
-		_sessions.erase(findIt);
-		ObjectPool<Session>::Release(removeSession);
+		Session* removeSession = it->second;
+		// 지연 삭제
+		if (removeSession->IsActive())
+		{
+			removeSession->Close();
+		}
 	}
 }
 
@@ -115,5 +154,43 @@ void SessionManager::Tick()
 	{
 		LOG_WARNING(L"세션 타임아웃: " + std::to_wstring(session->GetSessionID().GetID()));
 		session->Close();
+	}
+
+	// 주기적으로 삭제 대기 중인 세션 정리
+	if (NOW - _lastCleanUpTime >= CLEANUP_INTERVAL)
+	{
+		CleanUpSession();
+		_lastCleanUpTime = NOW;
+	}
+}
+
+// 삭제 대기 중인 세션 정리
+void SessionManager::CleanUpSession()
+{
+	// 실제 삭제할 세션 배열
+	Vector<Session*> sessions;
+	{
+		LOCK_GUARD;
+		for (auto it = _deleteSessions.begin(); it != _deleteSessions.end();)
+		{
+			Session* session = *it;
+			if (session->GetState() == SessionState::CloseRequest)
+			{
+				// 세션 목록 삭제
+				it = _deleteSessions.erase(it);
+				// 삭제 예정 추가
+				sessions.push_back(session);
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
+
+	// 실제 메모리 해제
+	for (Session* session : sessions)
+	{
+		ObjectPool<Session>::Release(session);
 	}
 }

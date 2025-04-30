@@ -5,6 +5,14 @@
 
 class ServerCoreService;
 
+// 세션상태
+enum class SessionState
+{
+	Active,			// 활성
+	CloseRequest,	// 종료 요청
+	Closed			// 완전 종료 - 메모리 해제
+};
+
 /*-------------------------------------------------------
 					Session
 
@@ -42,6 +50,13 @@ public:
 	SessionID GetSessionID();
 	// 소켓 가져오기
 	SOCKET GetSocket();
+	// 세션 상태
+	SessionState GetState();
+	// 세션 상태 변경
+	void SetState(SessionState state);
+	// 활성상태 여부
+	bool IsActive();
+
 
 private:
 	// 로그 찍기
@@ -56,7 +71,6 @@ private:
 	SOCKADDR_IN _clientAddress;
 	TimePoint _lastRecvTime;
 	TimePoint _connectedTime;
-	std::atomic<bool> _connected;
 
 	// I/O 작업 관련
 	HANDLE _iocpHandle;
@@ -67,6 +81,10 @@ private:
 	RecvBuffer _recvBuffer;
 	Queue<SendBuffer*> _sendQueue;
 	std::atomic<bool> _sending;
+
+	// 세션 상태 관리
+	std::atomic<SessionState> _state;
+	TimePoint _closeRequestTime;
 
 	// 서비스
 	ServerCoreService* _service;
