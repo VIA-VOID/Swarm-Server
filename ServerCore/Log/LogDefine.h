@@ -55,9 +55,9 @@ struct LogMessage
 		tnStream << std::left << std::setw(6) << std::wstring(LThreadName.begin(), LThreadName.end());
 		std::wstring threadNameStr = tnStream.str();
 
-		// function name 좌측 정렬 (30자 고정 너비)
+		// function name 좌측 정렬 (40자 고정 너비)
 		std::wstringstream fnStream;
-		fnStream << std::left << std::setw(30) << std::wstring(_functionName, _functionName + strlen(_functionName));
+		fnStream << std::left << std::setw(40) << std::wstring(_functionName, _functionName + strlen(_functionName));
 		std::wstring fnStr = fnStream.str();
 
 		ss << _timeStamp << L" "
