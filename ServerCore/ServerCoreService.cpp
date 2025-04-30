@@ -21,8 +21,6 @@ NetworkService::NetworkService()
 	SessionMgr.Init();
 	LogMgr.Init();
 	CrashDump::Init();
-
-	LOG_SYSTEM(L"GlobalService instance initialized");
 }
 
 /*----------------------------
@@ -45,6 +43,9 @@ void ServerCoreService::StartServer(uint16 port)
 // 자원 해제
 void ServerCoreService::CloseServer()
 {
+	LOG_WARNING(L"Shutdown Server After 3 seconds");
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+
 	_iocpServer->Shutdown();
 	ObjectPool<IocpServer>::Release(_iocpServer);
 
