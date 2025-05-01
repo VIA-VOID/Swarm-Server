@@ -47,11 +47,6 @@
 	}										\
 }
 
-// JobEventQueue 타입-그룹 매핑
-#define JOB_MAPPING(Type, GroupId)						\
-    JobGroupMgr.RegisterTypeMapping<Type>(GroupId)		\
-
-
 /*-------------------------------------
 	조건부 커스텀 매크로
 -------------------------------------*/
