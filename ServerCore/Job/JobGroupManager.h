@@ -20,6 +20,8 @@ public:
 	const HashMap<JobGroupId, JobGroupType*>& GetAllGroups() const;
 	// ID에 해당하는 이름 가져오기
 	const char* GetGroupName(JobGroupId id) const;
+	// 클래스 타입을 JobGroupId에 매핑 - 매크로에서 사용
+	void SetTypeToGroup(std::type_index idx, JobGroupId groupId);
 	// 클래스 타입을 JobGroupId에 매핑
 	template <typename T>
 	void RegisterTypeMapping(JobGroupId groupId);
@@ -59,13 +61,11 @@ inline JobGroupId JobGroupManager::GetGroupIdByType() const
 	return JobGroups::System;
 }
 
-namespace std {
-	template<>
-	struct hash<JobGroupType>
+template<>
+struct std::hash<JobGroupType>
+{
+	uint64 operator()(const JobGroupType& group) const noexcept
 	{
-		uint64 operator()(const JobGroupType& group) const noexcept
-		{
-			return group.hash();
-		}
-	};
-}
+		return group.hash();
+	}
+};

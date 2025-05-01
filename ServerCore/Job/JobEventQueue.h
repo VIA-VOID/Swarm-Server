@@ -24,6 +24,8 @@ public:
 	void DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args... args);
 	// 종료
 	void Shutdown() override;
+	// 그룹별 스레드 생성
+	void RegisterThreadsForGroup(JobGroupId groupId);
 
 private:
 	// 작업을 큐에 추가

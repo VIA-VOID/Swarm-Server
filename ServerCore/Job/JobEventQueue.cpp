@@ -55,6 +55,24 @@ void JobEventQueue::Shutdown()
 	_cv.notify_all();
 }
 
+// 그룹별 스레드 생성
+void JobEventQueue::RegisterThreadsForGroup(JobGroupId groupId)
+{
+	const JobGroupType* groupType = JobGroupMgr.GetGroupInfo(groupId);
+	if (groupType == nullptr || groupType->GetGroupIsInit() == false)
+	{
+		return;
+	}
+
+	// 스레드 생성
+	ThreadMgr.LaunchGroup(groupId, groupType->GetGroupThreadCount(),
+		[this, groupId]()
+		{
+			WorkerThread(groupId);
+		}
+	);
+}
+
 // 작업을 큐에 추가
 void JobEventQueue::Push(Job* job)
 {

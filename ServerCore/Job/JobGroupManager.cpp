@@ -57,6 +57,12 @@ const char* JobGroupManager::GetGroupName(JobGroupId id) const
 	return "System";
 }
 
+// 클래스 타입을 JobGroupId에 매핑 - 매크로에서 사용
+void JobGroupManager::SetTypeToGroup(std::type_index idx, JobGroupId groupId)
+{
+	_typeToGroup[idx] = groupId;
+}
+
 // 그룹 등록
 JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name, uint16 threadCount, JobPriority priority /*= JobPriority::Normal*/, bool isInit /*= true*/)
 {
