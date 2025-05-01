@@ -70,13 +70,11 @@ private:
 	uint64 _id;
 };
 
-namespace std {
-	template<>
-	struct hash<SessionID>
+template<>
+struct std::hash<SessionID>
+{
+	uint64 operator()(const SessionID& id) const noexcept
 	{
-		uint64 operator()(const SessionID& id) const noexcept
-		{
-			return hash<uint64>()(id.GetID());
-		}
-	};
-}
+		return std::hash<uint64>()(id.GetID());
+	}
+};
