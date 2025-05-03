@@ -33,3 +33,5 @@ using JobGroupId = uint16;
 //----------------------------------------------------------//
 // 스마트포인터
 #define SHARED_PTR(name)		using name##Ref = std::shared_ptr<class name>;
+
+SHARED_PTR(SendBuffer)
