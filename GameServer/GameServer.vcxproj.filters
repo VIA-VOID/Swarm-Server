@@ -3,9 +3,15 @@
   <ItemGroup>
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Job\ContentsJobGroups.cpp" />
+    <ClCompile Include="Packet\PacketManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Job\ContentsJob.txt" />
+    <ClInclude Include="Job\ContentsJobGroups.h" />
+    <ClInclude Include="Packet\PacketHeader.h" />
+    <ClInclude Include="Packet\PacketManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Service">
