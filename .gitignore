@@ -405,3 +405,8 @@ FodyWeavers.xsd
 
 # dump 파일
 *.dmp
+
+# protobuf & lib 설정
+/Libraries
+*.pb.cc
+*.pb.h
