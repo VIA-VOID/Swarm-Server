@@ -25,7 +25,8 @@ enum : uint16
 /*--------------------------------------------------------
 					ServerPacketHandler
 
-- 패킷 처리
+- protobuf 적용
+- 컨텐츠 로직 함수
 - 자동화 도구로 생성된 핸들러들이 여기 추가됨
 	- SC: Server에서 Client로 패킷 전달
 	- CS: Client에서 Server로 패킷 전달
