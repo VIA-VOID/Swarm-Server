@@ -6,7 +6,7 @@
 		RecvBuffer
 ----------------------------*/
 
-RecvBuffer::RecvBuffer(uint32 bufferSize/* = BUFFER_SIZE*/)
+RecvBuffer::RecvBuffer(uint32 bufferSize)
 	: RingBuffer(bufferSize)
 {
 }

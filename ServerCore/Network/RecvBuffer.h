@@ -8,7 +8,7 @@
 class RecvBuffer : public RingBuffer
 {
 public:
-	RecvBuffer(uint32 bufferSize = BUFFER_SIZE);
+	RecvBuffer(uint32 bufferSize);
 	virtual ~RecvBuffer() {};
 	// 데이터 읽기
 	bool Read(BYTE* dest, uint32 destSize, uint32 size);

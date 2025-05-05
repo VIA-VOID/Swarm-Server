@@ -1,5 +1,4 @@
 #pragma once
-#include "Network/NetworkDefine.h"
 
 /*-------------------------------------------------------
 				RingBuffer
@@ -11,7 +10,7 @@
 class RingBuffer
 {
 public:
-	RingBuffer(uint32 bufferSize = BUFFER_SIZE);
+	RingBuffer(uint32 bufferSize);
 	virtual ~RingBuffer();
 
 	// 사용중인 용량 얻기
@@ -23,6 +22,9 @@ public:
 	void CleanPos();
 	// 시작지점 포인터 반환
 	BYTE* GetBufferStart();
+	// 길이만큼 데이터 빼오기
+	// read, write Pos 이동하지 않음
+	void Peek(BYTE* dest, uint32 destSize, uint32 size);
 
 protected:
 	// 끊기지 않고 최대로 넣을 수 있는 길이
@@ -33,9 +35,6 @@ protected:
 	void MoveReadPos(uint32 size);
 	// 길이만큼 writePos 이동
 	void MoveWritePos(uint32 size);
-	// 길이만큼 데이터 빼오기
-	// read, write Pos 이동하지 않음
-	void Peek(BYTE* dest, uint32 destSize, uint32 size);
 	// 데이터 삽입
 	bool Enqueue(const BYTE* src, uint32 size);
 

@@ -8,7 +8,7 @@
 class SendBuffer : public RingBuffer
 {
 public:
-	SendBuffer(uint32 bufferSize = BUFFER_SIZE);
+	SendBuffer(uint32 bufferSize);
 	virtual ~SendBuffer() {};
 	// 데이터 쓰기
 	bool Write(const BYTE* src, uint32 size);

@@ -5,7 +5,7 @@
 		RingBuffer
 ----------------------------*/
 
-RingBuffer::RingBuffer(uint32 bufferSize /*= BUFFER_SIZE*/)
+RingBuffer::RingBuffer(uint32 bufferSize)
 	: _bufferSize(bufferSize), _readPos(0), _writePos(0)
 {
 	_buffer.resize(_bufferSize);
