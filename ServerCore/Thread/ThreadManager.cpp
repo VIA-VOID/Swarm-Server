@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "ThreadManager.h"
 #include "Utils/Utils.h"
-#include "Network/NetworkDefine.h"
 
 /*----------------------------
 		ThreadManager

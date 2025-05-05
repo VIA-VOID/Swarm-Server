@@ -24,6 +24,7 @@
 #include "Memory/ObjectPool.h"
 #include "Job/JobEventQueue.h"
 #include "Job/JobGroupManager.h"
+#include "Network/NetworkDefine.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
