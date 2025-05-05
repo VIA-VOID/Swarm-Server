@@ -1,5 +1,4 @@
 #pragma once
-#include "NetworkDefine.h"
 #include "Network/RecvBuffer.h"
 #include "Network/SendBuffer.h"
 
@@ -11,6 +10,19 @@ enum class SessionState
 	Active,			// 활성
 	CloseRequest,	// 종료 요청
 	Closed			// 완전 종료 - 메모리 해제
+};
+
+/*
+	패킷구조
+	[id][size][protobuf data]
+	- id: 프로토콜 ID
+	- size: 패킷 전체 크기(헤더 포함)
+	- data: 직렬화된 protobuf 데이터
+*/
+struct PacketHeader
+{
+	uint16 id;
+	uint16 size;
 };
 
 /*-------------------------------------------------------
@@ -41,7 +53,7 @@ public:
 	// Recv 완료 & 패킷처리
 	void OnRecvCompleted(int32 bytesTransferred);
 	// Send 완료 & 남은 데이터 있을시 이어서 전송
-	void OnSendCompleted(int32 bytesTransferred, OverlappedEx* overlappedEx);
+	void OnSendCompleted(int32 bytesTransferred);
 	// 타임아웃 체크
 	bool IsTimeout(std::chrono::seconds timeout = TIMEOUT_SECONDS);
 
@@ -52,6 +64,8 @@ public:
 	SOCKET GetSocket();
 	// 세션 상태
 	SessionState GetState();
+	// AcceptContext 가져오기(IocpServer에서 Accept시 사용)
+	AcceptContext GetAcceptContext();
 	// 세션 상태 변경
 	void SetState(SessionState state);
 	// 활성상태 여부
@@ -74,11 +88,11 @@ private:
 
 	// I/O 작업 관련
 	HANDLE _iocpHandle;
-	OverlappedEx _recvOverlappedEx;
-	OverlappedEx _sendOverlappedEx;
+	AcceptContext _acceptContext;
+	RecvContext _recvContext;
+	SendContext _sendContext;
 
 	// 버퍼 관련
-	RecvBuffer _recvBuffer;
 	Queue<SendBuffer*> _sendQueue;
 	std::atomic<bool> _sending;
 
