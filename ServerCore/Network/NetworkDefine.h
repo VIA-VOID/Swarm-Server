@@ -1,6 +1,7 @@
 #pragma once
 #include "pch/Types.h"
-class SendBuffer;
+#include "RecvBuffer.h"
+
 class Session;
 
 // CPU 스레드 개수
@@ -35,18 +36,21 @@ struct OverlappedEx
 	OVERLAPPED overlapped = {};
 	NetworkIOType type = NetworkIOType::Accept;
 };
-// 비동기 Send 구조체
-struct SendContext
-{
-	OverlappedEx overlappedEx;
-	Vector<SendBuffer*> buffers;
-};
 // 비동기 Accept 구조체
-struct AcceptContext
+struct AcceptContext : public OverlappedEx
 {
-	OverlappedEx overlappedEx;
 	Session* session = nullptr;
-	Array<BYTE, ACCEPT_BUFFER_SIZE> acceptBuffer = {};
+	Array<BYTE, ACCEPT_BUFFER_SIZE> acceptBuffer;
+};
+// 비동기 Recv 구조체
+struct RecvContext : public OverlappedEx
+{
+	RecvBuffer recvBuffer = RecvBuffer(BUFFER_SIZE);
+};
+// 비동기 Send 구조체
+struct SendContext : public OverlappedEx
+{
+	Vector<SendBuffer*> buffers;
 };
 // 세션 ID 클래스
 class SessionID

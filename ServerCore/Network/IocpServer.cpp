@@ -186,25 +186,24 @@ void IocpServer::RequestAccept()
 // AcceptEx 실행
 void IocpServer::ProcessAccept(Session* session)
 {
-	// AcceptContext 생성 및 초기화 
-	AcceptContext* acceptContext = ObjectPool<AcceptContext>::Allocate();
-	ZeroMemory(&acceptContext->overlappedEx, sizeof(acceptContext->overlappedEx));
-	acceptContext->overlappedEx.type = NetworkIOType::Accept;
-	acceptContext->session = session;
+	// AcceptContext 생성 및 초기화
+	AcceptContext acceptContext = session->GetAcceptContext();
+	ZeroMemory(&acceptContext.overlapped, sizeof(acceptContext.overlapped));
+	acceptContext.type = NetworkIOType::Accept;
+	acceptContext.session = session;
 
 	SOCKET clientSocket = session->GetSocket();
 	// AcceptEx 요청
 	DWORD bytesReceived = 0;
-	if (_acceptEx(_listenSocket, clientSocket, acceptContext->acceptBuffer.data(),
+	if (_acceptEx(_listenSocket, clientSocket, acceptContext.acceptBuffer.data(),
 		0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-		&bytesReceived, reinterpret_cast<LPOVERLAPPED>(&acceptContext->overlappedEx)) == FALSE)
+		&bytesReceived, reinterpret_cast<LPOVERLAPPED>(&acceptContext.overlapped)) == FALSE)
 	{
 		int32 errorCode = WSAGetLastError();
 		if (errorCode != ERROR_IO_PENDING)
 		{
 			LogError(L"AcceptEx 실패", errorCode);
 			::closesocket(clientSocket);
-			ObjectPool<AcceptContext>::Release(acceptContext);
 			SessionMgr.Release(session);
 			// 다시 accept 걸어줌
 			JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
@@ -312,7 +311,7 @@ void IocpServer::IOWorkerThread()
 			session->OnRecvCompleted(bytesTransferred);
 			break;
 		case NetworkIOType::Send:
-			session->OnSendCompleted(bytesTransferred, overlappedEx);
+			session->OnSendCompleted(bytesTransferred);
 			break;
 		}
 	}
