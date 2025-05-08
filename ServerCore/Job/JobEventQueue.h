@@ -5,7 +5,7 @@
 				JobEventQueue
 
 - 우선순위별 처리
-- 이벤트 방식의 Job 구현
+- 그룹 당 하나의 스레드, 이벤트 방식의 Job 처리
 --------------------------------------------------------*/
 
 class JobEventQueue : public Singleton<JobEventQueue>
@@ -32,15 +32,11 @@ private:
 	void Push(Job* job);
 	// 작업 큐에서 가져옴
 	// LOCK은 호출하는 함수에서 건다.
-	Job* Pop(JobGroupId group);
+	Job* Pop(JobGroupId groupId);
+	// 스레드 추가
+	void AddThread(JobGroupId groupId);
 	// 워커 스레드
 	void WorkerThread(JobGroupId group);
-	// 타 그룹에서 작업 훔쳐오기
-	// - 그룹을 처리하는 스레드가 쉬고있을때 바쁜 타 스레드를 도와줌
-	Job* StealJob(JobGroupId group);
-	// Job을 훔칠때 공정하게? 훔치기 위해 라운드 로빈 기반의 group 가져오기
-	// JobPriority::Low는 제외한다.
-	JobGroupId GetNextGroupIndex(JobGroupId myGroup);
 
 private:
 	// 우선순위 비교 연산자
@@ -64,22 +60,26 @@ private:
 	};
 
 private:
-	USE_LOCK;
 	// 우선순위 큐 타입
 	using JobType = PriorityQueue<Job*, Vector<Job*>, JobComparator>;
+	struct GroupJobQueue
+	{
+		JobType jobQueue;
+		USE_LOCK;
+	};
 	// 그룹별 작업 큐
-	HashMap<JobGroupId, JobType> _groupJobs;
-	// 조건변수(그룹 전체 관리)
-	ConditionVariable _cv;
-	// 스레드 실행중 플래그
-	std::atomic<bool> _running;
+	HashMap<JobGroupId, GroupJobQueue> _groupJobs;
+	// 조건변수
+	HashMap<JobGroupId, ConditionVariable> _groupCVs;
+	// 스레드 실행 중 플래그
+	HashMap<JobGroupId, std::atomic<bool>> _groupRunning;
 };
 
 // 멤버 함수를 이용한 작업 등록
 template<typename T, typename Ret, typename ...Args>
 inline void JobEventQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args ...args)
 {
-	Job* job = ObjectPool<Job>::MakeShared(owner, memFunc, 0, std::forward<Args>(args)...);
+	Job* job = ObjectPool<Job>::Allocate(owner, memFunc, 0, std::forward<Args>(args)...);
 	Push(job);
 }
 
@@ -87,6 +87,6 @@ inline void JobEventQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args ..
 template<typename T, typename Ret, typename ...Args>
 inline void JobEventQueue::DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args ...args)
 {
-	Job* job = ObjectPool<Job>::MakeShared(owner, memFunc, delayMs, std::forward<Args>(args)...);
+	Job* job = ObjectPool<Job>::Allocate(owner, memFunc, delayMs, std::forward<Args>(args)...);
 	Push(job);
 }

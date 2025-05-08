@@ -9,26 +9,13 @@
 // 초기화
 void JobEventQueue::Init()
 {
-	_running.store(true, std::memory_order::memory_order_relaxed);
-	_groupJobs.reserve(128);
-
 	// 스레드 할당
 	const auto& allGroups = JobGroupMgr.GetAllGroups();
 	for (const auto& pair : allGroups)
 	{
 		JobGroupId groupId = pair.first;
-		const JobGroupType* groupType = pair.second;
-
-		// 등록여부가 true면 스레드 등록
-		if (groupType->GetGroupIsInit())
-		{
-			ThreadMgr.LaunchGroup(groupId, groupType->GetGroupThreadCount(),
-				[this, groupId]()
-				{
-					WorkerThread(groupId);
-				}
-			);
-		}
+		_groupRunning[groupId].store(true, std::memory_order::memory_order_relaxed);
+		AddThread(groupId);
 	}
 }
 
@@ -49,28 +36,30 @@ void JobEventQueue::DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGro
 // 종료
 void JobEventQueue::Shutdown()
 {
-	// 모든 워커 스레드 종료 대기
-	_running.store(false);
-	// 모든 대기 스레드 깨우기
-	_cv.notify_all();
+	// 모든 그룹의 워커 스레드 종료
+	for (auto& pair : _groupRunning)
+	{
+		JobGroupId groupId = pair.first;
+		pair.second.store(false);
+
+		// 그룹의 스레드 깨우기
+		if (_groupCVs.find(groupId) != _groupCVs.end())
+		{
+			_groupCVs[groupId].notify_all();
+		}
+	}
 }
 
 // 그룹별 스레드 생성
 void JobEventQueue::RegisterThreadsForGroup(JobGroupId groupId)
 {
 	const JobGroupType* groupType = JobGroupMgr.GetGroupInfo(groupId);
-	if (groupType == nullptr || groupType->GetGroupIsInit() == false)
+	if (groupType == nullptr)
 	{
 		return;
 	}
-
 	// 스레드 생성
-	ThreadMgr.LaunchGroup(groupId, groupType->GetGroupThreadCount(),
-		[this, groupId]()
-		{
-			WorkerThread(groupId);
-		}
-	);
+	AddThread(groupId);
 }
 
 // 작업을 큐에 추가
@@ -78,105 +67,79 @@ void JobEventQueue::Push(Job* job)
 {
 	JobGroupId groupId = job->GetGroupId();
 	{
-		LOCK_GUARD;
-		_groupJobs[groupId].push(job);
+		GROUP_LOCK_GUARD(_groupJobs[groupId]);
+		_groupJobs[groupId].jobQueue.push(job);
 	}
-	// 우선순위에 따라 스레드 깨우기
-	if (job->GetPriority() == JobPriority::Low)
-	{
-		// 하나만
-		_cv.notify_one();
-	}
-	else
-	{
-		// 전체
-		_cv.notify_all();
-	}
+	// 그룹의 스레드 깨우기
+	_groupCVs[groupId].notify_one();
 }
 
 // 작업 큐에서 가져옴
 // LOCK은 호출하는 함수에서 건다.
-Job* JobEventQueue::Pop(JobGroupId group)
+Job* JobEventQueue::Pop(JobGroupId groupId)
 {
 	// 우선순위 큐
-	auto& groupQueue = _groupJobs[group];
-	if (groupQueue.empty() == false)
+	auto& groupQueue = _groupJobs[groupId].jobQueue;
+	if (groupQueue.empty())
 	{
-		Job* job = groupQueue.top();
-		groupQueue.pop();
-		return job;
+		return nullptr;
 	}
+	Job* job = groupQueue.top();
+	if (job->IsExecute() == false)
+	{
+		return nullptr;
+	}
+	groupQueue.pop();
+	return job;
+}
 
-	return nullptr;
+// 스레드 추가
+void JobEventQueue::AddThread(JobGroupId groupId)
+{
+	// 그룹 상태 활성화
+	_groupRunning[groupId].store(true, std::memory_order::memory_order_relaxed);
+	// 그룹별 스레드 생성
+	std::string groupName = JobGroupMgr.GetGroupName(groupId);
+	ThreadMgr.LaunchGroup(groupId, 1, [this, groupId]()
+		{
+			WorkerThread(groupId);
+		}
+	);
 }
 
 // 워커 스레드
 void JobEventQueue::WorkerThread(JobGroupId groupId)
 {
-	while (_running.load())
+	while (_groupRunning[groupId].load())
 	{
 		Job* job = nullptr;
 		// 일감이 있는지 확인하는 flag
 		bool hasJob = false;
 		{
-			UNIQUE_LOCK_GUARD;
+			GROUP_UNIQUE_LOCK(_groupJobs[groupId]);
 			// cv 대기
-			_cv.wait(ulockGuard, [this, groupId]()
+			_groupCVs[groupId].wait(ulockGuard, [this, groupId]()
 				{
-					// 해당 그룹에 실행 가능한 작업이 있는지 확인
-					bool hasExecuteWork = false;
-					auto& groupQueue = _groupJobs[groupId];
-					if (groupQueue.empty() == false && groupQueue.top()->IsExecute())
-					{
-						hasExecuteWork = true;
-					}
-
-					// 다른 그룹에 실행 가능한 작업이 있는지 확인
-					bool hasOtherExecuteWork = false;
-					for (const auto& pair : _groupJobs)
-					{
-						if (pair.first != groupId && pair.second.empty() == false)
-						{
-							auto& otherGroupQueue = pair.second;
-							if (otherGroupQueue.empty() == false && otherGroupQueue.top()->IsExecute())
-							{
-								hasOtherExecuteWork = true;
-								break;
-							}
-						}
-					}
+					auto& jobQueue = _groupJobs[groupId].jobQueue;
 					// 종료 신호 or 실행할 작업이 있다면 깨어난다.
-					return (_running.load() == false) || hasExecuteWork || hasOtherExecuteWork;
+					return (_groupRunning[groupId].load() == false) ||
+						(jobQueue.empty() == false && jobQueue.top()->IsExecute());
 				}
-			); // _cv.wait 끝
-
-			// wait동안 바뀔수 있으니 확인
-			if (_running.load() == false)
+			);
+			// 종료 확인
+			if (_groupRunning[groupId].load() == false)
 			{
 				break;
 			}
-
-			// 자신의 그룹에서 작업 확인
-			auto& groupQueue = _groupJobs[groupId];
-			if (groupQueue.empty() == false && groupQueue.top()->IsExecute())
-			{
-				job = groupQueue.top();
-				groupQueue.pop();
-			}
-			else
-			{
-				// 자신의 그룹에 실행 가능한 작업이 없다면 다른 그룹에서 훔쳐온다.
-				job = StealJob(groupId);
-			}
-
-			// job이 있음
+			// 작업 가져오기
+			job = Pop(groupId);
 			if (job != nullptr)
 			{
 				hasJob = true;
 			}
-		} // UNIQUE_LOCK_GUARD 종료
+		}
 
-		// job이 있음
+		// 작업 처리
 		if (hasJob)
 		{
 			// 작업 실행
@@ -186,62 +149,4 @@ void JobEventQueue::WorkerThread(JobGroupId groupId)
 		}
 
 	} // while 종료
-}
-
-// 타 그룹에서 작업 훔쳐오기
-// - 그룹을 처리하는 스레드가 쉬고있을때 바쁜 타 스레드를 도와줌
-Job* JobEventQueue::StealJob(JobGroupId groupId)
-{
-	// 훔칠 group 가져오기
-	JobGroupId stealGroupId = GetNextGroupIndex(groupId);
-	// 자신의 그룹이면 훔치지 않는다
-	if (stealGroupId == groupId)
-	{
-		return nullptr;
-	}
-	auto& groupQueue = _groupJobs[groupId];
-	// 작업이 남아있다면 확인
-	if (groupQueue.empty() == false)
-	{
-		Job* job = groupQueue.top();
-		// 실행가능한 작업만 가져온다
-		if (job->IsExecute())
-		{
-			groupQueue.pop();
-			return job;
-		}
-	}
-
-	return nullptr;
-}
-
-// Job을 훔칠때 공정하게? 훔치기 위해 라운드 로빈 기반의 group 가져오기
-// JobPriority::Low는 제외한다.
-JobGroupId JobEventQueue::GetNextGroupIndex(JobGroupId groupId)
-{
-	const auto& allGroups = JobGroupMgr.GetAllGroups();
-	for (const auto& pair : allGroups)
-	{
-		JobGroupId getGroupId = pair.first;
-		JobGroupType* groupType = pair.second;
-		// 내 그룹이 아닌것들만 가져온다.
-		if (getGroupId == groupId)
-		{
-			continue;
-		}
-		// 낮은 작업들은 굳이 훔치지 않음
-		if (groupType->GetGroupPriority() == JobPriority::Low)
-		{
-			continue;
-		}
-		// 이전에 처리한 그룹외의 것을 가져옴
-		if (getGroupId == LStealJobGroupId)
-		{
-			continue;
-		}
-		LStealJobGroupId = getGroupId;
-		return getGroupId;
-	}
-	// 못훔쳤으면 자기그룹 ID
-	return groupId;
 }

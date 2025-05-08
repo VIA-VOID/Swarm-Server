@@ -14,9 +14,8 @@ namespace JobGroups
 {
 	constexpr JobGroupId Invalid = UINT16_MAX;
 	constexpr JobGroupId System = 0;
-	constexpr JobGroupId Network = 1;
-	constexpr JobGroupId Packet = 2;
-	constexpr JobGroupId Log = 3;
+	constexpr JobGroupId Log = 1;
+	constexpr JobGroupId Network = 2;
 	constexpr JobGroupId NextStart = 10;
 }
 
@@ -27,14 +26,12 @@ namespace JobGroups
 class JobGroupType
 {
 public:
-	JobGroupType(JobGroupId id, const std::string& name, uint16 threadCount, bool isInit, JobPriority priority);
+	JobGroupType(JobGroupId id, const std::string& name, JobPriority priority);
 
 	// Getter-
 	JobGroupId GetGroupId() const;
 	const std::string& GetGroupName() const;
-	uint16 GetGroupThreadCount() const;
 	JobPriority GetGroupPriority() const;
-	bool GetGroupIsInit() const;
 
 	// operator-
 	bool operator==(const JobGroupType& other) const;
@@ -49,7 +46,5 @@ public:
 private:
 	JobGroupId _id;         // 고유 ID
 	std::string _name;      // 그룹 이름(스레드 이름으로 사용)
-	uint16 _threadCount;    // 스레드 개수
 	JobPriority _priority;  // 우선순위
-	bool _isInit;           // Job 전용 스레드로 등록할지 여부
 };

@@ -13,7 +13,10 @@ public:
 	void Init() override;
 	void Shutdown() override;
 	// 컨텐츠 그룹 등록
-	JobGroupId RegisterContentGroup(const std::string& name, uint16 threadCount, JobPriority priority = JobPriority::Normal, bool isInit = true);
+	JobGroupId RegisterContentGroup(const std::string& name, JobPriority priority = JobPriority::Normal);
+	// 객체 인스턴스 그룹 등록
+	// 동적 생성용
+	JobGroupId RegisterInstanceGroup(const std::string& baseName, JobPriority priority = JobPriority::Normal);
 	// ID로 그룹 정보 가져오기
 	const JobGroupType* GetGroupInfo(JobGroupId id) const;
 	// 모든 JobGroup 정보 가져오기
@@ -31,12 +34,13 @@ public:
 
 private:
 	// 그룹 등록
-	JobGroupId RegisterGroup(JobGroupId id, const std::string& name, uint16 threadCount, JobPriority priority = JobPriority::Normal, bool isInit = true);
+	JobGroupId RegisterGroup(JobGroupId id, const std::string& name, JobPriority priority = JobPriority::Normal);
 
 private:
 	std::atomic<JobGroupId> _nextGroupId;
 	HashMap<JobGroupId, JobGroupType*> _groups;
 	HashMap<std::type_index, JobGroupId> _typeToGroup;
+	HashMap<std::string, uint32> _instanceGroupCounters;
 };
 
 // 클래스 타입을 JobGroupId에 매핑

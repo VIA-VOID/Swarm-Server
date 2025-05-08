@@ -5,10 +5,9 @@ void JobGroupManager::Init()
 {
 	_nextGroupId.store(JobGroups::NextStart, std::memory_order_relaxed);
 	// 기본적인 ServerCore 그룹 생성
-	RegisterGroup(JobGroups::System, "System", 1);
-	RegisterGroup(JobGroups::Network, "Network", 1, JobPriority::High);
-	RegisterGroup(JobGroups::Packet, "Packet", 4, JobPriority::High);
-	RegisterGroup(JobGroups::Log, "Log", 1, JobPriority::Low);
+	RegisterGroup(JobGroups::System, "System");
+	RegisterGroup(JobGroups::Log, "Log", JobPriority::Low);
+	RegisterGroup(JobGroups::Network, "Network", JobPriority::High);
 }
 
 void JobGroupManager::Shutdown()
@@ -22,11 +21,28 @@ void JobGroupManager::Shutdown()
 }
 
 // 컨텐츠 그룹 등록
-JobGroupId JobGroupManager::RegisterContentGroup(const std::string& name, uint16 threadCount, JobPriority priority /*= JobPriority::Normal*/, bool isInit /*= true*/)
+JobGroupId JobGroupManager::RegisterContentGroup(const std::string& name, JobPriority priority /*= JobPriority::Normal*/)
 {
 	// 다음 사용 가능한 컨텐츠 그룹 ID 생성
 	JobGroupId newId = _nextGroupId.fetch_add(1);
-	return RegisterGroup(newId, name, threadCount, priority, isInit);
+	return RegisterGroup(newId, name, priority);
+}
+
+// 객체 인스턴스 그룹 등록
+// 동적 생성용
+JobGroupId JobGroupManager::RegisterInstanceGroup(const std::string& baseName, JobPriority priority)
+{
+	uint32 instanceCounter = ++_instanceGroupCounters[baseName];
+	std::string instanceName = baseName + "_" + std::to_string(instanceCounter);
+	// 그룹 등록
+	JobGroupId newId = _nextGroupId.fetch_add(1);
+	JobGroupId groupId = RegisterGroup(newId, instanceName, priority);
+	// 등록 후 스레드 생성 요청
+	if (groupId != JobGroups::Invalid)
+	{
+		JobQ.RegisterThreadsForGroup(groupId);
+	}
+	return groupId;
 }
 
 // ID로 그룹 정보 가져오기
@@ -64,7 +80,7 @@ void JobGroupManager::SetTypeToGroup(std::type_index idx, JobGroupId groupId)
 }
 
 // 그룹 등록
-JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name, uint16 threadCount, JobPriority priority /*= JobPriority::Normal*/, bool isInit /*= true*/)
+JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name, JobPriority priority /*= JobPriority::Normal*/)
 {
 	// 이미 등록된 ID인지 확인
 	if (_groups.find(id) != _groups.end())
@@ -73,7 +89,7 @@ JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name
 		return JobGroups::Invalid;
 	}
 
-	JobGroupType* newGroup = ObjectPool<JobGroupType>::Allocate(id, name, threadCount, isInit, priority);
+	JobGroupType* newGroup = ObjectPool<JobGroupType>::Allocate(id, name, priority);
 	_groups[id] = newGroup;
 	return id;
 }

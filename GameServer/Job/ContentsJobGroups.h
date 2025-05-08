@@ -5,7 +5,7 @@
 namespace JobGroups
 {
 	// 그룹 ID 선언
-#define JOB_GROUP(name, count, priority, isInit) extern JobGroupId name;
+#define JOB_GROUP(name, priority) extern JobGroupId name;
 #define CLASS_TO_JOB(className, groupName)
 
 #include "ContentsJob.txt"
@@ -17,4 +17,6 @@ namespace JobGroups
 	void Init();
 	// Job 스레드 생성 요청
 	void CreateThreadsForGroups();
+	// 던전 인스턴스용 그룹 생성
+	JobGroupId CreateDungeonGroup(uint32 dungeonId);
 }
