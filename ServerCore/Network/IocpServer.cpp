@@ -187,17 +187,17 @@ void IocpServer::RequestAccept()
 void IocpServer::ProcessAccept(Session* session)
 {
 	// AcceptContext 생성 및 초기화
-	AcceptContext acceptContext = session->GetAcceptContext();
-	ZeroMemory(&acceptContext.overlapped, sizeof(acceptContext.overlapped));
-	acceptContext.type = NetworkIOType::Accept;
-	acceptContext.session = session;
+	AcceptContext* acceptContext = session->GetAcceptContext();
+	ZeroMemory(&acceptContext->overlapped, sizeof(acceptContext->overlapped));
+	acceptContext->type = NetworkIOType::Accept;
+	acceptContext->session = session;
 
 	SOCKET clientSocket = session->GetSocket();
 	// AcceptEx 요청
 	DWORD bytesReceived = 0;
-	if (_acceptEx(_listenSocket, clientSocket, acceptContext.acceptBuffer.data(),
+	if (_acceptEx(_listenSocket, clientSocket, acceptContext->acceptBuffer.data(),
 		0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
-		&bytesReceived, reinterpret_cast<LPOVERLAPPED>(&acceptContext.overlapped)) == FALSE)
+		&bytesReceived, reinterpret_cast<LPOVERLAPPED>(&acceptContext->overlapped)) == FALSE)
 	{
 		int32 errorCode = WSAGetLastError();
 		if (errorCode != ERROR_IO_PENDING)
@@ -227,7 +227,6 @@ bool IocpServer::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"SO_UPDATE_ACCEPT_CONTEXT 설정 실패", errorCode);
-		ObjectPool<AcceptContext>::Release(acceptContext);
 		::closesocket(clientSocket);
 		SessionMgr.Release(session);
 		// 다시 accept 걸어줌
@@ -237,8 +236,6 @@ bool IocpServer::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	// 세션 초기화
 	if (session->Init(clientSocket, _iocpHandle) == false)
 	{
-		// 초기화 실패
-		ObjectPool<AcceptContext>::Release(acceptContext);
 		::closesocket(clientSocket);
 		// 다시 AcceptEx 요청
 		ProcessAccept(session);
@@ -246,8 +243,6 @@ bool IocpServer::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	}
 	// 세션 매니저에 등록
 	SessionMgr.Add(session);
-	// AcceptContext 해제
-	ObjectPool<AcceptContext>::Release(acceptContext);
 	// 다시 accept 걸어줌
 	RequestAccept();
 	return true;
