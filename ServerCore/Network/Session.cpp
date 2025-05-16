@@ -409,9 +409,9 @@ SessionState Session::GetState()
 }
 
 // AcceptContext 가져오기(IocpServer에서 Accept시 사용)
-AcceptContext Session::GetAcceptContext()
+AcceptContext* Session::GetAcceptContext()
 {
-	return _acceptContext;
+	return &_acceptContext;
 }
 
 // 세션 상태 변경

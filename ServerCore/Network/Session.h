@@ -46,10 +46,6 @@ public:
 	void PreAccept(SOCKET socket, ServerCoreService* service);
 	// WSASend 실행전 유효성, 버퍼 할당
 	void Send(const BYTE* data, int32 len);
-	// WSARecv 실행
-	void ProcessRecv();
-	// WSASend 실행
-	void ProcessSend();
 	// Recv 완료 & 패킷처리
 	void OnRecvCompleted(int32 bytesTransferred);
 	// Send 완료 & 남은 데이터 있을시 이어서 전송
@@ -65,7 +61,7 @@ public:
 	// 세션 상태
 	SessionState GetState();
 	// AcceptContext 가져오기(IocpServer에서 Accept시 사용)
-	AcceptContext GetAcceptContext();
+	AcceptContext* GetAcceptContext();
 	// 세션 상태 변경
 	void SetState(SessionState state);
 	// 활성상태 여부
@@ -73,6 +69,10 @@ public:
 
 
 private:
+	// WSARecv 실행
+	void ProcessRecv();
+	// WSASend 실행
+	void ProcessSend();
 	// 로그 찍기
 	// ERROR, WARNING
 	void LogError(const std::wstring& msg, const int32 errorCode, const LogType type = LogType::Error);
