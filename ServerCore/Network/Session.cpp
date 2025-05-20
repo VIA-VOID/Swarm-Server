@@ -11,6 +11,7 @@ Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
 	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr)
 {
+	_acceptContext.type = NetworkIOType::Accept;
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
 
@@ -24,6 +25,7 @@ Session::~Session()
 	Close();
 }
 
+// 초기화
 bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 {
 	_socket = socket;
@@ -93,8 +95,8 @@ void Session::Close()
 	SessionMgr.OnSessionClosed(this);
 }
 
-// 소켓만 먼저 설정
-void Session::PreAccept(SOCKET socket, ServerCoreService* service)
+// 세션에 소켓, 서비스 설정
+void Session::PreInit(SOCKET socket, CoreService* service)
 {
 	_socket = socket;
 	_service = service;
@@ -193,7 +195,6 @@ void Session::ProcessSend()
 		return;
 	}
 	ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
-	_sendContext.type = NetworkIOType::Send;
 	_sendContext.buffers.reserve(MAX_SEND_BUFFER_COUNT);
 
 	// 한 번에 최대 MAX_SEND_BUFFER_COUNT개의 버퍼를 보냄

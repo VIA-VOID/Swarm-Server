@@ -2,7 +2,7 @@
 #include "Network/RecvBuffer.h"
 #include "Network/SendBuffer.h"
 
-class ServerCoreService;
+class CoreService;
 
 // 세션상태
 enum class SessionState
@@ -42,8 +42,8 @@ public:
 	bool Init(SOCKET socket, HANDLE iocpHandle);
 	// 종료
 	void Close();
-	// Accept전 세션에 소켓, 서비스 설정
-	void PreAccept(SOCKET socket, ServerCoreService* service);
+	// 세션에 소켓, 서비스 설정
+	void PreInit(SOCKET socket, CoreService* service);
 	// WSASend 실행전 유효성, 버퍼 할당
 	void Send(const BYTE* data, int32 len);
 	// Recv 완료 & 패킷처리
@@ -101,5 +101,5 @@ private:
 	TimePoint _closeRequestTime;
 
 	// 서비스
-	ServerCoreService* _service;
+	CoreService* _service;
 };
