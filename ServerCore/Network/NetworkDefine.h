@@ -12,6 +12,8 @@ constexpr uint32 BUFFER_SIZE = 8196;
 constexpr std::chrono::seconds TIMEOUT_SECONDS(300);
 // 최대 패킷 크기 (2KB)
 constexpr uint32 MAX_PACKET_SIZE = 2048;
+// Connect 버퍼 크기
+constexpr uint32 CONNECT_BUFFER_SIZE = 64;
 // Accept 버퍼 크기
 constexpr uint32 ACCEPT_BUFFER_SIZE = 128;
 // Accept 처리 개수
@@ -26,7 +28,8 @@ constexpr std::chrono::milliseconds CLEANUP_INTERVAL = std::chrono::milliseconds
 // 네트워크 I/O 타입
 enum class NetworkIOType : uint16
 {
-	Accept = 0,
+	Connect = 0,
+	Accept,
 	Recv,
 	Send
 };
@@ -36,6 +39,12 @@ struct OverlappedEx
 	OVERLAPPED overlapped = {};
 	NetworkIOType type = NetworkIOType::Accept;
 };
+// 비동기 Connect 구조체
+struct ConnectContext : public OverlappedEx
+{
+	Session* session = nullptr;
+};
+
 // 비동기 Accept 구조체
 struct AcceptContext : public OverlappedEx
 {
