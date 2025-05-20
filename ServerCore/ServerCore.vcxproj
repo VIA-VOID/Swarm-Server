@@ -174,7 +174,7 @@
     <ClInclude Include="Container\Container.h" />
     <ClInclude Include="Job\JobGroupManager.h" />
     <ClInclude Include="Job\JobGroupType.h" />
-    <ClInclude Include="Network\IocpServer.h" />
+    <ClInclude Include="Network\IocpCore.h" />
     <ClInclude Include="Job\JobEventQueue.h" />
     <ClInclude Include="Job\Job.h" />
     <ClInclude Include="Memory\MemoryHeader.h" />
@@ -189,7 +189,7 @@
     <ClInclude Include="Network\SendBuffer.h" />
     <ClInclude Include="Network\SessionManager.h" />
     <ClInclude Include="Network\SocketUtil.h" />
-    <ClInclude Include="ServerCoreService.h" />
+    <ClInclude Include="CoreService.h" />
     <ClInclude Include="Thread\LockGuard.h" />
     <ClInclude Include="Log\LogDefine.h" />
     <ClInclude Include="Memory\MemoryPool.h" />
@@ -209,7 +209,7 @@
   <ItemGroup>
     <ClCompile Include="Job\JobGroupManager.cpp" />
     <ClCompile Include="Job\JobGroupType.cpp" />
-    <ClCompile Include="Network\IocpServer.cpp" />
+    <ClCompile Include="Network\IocpCore.cpp" />
     <ClCompile Include="Job\JobEventQueue.cpp" />
     <ClCompile Include="Job\Job.cpp" />
     <ClCompile Include="Log\LogManager.cpp" />
@@ -221,7 +221,7 @@
     <ClCompile Include="Network\SendBuffer.cpp" />
     <ClCompile Include="Network\SessionManager.cpp" />
     <ClCompile Include="Network\SocketUtil.cpp" />
-    <ClCompile Include="ServerCoreService.cpp" />
+    <ClCompile Include="CoreService.cpp" />
     <ClCompile Include="Thread\LockGuard.cpp" />
     <ClCompile Include="Memory\MemoryPool.cpp" />
     <ClCompile Include="Memory\MemoryManger.cpp" />

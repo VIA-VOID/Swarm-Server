@@ -46,7 +46,7 @@
     <ClCompile Include="Utils\Utils.cpp">
       <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Network\IocpServer.cpp">
+    <ClCompile Include="Network\IocpCore.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="Network\RecvBuffer.cpp">
@@ -67,7 +67,7 @@
     <ClCompile Include="Container\RingBuffer.cpp">
       <Filter>Container</Filter>
     </ClCompile>
-    <ClCompile Include="ServerCoreService.cpp" />
+    <ClCompile Include="CoreService.cpp" />
     <ClCompile Include="Job\JobGroupType.cpp">
       <Filter>Job</Filter>
     </ClCompile>
@@ -145,7 +145,7 @@
     <ClInclude Include="Utils\Utils.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Network\IocpServer.h">
+    <ClInclude Include="Network\IocpCore.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="Network\NetworkDefine.h">
@@ -169,7 +169,7 @@
     <ClInclude Include="Container\RingBuffer.h">
       <Filter>Container</Filter>
     </ClInclude>
-    <ClInclude Include="ServerCoreService.h" />
+    <ClInclude Include="CoreService.h" />
     <ClInclude Include="Job\JobGroupType.h">
       <Filter>Job</Filter>
     </ClInclude>
