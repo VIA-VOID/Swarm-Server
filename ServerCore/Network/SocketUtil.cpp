@@ -16,26 +16,31 @@ SOCKET SocketUtil::CreateSocket()
 	return ::WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 }
 
-// Bind & Listen
-bool SocketUtil::BindAndListenSocket(SOCKET socket, uint16 port)
+// Bind
+bool SocketUtil::BindSocket(SOCKET socket, uint16 port)
 {
+	SOCKADDR_IN addr;
+	ZeroMemory(&addr, sizeof(addr));
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	addr.sin_port = ::htons(port);
 	// 소켓 옵션 설정
 	if (SetSockOpt(socket) == false)
 	{
 		return false;
 	}
-	// bind
-	SOCKADDR_IN serverAddr = {};
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	serverAddr.sin_port = ::htons(port);
-
 	// IP/PORT 바인딩
-	if (::bind(socket, reinterpret_cast<SOCKADDR*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR)
+	if (::bind(socket, reinterpret_cast<SOCKADDR*>(&addr), sizeof(addr)) == SOCKET_ERROR)
 	{
 		return false;
 	}
 
+	return true;
+}
+
+// Listen
+bool SocketUtil::ListenSocket(SOCKET socket)
+{
 	// 수신대기
 	if (::listen(socket, SOMAXCONN) == SOCKET_ERROR)
 	{
@@ -43,7 +48,6 @@ bool SocketUtil::BindAndListenSocket(SOCKET socket, uint16 port)
 		::closesocket(socket);
 		return false;
 	}
-
 	return true;
 }
 

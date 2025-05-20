@@ -13,8 +13,10 @@ public:
 	static bool InitWinSocket();
 	// Socket 생성
 	static SOCKET CreateSocket();
-	// Bind & Listen
-	static bool BindAndListenSocket(SOCKET socket, uint16 port);
+	// Bind
+	static bool BindSocket(SOCKET socket, uint16 port);
+	// Listen
+	static bool ListenSocket(SOCKET socket);
 
 private:
 	// 소켓 옵션 설정
