@@ -32,4 +32,4 @@
 #include <mswsock.h>
 #include <ws2tcpip.h>
 
-#include "ServerCoreService.h"
+#include "CoreService.h"
