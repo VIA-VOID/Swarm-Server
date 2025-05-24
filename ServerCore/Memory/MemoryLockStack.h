@@ -19,6 +19,10 @@ public:
 	T Pop()
 	{
 		LOCK_GUARD;
+		if (_stack.empty())
+		{
+			return nullptr;
+		}
 		T item = _stack.top();
 		_stack.pop();
 		return item;
