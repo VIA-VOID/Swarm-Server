@@ -10,11 +10,9 @@
 ----------------------------*/
 
 IocpCore::IocpCore()
-	: _acceptEx(nullptr), _connectEx(nullptr), _socket(INVALID_SOCKET), _iocpHandle(NULL), _service(nullptr)
+	: _acceptEx(nullptr), _connectEx(nullptr), _listenSocket(INVALID_SOCKET), _iocpHandle(NULL), _service(nullptr)
 {
 	_running.store(false, std::memory_order_relaxed);
-	_socket = INVALID_SOCKET;
-	_iocpHandle = NULL;
 }
 
 // 종료
@@ -29,10 +27,10 @@ void IocpCore::Shutdown()
 	WakeUpIOWorkerThreads();
 
 	// 리슨 소켓 닫기
-	if (_socket != INVALID_SOCKET)
+	if (_listenSocket != INVALID_SOCKET)
 	{
-		::closesocket(_socket);
-		_socket = INVALID_SOCKET;
+		::closesocket(_listenSocket);
+		_listenSocket = INVALID_SOCKET;
 	}
 	// IOCP 핸들 닫기
 	if (_iocpHandle != NULL)
@@ -47,13 +45,18 @@ void IocpCore::Shutdown()
 // Accept & Worker Thread 생성
 bool IocpCore::Start(uint16 port)
 {
+	// 이미 실행 중이면 중단
+	if (_running.load())
+	{
+		return false;
+	}
 	// 소켓 생성 및 Bind
-	if (CreateSocketAndBind(port) == false)
+	if (CreateSocketAndBind(_listenSocket, port) == false)
 	{
 		return false;
 	}
 	// Listen
-	if (SocketUtil::ListenSocket(_socket) == false)
+	if (SocketUtil::ListenSocket(_listenSocket) == false)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"Socket Listen 실패", errorCode);
@@ -66,15 +69,14 @@ bool IocpCore::Start(uint16 port)
 		LogError(L"AcceptEx 함수 로딩 실패", errorCode);
 		return false;
 	}
-	// 스레드 시작
-	_running.store(true);
 	// Accept 시작
 	for (int32 acceptCount = 0; acceptCount < ACCEPT_NUM; acceptCount++)
 	{
 		RequestAccept();
 	}
-	// IO 워커 스레드 시작
-	ThreadMgr.LaunchGroup(JobGroups::Network, MAX_WORKER_THREAD_NUM, [this]() { IOWorkerThread(); });
+	// 워커 스레드 시작
+	StartWorkerThreads(MAX_WORKER_THREAD_NUM);
+
 	// HeartBeat 작업 등록
 	StartHeartbeatTask();
 
@@ -85,24 +87,26 @@ bool IocpCore::Start(uint16 port)
 // 서버에 연결
 bool IocpCore::Connect(const std::string& address, uint16 port)
 {
+	// session 생성
+	Session* session = SessionMgr.Create();
+	// 소켓 생성
+	SOCKET clientSocket = INVALID_SOCKET;
 	// 소켓 생성 및 Bind
-	if (CreateSocketAndBind(0) == false)
+	if (CreateSocketAndBind(clientSocket, 0) == false)
 	{
 		return false;
 	}
+	// 세션에 소켓, 서비스 설정
+	session->PreInit(clientSocket, _service);
 	// connectEx 함수 로딩
-	if (WSAIoctlConnectEx() == false)
+	if (WSAIoctlConnectEx(clientSocket) == false)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"ConnectEx 함수 로딩 실패", errorCode);
 		return false;
 	}
-	// 스레드 시작
-	_running.store(true);
-	// IO 워커 스레드 시작
-	ThreadMgr.LaunchGroup(JobGroups::Network, MAX_WORKER_THREAD_NUM, [this]() { IOWorkerThread(); });
 	// 서버 연결 시도
-	ProcessConnect(address, port);
+	ProcessConnect(session, address, port);
 	
 	LOG_SYSTEM(L"IOCP 클라이언트 시작 (서버 주소: " + Utils::ConvertUtf16(address) + L", 포트: " + std::to_wstring(port) + L")");
 	return true;
@@ -114,14 +118,17 @@ void IocpCore::ConnectService(CoreService* service)
 	_service = service;
 }
 
-// 소켓 생성 및 Bind
-bool IocpCore::CreateSocketAndBind(uint16 port)
+// 워커 스레드 시작
+void IocpCore::StartWorkerThreads(uint16 maxWorkerThreadNum)
 {
-	// 이미 실행 중이면 중단
-	if (_running.load())
-	{
-		return false;
-	}
+	_running.store(true);
+	// IO 워커 스레드 시작
+	ThreadMgr.LaunchGroup(JobGroups::Network, maxWorkerThreadNum, [this]() { IOWorkerThread(); });
+}
+
+// 소켓 생성 및 Bind
+bool IocpCore::CreateSocketAndBind(SOCKET& socket, uint16 port)
+{
 	// WSAStartup
 	if (SocketUtil::InitWinSocket() == false)
 	{
@@ -130,22 +137,22 @@ bool IocpCore::CreateSocketAndBind(uint16 port)
 		return false;
 	}
 	// 소켓생성
-	_socket = SocketUtil::CreateSocket();
-	if (_socket == INVALID_SOCKET)
+	socket = SocketUtil::CreateSocket();
+	if (socket == INVALID_SOCKET)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"CreateSocket 실패", errorCode);
 		return false;
 	}
 	// Bind
-	if (SocketUtil::BindSocket(_socket, port) == false)
+	if (SocketUtil::BindSocket(socket, port) == false)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"Socket Bind 실패", errorCode);
 		return false;
 	}
 	// 입출력 완료 포트 새로 생성 & 소켓과 연결
-	if (InitIocp() == false)
+	if (InitIocp(socket) == false)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"CreateIoCompletionPort 실패", errorCode);
@@ -156,7 +163,7 @@ bool IocpCore::CreateSocketAndBind(uint16 port)
 }
 
 // 입출력 완료 포트 새로 생성 & 소켓과 연결
-bool IocpCore::InitIocp()
+bool IocpCore::InitIocp(SOCKET socket)
 {
 	// 입출력 완료 포트 새로 생성
 	_iocpHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
@@ -165,7 +172,7 @@ bool IocpCore::InitIocp()
 		return false;
 	}
 	// 소켓과 입출력 완료 포트를 연결
-	if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(_socket), _iocpHandle, 0, 0) == NULL)
+	if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket), _iocpHandle, 0, 0) == NULL)
 	{
 		return false;
 	}
@@ -173,12 +180,12 @@ bool IocpCore::InitIocp()
 }
 
 // connectEx 함수 로딩
-bool IocpCore::WSAIoctlConnectEx()
+bool IocpCore::WSAIoctlConnectEx(SOCKET socket)
 {
 	GUID guidConnectEx = WSAID_CONNECTEX;
 	DWORD bytesReturned = 0;
 
-	if (::WSAIoctl(_socket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+	if (::WSAIoctl(socket, SIO_GET_EXTENSION_FUNCTION_POINTER,
 		&guidConnectEx, sizeof(guidConnectEx),
 		&_connectEx, sizeof(_connectEx),
 		&bytesReturned, NULL, NULL) == SOCKET_ERROR)
@@ -190,15 +197,10 @@ bool IocpCore::WSAIoctlConnectEx()
 }
 
 // connectEx 실행
-void IocpCore::ProcessConnect(const std::string& address, uint16 port)
+void IocpCore::ProcessConnect(Session* session, const std::string& address, uint16 port)
 {
-	// session 생성
-	Session* session = SessionMgr.Create();
-	session->PreInit(_socket, _service);
-	// ConnectContext 생성 및 초기화
-	ConnectContext* connectContext = ObjectPool<ConnectContext>::Allocate();
+	ConnectContext* connectContext = session->GetConnectContext();
 	ZeroMemory(&connectContext->overlapped, sizeof(connectContext->overlapped));
-	connectContext->type = NetworkIOType::Connect;
 	connectContext->session = session;
 
 	SOCKADDR_IN serverAddr;
@@ -209,14 +211,13 @@ void IocpCore::ProcessConnect(const std::string& address, uint16 port)
 
 	// ConnectEx 호출
 	DWORD bytesSent = 0;
-	if (_connectEx(_socket, (SOCKADDR*)&serverAddr, sizeof(serverAddr), 
+	if (_connectEx(session->GetSocket(), (SOCKADDR*)&serverAddr, sizeof(serverAddr), 
 		nullptr, 0, &bytesSent, (LPOVERLAPPED)connectContext) == FALSE)
 	{
 		int32 errorCode = WSAGetLastError();
 		if (errorCode != ERROR_IO_PENDING)
 		{
 			LogError(L"ConnectEx 실패", errorCode);
-			ObjectPool<ConnectContext>::Release(connectContext);
 			return;
 		}
 	}
@@ -236,7 +237,6 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"SO_UPDATE_CONNECT_CONTEXT 설정 실패", errorCode);
 		SessionMgr.Release(session);
-		ObjectPool<ConnectContext>::Release(connectContext);
 		return false;
 	}
 
@@ -244,13 +244,11 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 	if (session->Init(clientSocket, _iocpHandle) == false)
 	{
 		SessionMgr.Release(session);
-		ObjectPool<ConnectContext>::Release(connectContext);
 		return false;
 	}
 	// 세션 매니저에 등록
 	SessionMgr.Add(session);
 
-	ObjectPool<ConnectContext>::Release(connectContext);
 	return true;
 }
 
@@ -260,7 +258,7 @@ bool IocpCore::WSAIoctlAcceptEx()
 	GUID guidAcceptEx = WSAID_ACCEPTEX;
 	DWORD bytesReturned = 0;
 
-	if (::WSAIoctl(_socket, SIO_GET_EXTENSION_FUNCTION_POINTER,
+	if (::WSAIoctl(_listenSocket, SIO_GET_EXTENSION_FUNCTION_POINTER,
 		&guidAcceptEx, sizeof(guidAcceptEx),
 		&_acceptEx, sizeof(_acceptEx),
 		&bytesReturned, NULL, NULL) == SOCKET_ERROR)
@@ -313,7 +311,7 @@ void IocpCore::ProcessAccept(Session* session)
 	SOCKET clientSocket = session->GetSocket();
 	// AcceptEx 요청
 	DWORD bytesReceived = 0;
-	if (_acceptEx(_socket, clientSocket, acceptContext->acceptBuffer.data(),
+	if (_acceptEx(_listenSocket, clientSocket, acceptContext->acceptBuffer.data(),
 		0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&bytesReceived, reinterpret_cast<LPOVERLAPPED>(&acceptContext->overlapped)) == FALSE)
 	{
@@ -341,7 +339,7 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	// 소켓 옵션 업데이트 (SO_UPDATE_ACCEPT_CONTEXT)
 	// _listenSocket의 특성을 clientSocket에 그대로 적용
 	if (::setsockopt(clientSocket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-		reinterpret_cast<char*>(&_socket), sizeof(_socket)) == SOCKET_ERROR)
+		reinterpret_cast<char*>(&_listenSocket), sizeof(_listenSocket)) == SOCKET_ERROR)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"SO_UPDATE_ACCEPT_CONTEXT 설정 실패", errorCode);

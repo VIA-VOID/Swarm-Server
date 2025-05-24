@@ -60,7 +60,9 @@ public:
 	SOCKET GetSocket();
 	// 세션 상태
 	SessionState GetState();
-	// AcceptContext 가져오기(IocpServer에서 Accept시 사용)
+	// ConnectContext 가져오기
+	ConnectContext* GetConnectContext();
+	// AcceptContext 가져오기
 	AcceptContext* GetAcceptContext();
 	// 세션 상태 변경
 	void SetState(SessionState state);
@@ -88,6 +90,7 @@ private:
 
 	// I/O 작업 관련
 	HANDLE _iocpHandle;
+	ConnectContext _connectContext;
 	AcceptContext _acceptContext;
 	RecvContext _recvContext;
 	SendContext _sendContext;

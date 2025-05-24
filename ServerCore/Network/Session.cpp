@@ -11,6 +11,7 @@ Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
 	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr)
 {
+	_connectContext.type = NetworkIOType::Connect;
 	_acceptContext.type = NetworkIOType::Accept;
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
@@ -409,7 +410,13 @@ SessionState Session::GetState()
 	return _state.load();
 }
 
-// AcceptContext 가져오기(IocpServer에서 Accept시 사용)
+// ConnectContext 가져오기
+ConnectContext* Session::GetConnectContext()
+{
+	return &_connectContext;
+}
+
+// AcceptContext 가져오기
 AcceptContext* Session::GetAcceptContext()
 {
 	return &_acceptContext;

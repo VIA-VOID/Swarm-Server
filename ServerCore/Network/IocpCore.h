@@ -22,17 +22,19 @@ public:
 	bool Connect(const std::string& address, uint16 port);
 	// 서비스 연결
 	void ConnectService(CoreService* service);
+	// 워커 스레드 시작
+	void StartWorkerThreads(uint16 maxWorkerThreadNum);
 
 private:
 	// 소켓 생성 및 Bind
-	bool CreateSocketAndBind(uint16 port);
+	bool CreateSocketAndBind(SOCKET& socket, uint16 port);
 	// 입출력 완료 포트 새로 생성 & 소켓과 연결
-	bool InitIocp();
+	bool InitIocp(SOCKET socket);
 	// connectEx 함수 로딩
-	bool WSAIoctlConnectEx();
+	bool WSAIoctlConnectEx(SOCKET socket);
 	// connectEx 실행
 	// 서버 연결 시도
-	void ProcessConnect(const std::string& address, uint16 port);
+	void ProcessConnect(Session* session, const std::string& address, uint16 port);
 	// connect 완료
 	bool OnConnectCompleted(OverlappedEx* overlappedEx);
 	// acceptEx 함수 로딩
@@ -58,7 +60,7 @@ private:
 	LPFN_ACCEPTEX _acceptEx;
 	LPFN_CONNECTEX _connectEx;
 	std::atomic<bool> _running;
-	SOCKET _socket;
+	SOCKET _listenSocket;
 	HANDLE _iocpHandle;
 	CoreService* _service;
 };
