@@ -3,12 +3,6 @@
 class Session;
 class IocpCore;
 
-// dummyClient 생성시 필요
-// 배치 크기, BATCH_SIZE 크기만큼 나누어 연결
-constexpr uint32 BATCH_SIZE = 100;
-// 배치 간 딜레이
-constexpr uint32 BATCH_DELAY_MS = 100;
-
 enum ServiceType : uint16
 {
 	Client,
@@ -27,7 +21,7 @@ public:
 	CoreService(ServiceType type);
 	virtual ~CoreService() = default;
 
-	void Run(uint16 port, const std::string& address = "", int16 connectCount = 1);
+	void Run(uint16 port, const std::string& address = "", uint16 connectCount = 1);
 	void Stop();
 
 	// 컨텐츠 로직에서 구현
@@ -37,7 +31,7 @@ public:
 	virtual void OnSend(Session* session, int32 len) = 0;
 
 private:
-	void DummyConnect(uint16 port, const std::string& address, int16 connectCount);
+	void DummyConnect(uint16 port, const std::string& address, uint16 connectCount);
 
 private:
 	IocpCore* _iocpCore;
