@@ -3,8 +3,21 @@
   <ItemGroup>
     <ClCompile Include="DummyClient.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="Packet\ClientPacketHandler.cpp" />
+    <ClCompile Include="Protocol\Enum.pb.cc" />
+    <ClCompile Include="Protocol\Protocol.pb.cc" />
+    <ClCompile Include="Protocol\Struct.pb.cc" />
+    <ClCompile Include="Job\ContentsJobGroups.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Packet\ClientPacketHandler.h" />
+    <ClInclude Include="Protocol\Enum.pb.h" />
+    <ClInclude Include="Protocol\Protocol.pb.h" />
+    <ClInclude Include="Protocol\Struct.pb.h" />
+    <ClInclude Include="Job\ContentsJobGroups.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Job\ContentsJob.txt" />
   </ItemGroup>
 </Project>
