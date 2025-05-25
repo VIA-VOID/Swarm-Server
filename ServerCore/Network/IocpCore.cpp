@@ -10,7 +10,7 @@
 ----------------------------*/
 
 IocpCore::IocpCore()
-	: _acceptEx(nullptr), _connectEx(nullptr), _listenSocket(INVALID_SOCKET), _iocpHandle(NULL), _service(nullptr)
+	: _acceptEx(nullptr), _connectEx(nullptr), _listenSocket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _service(nullptr)
 {
 	_running.store(false, std::memory_order_relaxed);
 }
@@ -85,7 +85,7 @@ bool IocpCore::Start(uint16 port)
 }
 
 // 서버에 연결
-bool IocpCore::Connect(const std::string& address, uint16 port)
+bool IocpCore::Connect(const std::string& address, uint16 port, uint16 maxWorkerThreadNum)
 {
 	// session 생성
 	Session* session = SessionMgr.Create();
@@ -104,6 +104,11 @@ bool IocpCore::Connect(const std::string& address, uint16 port)
 		int32 errorCode = ::WSAGetLastError();
 		LogError(L"ConnectEx 함수 로딩 실패", errorCode);
 		return false;
+	}
+	// 워커 스레드 시작
+	if (_running.load() == false)
+	{
+		StartWorkerThreads(maxWorkerThreadNum);
 	}
 	// 서버 연결 시도
 	ProcessConnect(session, address, port);
@@ -166,10 +171,13 @@ bool IocpCore::CreateSocketAndBind(SOCKET& socket, uint16 port)
 bool IocpCore::InitIocp(SOCKET socket)
 {
 	// 입출력 완료 포트 새로 생성
-	_iocpHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
-	if (_iocpHandle == NULL)
+	if (_iocpHandle == INVALID_HANDLE_VALUE)
 	{
-		return false;
+		_iocpHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+		if (_iocpHandle == NULL)
+		{
+			return false;
+		}
 	}
 	// 소켓과 입출력 완료 포트를 연결
 	if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket), _iocpHandle, 0, 0) == NULL)

@@ -19,12 +19,10 @@ public:
 	// Accept & Worker Thread 생성
 	bool Start(uint16 port);
 	// 서버에 연결
-	bool Connect(const std::string& address, uint16 port);
+	bool Connect(const std::string& address, uint16 port, uint16 maxWorkerThreadNum);
 	// 서비스 연결
 	void ConnectService(CoreService* service);
-	// 워커 스레드 시작
-	void StartWorkerThreads(uint16 maxWorkerThreadNum);
-
+	
 private:
 	// 소켓 생성 및 Bind
 	bool CreateSocketAndBind(SOCKET& socket, uint16 port);
@@ -32,6 +30,8 @@ private:
 	bool InitIocp(SOCKET socket);
 	// connectEx 함수 로딩
 	bool WSAIoctlConnectEx(SOCKET socket);
+	// 워커 스레드 시작
+	void StartWorkerThreads(uint16 maxWorkerThreadNum);
 	// connectEx 실행
 	// 서버 연결 시도
 	void ProcessConnect(Session* session, const std::string& address, uint16 port);
