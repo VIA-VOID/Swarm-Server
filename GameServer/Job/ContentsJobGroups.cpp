@@ -55,9 +55,4 @@ namespace JobGroups
 #undef CLASS_TO_JOB
 #undef JOB_GROUP
 	}
-	// 던전 인스턴스용 그룹 생성
-	JobGroupId CreateDungeonGroup(uint32 dungeonId)
-	{
-		return JobGroupMgr.RegisterInstanceGroup("Dungeon", JobPriority::High);
-	}
 }

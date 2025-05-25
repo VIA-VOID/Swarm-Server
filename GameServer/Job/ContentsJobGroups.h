@@ -17,6 +17,4 @@ namespace JobGroups
 	void Init();
 	// Job 스레드 생성 요청
 	void CreateThreadsForGroups();
-	// 던전 인스턴스용 그룹 생성
-	JobGroupId CreateDungeonGroup(uint32 dungeonId);
 }
