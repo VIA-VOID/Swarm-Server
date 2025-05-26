@@ -1,0 +1,96 @@
+#pragma once
+#include "PacketId.h"
+#include "Utils/Utils.h"
+
+class PacketHandler;
+
+using PacketFunc = std::function<void(Session*, BYTE*, uint16)>;
+using PacketClass = std::vector<std::unique_ptr<PacketHandler>>;
+
+/*--------------------------------------------------------
+					PacketHandler
+
+- Protobuf 패킷, 패킷함수 관리
+- 도메인별로 PacketHandler를 상속받아 핸들러 등록
+- PacketHandler.cpp의 Init 구현부 자동생성
+--------------------------------------------------------*/
+
+class PacketHandler
+{
+public:
+	virtual ~PacketHandler() = default;
+	// 파생 클래스들의 테이블 등록, 초기화
+	// 자동생성 코드
+	static void Init();
+	// 함수 테이블 등록
+	// 상속받아 구현
+	virtual void RegisterHandlers(PacketFunc* handlers) = 0;
+	// 함수 테이블에 등록된 함수 실행 (템플릿 HandlePacket 함수 실행)
+	static void HandlePacket(Session* session, BYTE* buffer, uint16 len);
+	// 패킷 전송
+	template<typename T>
+	static void SendPacket(Session* session, const T& packet, PacketID packetId);
+
+protected:
+	// 함수 테이블에 패킷 등록
+	template<typename PacketType, typename HandleFunc>
+	static void RegisterPacket(PacketID packetId, HandleFunc handle);
+	// 전달받은 RunFunc 함수 실행
+	template<typename PacketType, typename RunFunc>
+	static void HandlePacket(RunFunc func, Session* session, BYTE* buffer, uint16 len);
+
+protected:
+	// 함수 테이블
+	static PacketFunc _handlers[UINT16_MAX];
+	// 도메인별 핸들러
+	static PacketClass _domainHandlerClasses;
+};
+
+// 함수 테이블에 패킷 등록
+template<typename PacketType, typename HandleFunc>
+inline void PacketHandler::RegisterPacket(PacketID packetId, HandleFunc handle)
+{
+	_handlers[static_cast<uint16>(packetId)] = [handle](Session* session, BYTE* buffer, uint16 len)
+		{
+			HandlePacket<PacketType>(handle, session, buffer, len);
+		};
+}
+
+// 전달받은 RunFunc 함수 실행
+template<typename PacketType, typename RunFunc>
+inline void PacketHandler::HandlePacket(RunFunc func, Session* session, BYTE* buffer, uint16 len)
+{
+	PacketType packet;
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
+	BYTE* payload = buffer + sizeof(PacketHeader);
+	uint16 payloadSize = len - sizeof(PacketHeader);
+
+	if (packet.ParseFromArray(payload, payloadSize) == false)
+	{
+		LOG_ERROR(L"Packet ParseFromArray 실패: " + Utils::ConvertUtf16(typeid(RunFunc).name()) + L", packetSize: " + Utils::ToWString(len));
+	}
+
+	func(session, packet);
+}
+
+// 패킷 전송
+template<typename T>
+inline void PacketHandler::SendPacket(Session* session, const T& packet, PacketID packetId)
+{
+	const uint16 payloadSize = static_cast<uint16>(packet.ByteSizeLong());
+	const uint16 totalSize = sizeof(PacketHeader) + payloadSize;
+
+	// sendBuffer 헤더 세팅
+	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(totalSize + 1);
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->GetWritePtr());
+	header->size = totalSize;
+	header->id = packetId;
+
+	// 데이터 세팅
+	BYTE* payload = sendBuffer->GetWritePtr() + sizeof(PacketHeader);
+	packet.SerializeToArray(payload, payloadSize);
+
+	// 데이터 전송
+	sendBuffer->MoveWritePos(totalSize);
+	session->Send(sendBuffer->GetReadPtr(), totalSize);
+}
