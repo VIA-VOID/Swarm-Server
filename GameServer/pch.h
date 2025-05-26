@@ -11,3 +11,5 @@
 #endif
 
 #include "Pch/CorePch.h"
+#include "Protocol/Protocol.pb.h"
+#include "Network/Session.h"
