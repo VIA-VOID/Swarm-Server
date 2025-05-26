@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Job/ContentsJobGroups.h"
-#include "Packet/ClientPacketHandler.h"
-#include "Network/SessionManager.h"
+#include "Packet/PacketHandler.h"
 
 class GameClient : public CoreService
 {
@@ -10,7 +9,7 @@ public:
 		: CoreService(ServiceType::Client)
 	{
 		// 패킷 핸들러 초기화
-		ClientPacketHandler::Init();
+		PacketHandler::Init();
 		// JobGroup 초기화
 		JobGroups::Init();
 		// Job 스레드 생성 요청
@@ -27,7 +26,7 @@ public:
 	{
 	}
 
-	void OnRecv(Session* session, const BYTE* buffer, int32 len) override
+	void OnRecv(Session* session, BYTE* buffer, int32 len) override
 	{
 	}
 
@@ -42,9 +41,6 @@ int wmain()
 
 	GameClient client;
 	client.Run(7777, "127.0.0.1", 5);
-
-	uint32 count = SessionMgr.GetCurrentSessionCount();
-	LOG_INFO(L"GetSessionCount: " + Utils::ToWString(count));
 
 	ThreadMgr.JoinAll();
 

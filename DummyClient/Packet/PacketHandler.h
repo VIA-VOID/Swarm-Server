@@ -1,69 +1,64 @@
 #pragma once
+#include "PacketId.h"
 #include "Utils/Utils.h"
 
-class Session;
+class PacketHandler;
 
 using PacketFunc = std::function<void(Session*, BYTE*, uint16)>;
-
-enum : uint16
-{
-	// 자동화 코드
-	SC_CHAT_MSG = 0,
-	SC_PLAYER_CREATE = 1,
-	SC_PLAYER_MOVE = 2,
-};
+using PacketClass = std::vector<std::unique_ptr<PacketHandler>>;
 
 /*--------------------------------------------------------
-					ClientPacketHandler
+					PacketHandler
 
-- protobuf 적용
-- 컨텐츠 로직 함수
-- 자동화 도구로 생성된 핸들러들이 여기 추가됨
-	- SC: Server에서 Client로 패킷 전달
-	- CS: Client에서 Server로 패킷 전달
+- Protobuf 패킷, 패킷함수 관리
+- 도메인별로 PacketHandler를 상속받아 핸들러 등록
+- PacketHandler.cpp의 Init 구현부 자동생성
 --------------------------------------------------------*/
 
-class ClientPacketHandler
+class PacketHandler
 {
 public:
-	// 함수 테이블 초기화
-	static void Init()
-	{
-		// 자동화 코드
-		_handlers[SC_CHAT_MSG] = [](Session* session, BYTE* buffer, int32 len)
-			{
-				ClientPacketHandler::HandlePacket<Protocol::SC_CHAT_MSG>(Handle_SC_CHAT_MSG, session, buffer, len);
-			};
-		_handlers[SC_PLAYER_CREATE] = [](Session* session, BYTE* buffer, int32 len)
-			{
-				ClientPacketHandler::HandlePacket<Protocol::SC_PLAYER_CREATE>(Handle_SC_PLAYER_CREATE, session, buffer, len);
-			};
-		_handlers[SC_PLAYER_MOVE] = [](Session* session, BYTE* buffer, int32 len)
-			{
-				ClientPacketHandler::HandlePacket<Protocol::SC_PLAYER_MOVE>(Handle_SC_PLAYER_MOVE, session, buffer, len);
-			};
-	}
+	virtual ~PacketHandler() = default;
+	// 파생 클래스들의 테이블 등록, 초기화
+	// 자동생성 코드
+	static void Init();
+	// 함수 테이블 등록
+	// 상속받아 구현
+	virtual void RegisterHandlers(PacketFunc* handlers) = 0;
 	// 함수 테이블에 등록된 함수 실행 (템플릿 HandlePacket 함수 실행)
 	static void HandlePacket(Session* session, BYTE* buffer, uint16 len);
+	// 패킷 전송
+	template<typename T>
+	static void SendPacket(Session* session, const T& packet, PacketID packetId);
+
+protected:
+	// 함수 테이블에 패킷 등록
+	template<typename PacketType, typename HandleFunc>
+	static void RegisterPacket(PacketID packetId, HandleFunc handle);
 	// 전달받은 RunFunc 함수 실행
 	template<typename PacketType, typename RunFunc>
 	static void HandlePacket(RunFunc func, Session* session, BYTE* buffer, uint16 len);
-	// 패킷 전송
-	template<typename T>
-	static void SendPacket(Session* session, const T& packet, uint16 packetId);
-	// 자동화 코드
-	static void Handle_SC_CHAT_MSG(Session* session, Protocol::SC_CHAT_MSG& packet);
-	static void Handle_SC_PLAYER_CREATE(Session* session, Protocol::SC_PLAYER_CREATE& packet);
-	static void Handle_SC_PLAYER_MOVE(Session* session, Protocol::SC_PLAYER_MOVE& packet);
 
-private:
+protected:
 	// 함수 테이블
 	static PacketFunc _handlers[UINT16_MAX];
+	// 도메인별 핸들러
+	static PacketClass _domainHandlerClasses;
 };
+
+// 함수 테이블에 패킷 등록
+template<typename PacketType, typename HandleFunc>
+inline void PacketHandler::RegisterPacket(PacketID packetId, HandleFunc handle)
+{
+	_handlers[static_cast<uint16>(packetId)] = [handle](Session* session, BYTE* buffer, uint16 len)
+		{
+			HandlePacket<PacketType>(handle, session, buffer, len);
+		};
+}
 
 // 전달받은 RunFunc 함수 실행
 template<typename PacketType, typename RunFunc>
-inline void ClientPacketHandler::HandlePacket(RunFunc func, Session* session, BYTE* buffer, uint16 len)
+inline void PacketHandler::HandlePacket(RunFunc func, Session* session, BYTE* buffer, uint16 len)
 {
 	PacketType packet;
 	PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
@@ -80,7 +75,7 @@ inline void ClientPacketHandler::HandlePacket(RunFunc func, Session* session, BY
 
 // 패킷 전송
 template<typename T>
-inline void ClientPacketHandler::SendPacket(Session* session, const T& packet, uint16 packetId)
+inline void PacketHandler::SendPacket(Session* session, const T& packet, PacketID packetId)
 {
 	const uint16 payloadSize = static_cast<uint16>(packet.ByteSizeLong());
 	const uint16 totalSize = sizeof(PacketHeader) + payloadSize;
