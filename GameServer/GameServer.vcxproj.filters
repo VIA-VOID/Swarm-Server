@@ -4,13 +4,25 @@
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Job\ContentsJobGroups.cpp" />
-    <ClCompile Include="Packet\ServerPacketHandler.cpp" />
+    <ClCompile Include="Protocol\Enum.pb.cc" />
+    <ClCompile Include="Protocol\Protocol.pb.cc" />
+    <ClCompile Include="Protocol\Struct.pb.cc" />
+    <ClCompile Include="Packet\PacketId.cpp" />
+    <ClCompile Include="Packet\PlayerPacketHandler.cpp" />
+    <ClCompile Include="Packet\PacketHandler.cpp" />
+    <ClCompile Include="Packet\ChatPacketHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
     <ClInclude Include="Job\ContentsJob.txt" />
     <ClInclude Include="Job\ContentsJobGroups.h" />
-    <ClInclude Include="Packet\ServerPacketHandler.h" />
+    <ClInclude Include="Protocol\Enum.pb.h" />
+    <ClInclude Include="Protocol\Protocol.pb.h" />
+    <ClInclude Include="Protocol\Struct.pb.h" />
+    <ClInclude Include="Packet\PacketHandler.h" />
+    <ClInclude Include="Packet\PlayerPacketHandler.h" />
+    <ClInclude Include="Packet\PacketId.h" />
+    <ClInclude Include="Packet\ChatPacketHandler.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Service">
