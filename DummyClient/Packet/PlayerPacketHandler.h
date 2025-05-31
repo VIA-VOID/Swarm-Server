@@ -13,7 +13,7 @@ class PlayerPacketHandler : public PacketHandler
 public:
 	// 자동생성
 	// 함수 테이블 등록
-	void RegisterHandlers(PacketFunc* handlers) override
+	void RegisterHandlers() override
 	{
 		RegisterPacket<Protocol::SC_PLAYER_CREATE>(PacketID::SC_PLAYER_CREATE, Handle_SC_PLAYER_CREATE);
 		RegisterPacket<Protocol::SC_PLAYER_MOVE>(PacketID::SC_PLAYER_MOVE, Handle_SC_PLAYER_MOVE);

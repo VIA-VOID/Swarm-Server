@@ -13,7 +13,7 @@ class ChatPacketHandler : public PacketHandler
 public:
 	// 자동생성
 	// 함수 테이블 등록
-	void RegisterHandlers(PacketFunc* handlers) override
+	void RegisterHandlers() override
 	{
 		RegisterPacket<Protocol::SC_CHAT_MSG>(PacketID::SC_CHAT_MSG, Handle_SC_CHAT_MSG);
 	}

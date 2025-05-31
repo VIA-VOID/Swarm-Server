@@ -24,7 +24,7 @@ public:
 	static void Init();
 	// 함수 테이블 등록
 	// 상속받아 구현
-	virtual void RegisterHandlers(PacketFunc* handlers) = 0;
+	virtual void RegisterHandlers() = 0;
 	// 함수 테이블에 등록된 함수 실행 (템플릿 HandlePacket 함수 실행)
 	static void HandlePacket(Session* session, BYTE* buffer, uint16 len);
 	// 패킷 전송
@@ -61,7 +61,6 @@ template<typename PacketType, typename RunFunc>
 inline void PacketHandler::HandlePacket(RunFunc func, Session* session, BYTE* buffer, uint16 len)
 {
 	PacketType packet;
-	PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
 	BYTE* payload = buffer + sizeof(PacketHeader);
 	uint16 payloadSize = len - sizeof(PacketHeader);
 
