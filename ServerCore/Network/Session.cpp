@@ -319,16 +319,16 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		{
 			continue;
 		}
-		int32 useSize = buffer->GetUseSize();
+		int32 useSize = buffer->GetUseSizeLock();
 		// 남은 데이터만큼 ReadPos 이동
 		if (transferred >= useSize)
 		{
 			// 완전 전송
 			buffer->CommitSend(useSize);
-			buffer->CleanPos();
+			buffer->CleanPosLock();
 			transferred -= useSize;
 			// 모든 데이터가 전송되었을 경우 해제
-			if (buffer->GetUseSize() == 0)
+			if (buffer->GetUseSizeLock() == 0)
 			{
 				ObjectPool<SendBuffer>::Release(buffer);
 			}
