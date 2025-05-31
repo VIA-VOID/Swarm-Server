@@ -1,32 +1,72 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Job\ContentsJobGroups.cpp" />
-    <ClCompile Include="Protocol\Enum.pb.cc" />
-    <ClCompile Include="Protocol\Protocol.pb.cc" />
-    <ClCompile Include="Protocol\Struct.pb.cc" />
-    <ClCompile Include="Packet\PacketId.cpp" />
-    <ClCompile Include="Packet\PlayerPacketHandler.cpp" />
-    <ClCompile Include="Packet\PacketHandler.cpp" />
-    <ClCompile Include="Packet\ChatPacketHandler.cpp" />
+    <ClCompile Include="Job\ContentsJobGroups.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\Enum.pb.cc">
+      <Filter>Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\Protocol.pb.cc">
+      <Filter>Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\Struct.pb.cc">
+      <Filter>Protocol</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\ChatPacketHandler.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\PacketHandler.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\PacketId.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\PlayerPacketHandler.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="GameServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Job\ContentsJob.txt" />
-    <ClInclude Include="Job\ContentsJobGroups.h" />
-    <ClInclude Include="Protocol\Enum.pb.h" />
-    <ClInclude Include="Protocol\Protocol.pb.h" />
-    <ClInclude Include="Protocol\Struct.pb.h" />
-    <ClInclude Include="Packet\PacketHandler.h" />
-    <ClInclude Include="Packet\PlayerPacketHandler.h" />
-    <ClInclude Include="Packet\PacketId.h" />
-    <ClInclude Include="Packet\ChatPacketHandler.h" />
+    <ClInclude Include="Job\ContentsJob.txt">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Job\ContentsJobGroups.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\Enum.pb.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\Protocol.pb.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\Struct.pb.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\ChatPacketHandler.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\PacketHandler.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\PacketId.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\PlayerPacketHandler.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Service">
-      <UniqueIdentifier>{fb749b75-c135-44f8-8c88-8e3fa0d42336}</UniqueIdentifier>
+    <Filter Include="Job">
+      <UniqueIdentifier>{339e93d0-b1b8-4eee-9900-7cc601deffba}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Protocol">
+      <UniqueIdentifier>{37b890ca-a01a-4785-b37f-9b64a6b10824}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Packet">
+      <UniqueIdentifier>{d4a8df1b-1f49-4c4a-8fc7-79579b836a6e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
