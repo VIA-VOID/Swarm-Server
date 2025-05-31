@@ -103,7 +103,6 @@ bool RingBuffer::Enqueue(const BYTE* src, uint32 size)
 	if (size > firstEnqueSize)
 	{
 		// 나누어 삽입
-		uint32 firstEnqueSize = GetDirectEnqueSize();
 		::memcpy_s(&_buffer[_writePos], firstEnqueSize, src, firstEnqueSize);
 		::memcpy_s(&_buffer[0], size - firstEnqueSize, src + firstEnqueSize, size - firstEnqueSize);
 	}
