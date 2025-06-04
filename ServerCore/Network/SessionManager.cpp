@@ -67,7 +67,7 @@ void SessionManager::Release(Session* session)
 	auto it = _sessions.find(session->GetSessionID());
 	if (it != _sessions.end() && it->second == session)
 	{
-		LOG_WARNING(L"이미 등록된 세션입니다. Remove를 통해 제거");
+		LOG_WARNING("이미 등록된 세션입니다. Remove를 통해 제거");
 		return;
 	}
 	ObjectPool<Session>::Release(session);
@@ -152,7 +152,7 @@ void SessionManager::Tick()
 	// 타임아웃 세션 닫기
 	for (auto& session : timeoutSessions)
 	{
-		LOG_WARNING(L"세션 타임아웃: " + std::to_wstring(session->GetSessionID().GetID()));
+		LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
 		session->Close();
 	}
 
@@ -162,6 +162,12 @@ void SessionManager::Tick()
 		CleanUpSession();
 		_lastCleanUpTime = NOW;
 	}
+}
+
+// 현재 세션 수 가져오기
+uint32 SessionManager::GetCurrentSessionCount()
+{
+	return static_cast<uint32>(_sessions.size());
 }
 
 // 삭제 대기 중인 세션 정리

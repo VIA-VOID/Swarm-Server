@@ -30,6 +30,8 @@ public:
 	Session* Find(SessionID sessionID);
 	// 타임아웃 세션 관리
 	void Tick();
+	// 현재 세션 수 가져오기
+	uint32 GetCurrentSessionCount();
 
 private:
 	// 삭제 대기 중인 세션 정리

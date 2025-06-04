@@ -154,7 +154,7 @@ uint16 MemoryManager::SizeToIndex(uint32 size)
 			return index;
 		}
 	}
-	LOG_ERROR(L"블록 배열 매핑 실패!!");
+	LOG_ERROR("블록 배열 매핑 실패!!");
 	CRASH("NOT FOUND INDEX");
 	return 0;
 }

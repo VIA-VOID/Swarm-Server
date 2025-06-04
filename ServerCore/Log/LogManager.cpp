@@ -31,22 +31,22 @@ void LogManager::Shutdown()
 }
 
 // 로그 쌓기
-void LogManager::PushLog(const LogType type, const std::wstring& message, const char* fnName)
+void LogManager::PushLog(const LogType type, const std::string& message, const char* fnName)
 {
 	LogMessage log(type, message, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
 
 	JobQ.DoAsync([this, log = std::move(log)]() {
-		ProcessThread(log._type, log.ToWString());
+		ProcessThread(log._type, log.ToString());
 		}, JobGroups::Log);
 }
 
 // 스레드 일감
-void LogManager::ProcessThread(const LogType type, const std::wstring& message)
+void LogManager::ProcessThread(const LogType type, const std::string& message)
 {
 #if _DEBUG
 	// console log
 	PrintColor(type);
-	std::cerr << Utils::ConvertUtf8(message);
+	std::cerr << message;
 	ResetColor();
 #endif
 
@@ -73,18 +73,11 @@ void LogManager::ProcessThread(const LogType type, const std::wstring& message)
 // 파일 생성
 void LogManager::CreateLogFile()
 {
-	std::wstring dir = Utils::SetFilePath() + L"\\Logs";
-	::CreateDirectoryW(dir.c_str(), nullptr);
+	std::string dir = Utils::SetFilePath() + "\\Logs";
+	::CreateDirectoryA(dir.c_str(), nullptr);
 
-	std::wstring fileName = dir + L"\\Serverlog_" + Clock::GetFormattedDate(L'_') + L".log";
+	std::string fileName = dir + "\\Serverlog_" + Clock::GetFormattedDate('_') + ".log";
 	_file.open(fileName, std::ios::app);
-
-	if (_file.tellp() == 0)
-	{
-		// UTF-8 BOM 추가
-		const char utf8BOM[] = "\xEF\xBB\xBF";
-		_file.write(utf8BOM, sizeof(utf8BOM) - 1);
-	}
 }
 
 // 파일 flush
@@ -92,8 +85,7 @@ void LogManager::FlushBuffer()
 {
 	for (const auto& log : _buffer)
 	{
-		std::string utf8 = Utils::ConvertUtf8(log.c_str());
-		_file.write(utf8.c_str(), utf8.size());
+		_file.write(log.c_str(), log.size());
 	}
 	_file.flush();
 	_buffer.clear();

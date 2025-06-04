@@ -60,7 +60,7 @@
 #else
 #define USE_LOCK						std::mutex _mutex
 #define LOCK_GUARD						std::lock_guard<std::mutex> lockGuard(_mutex)
-#define GROUP_LOCK_GUARD(group)			std::lock_guard<std::mutex> lockGuard(&((group)._mutex))
+#define GROUP_LOCK_GUARD(group)			std::lock_guard<std::mutex> lockGuard(group._mutex)
 #define UNIQUE_LOCK_GUARD				std::unique_lock<std::mutex> ulockGuard(_mutex)
-#define GROUP_UNIQUE_LOCK(group)		std::unique_lock<std::mutex> ulockGuard(&((group)._mutex))
+#define GROUP_UNIQUE_LOCK(group)		std::unique_lock<std::mutex> ulockGuard(group._mutex)
 #endif

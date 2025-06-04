@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "ThreadManager.h"
-#include "Utils/Utils.h"
 
 /*----------------------------
 		ThreadManager
@@ -30,7 +29,7 @@ void ThreadManager::LaunchGroup(JobGroupId groupId, uint16 count, CallbackType j
 			}
 		);
 
-		LOG_INFO(L"Thread Created :: " + Utils::ConvertUtf16(name));
+		LOG_INFO("Thread Created :: " + name);
 	}
 }
 

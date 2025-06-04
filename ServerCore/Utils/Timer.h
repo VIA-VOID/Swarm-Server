@@ -7,9 +7,9 @@ class Clock
 {
 public:
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-	static std::wstring GetFormattedTime(wchar_t dateSep = '/', wchar_t timeSep = L':');
+	static std::string GetFormattedTime(char dateSep = '/', char timeSep = L':');
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd)
-	static std::wstring GetFormattedDate(wchar_t dateSep = '/');
+	static std::string GetFormattedDate(char dateSep = '/');
 	// 일자 변경 여부
 	static bool IsNewDay();
 	// 두 시간 사이의 차이, 밀리초 반환

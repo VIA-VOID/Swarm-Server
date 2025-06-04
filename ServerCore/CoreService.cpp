@@ -16,7 +16,6 @@ CoreService::CoreService(ServiceType type)
 	MemoryMgr.Init();
 
 #if _DEBUG
-	::SetConsoleOutputCP(CP_UTF8);
 	DeadLockMgr.Init();
 #endif
 	JobGroupMgr.Init();
@@ -66,7 +65,7 @@ void CoreService::Stop()
 
 void CoreService::DummyConnect(uint16 port, const std::string& address, uint16 connectCount)
 {
-	LOG_SYSTEM(L"Dummy Client 생성 시작");
+	LOG_SYSTEM("Dummy Client 생성 시작");
 
 	for (uint16 i = 0; i < connectCount; i++)
 	{

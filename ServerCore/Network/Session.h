@@ -77,7 +77,7 @@ private:
 	void ProcessSend();
 	// 로그 찍기
 	// ERROR, WARNING
-	void LogError(const std::wstring& msg, const int32 errorCode, const LogType type = LogType::Error);
+	void LogError(const std::string& msg, const int32 errorCode, const LogType type = LogType::Error);
 
 private:
 	USE_LOCK;

@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Session.h"
 #include "SessionManager.h"
-#include "Utils/Utils.h"
 
 /*----------------------------
 		Session
@@ -45,7 +44,7 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 	{
 		// 주소 저장 실패시 세션 종료
 		int32 errorCode = ::WSAGetLastError();
-		LogError(L"getpeername 실패", errorCode, LogType::Warning);
+		LogError("getpeername 실패", errorCode, LogType::Warning);
 		return false;
 	}
 	// 비동기 수신 시작
@@ -127,7 +126,7 @@ void Session::Send(const BYTE* data, int32 len)
 	{
 		// 세션종료
 		int32 errorCode = ::WSAGetLastError();
-		LogError(L"SendBuffer Write 실패, 해당 세션 종료", errorCode);
+		LogError("SendBuffer Write 실패, 해당 세션 종료", errorCode);
 		ObjectPool<SendBuffer>::Release(sendBuffer);
 		Close();
 		return;
@@ -181,7 +180,7 @@ void Session::ProcessRecv()
 		{
 			// 세션종료
 			int32 errorCode = ::WSAGetLastError();
-			LogError(L"WSARecv 실패, 해당 세션 종료", errorCode);
+			LogError("WSARecv 실패, 해당 세션 종료", errorCode);
 			Close();
 		}
 	}
@@ -257,7 +256,7 @@ void Session::ProcessSend()
 				}
 			}
 			int32 errorCode = ::WSAGetLastError();
-			LogError(L"WSASend 실패, 해당 세션 종료", errorCode);
+			LogError("WSASend 실패, 해당 세션 종료", errorCode);
 			_sending.store(false);
 			Close();
 			return;
@@ -441,10 +440,10 @@ bool Session::IsActive()
 
 // 로그 찍기
 // ERROR, WARNING
-void Session::LogError(const std::wstring& msg, const  int32 errorCode, const LogType type /*= LogType::Error*/)
+void Session::LogError(const std::string& msg, const  int32 errorCode, const LogType type /*= LogType::Error*/)
 {
-	std::wstring errorMsg = msg;
-	errorMsg += L" [errorCode: " + Utils::ToWString(errorCode) + L"]";
+	std::string errorMsg = msg;
+	errorMsg += " [errorCode: " + std::to_string(errorCode) + "]";
 
 	if (type == LogType::Error)
 	{

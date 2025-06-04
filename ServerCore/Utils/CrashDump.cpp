@@ -18,22 +18,22 @@ void CrashDump::Init()
 }
 
 // Dump 파일명 지정
-std::wstring CrashDump::MakeDumpFileName()
+std::string CrashDump::MakeDumpFileName()
 {
-	std::wstring dumpPath = Utils::SetFilePath() + L"\\Dumps";
+	std::string dumpPath = Utils::SetFilePath() + "\\Dumps";
 
 	// 폴더가 없으면 생성
-	::CreateDirectoryW(dumpPath.c_str(), nullptr);
+	::CreateDirectoryA(dumpPath.c_str(), nullptr);
 
-	return dumpPath + L"\\dump_" + Clock::GetFormattedTime(L'_', L'_') + L".dmp";
+	return dumpPath + "\\dump_" + Clock::GetFormattedTime('_', '_') + ".dmp";
 }
 
 // dump 파일 생성
 LONG WINAPI CrashDump::ExceptionFilter(EXCEPTION_POINTERS* pExceptionInfo)
 {
-	std::wstring dumpFileName = MakeDumpFileName();
+	std::string dumpFileName = MakeDumpFileName();
 
-	HANDLE hFile = ::CreateFile(
+	HANDLE hFile = ::CreateFileA(
 		dumpFileName.c_str(),
 		GENERIC_WRITE,
 		FILE_SHARE_WRITE,

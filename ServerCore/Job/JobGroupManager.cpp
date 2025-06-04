@@ -85,7 +85,7 @@ JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name
 	// 이미 등록된 ID인지 확인
 	if (_groups.find(id) != _groups.end())
 	{
-		LOG_WARNING(L"이미 등록된 JobGroup ID: " + std::to_wstring(id));
+		LOG_WARNING("이미 등록된 JobGroup ID: " + std::to_string(id));
 		return JobGroups::Invalid;
 	}
 

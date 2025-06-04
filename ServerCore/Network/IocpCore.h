@@ -54,7 +54,7 @@ private:
 	// HeartBeat 작업 등록
 	void StartHeartbeatTask();
 	// 로그 찍기
-	void LogError(const std::wstring& msg, const int32 errorCode);
+	void LogError(const std::string& msg, const int32 errorCode);
 
 private:
 	LPFN_ACCEPTEX _acceptEx;

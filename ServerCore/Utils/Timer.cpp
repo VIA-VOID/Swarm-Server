@@ -11,7 +11,7 @@ using namespace std::chrono;
 ----------------------------*/
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-std::wstring Clock::GetFormattedTime(wchar_t dateSep /*= '/'*/, wchar_t timeSep /*= L':'*/)
+std::string Clock::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= L':'*/)
 {
 	system_clock::time_point now = system_clock::now();
 	auto ms = ::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -20,22 +20,22 @@ std::wstring Clock::GetFormattedTime(wchar_t dateSep /*= '/'*/, wchar_t timeSep 
 	std::tm time_tm{};
 	::localtime_s(&time_tm, &now_c);
 
-	std::wstringstream oss;
+	std::stringstream oss;
 	oss << std::put_time(&time_tm, (
-		std::wstring(L"%Y") + dateSep +
-		L"%m" + dateSep +
-		L"%d %H" + timeSep +
-		L"%M" + timeSep +
-		L"%S").c_str()
+		std::string("%Y") + dateSep +
+		"%m" + dateSep +
+		"%d %H" + timeSep +
+		"%M" + timeSep +
+		"%S").c_str()
 	);
 
-	oss << L"." << std::setw(3) << std::setfill(L'0') << ms.count();
+	oss << "." << std::setw(3) << std::setfill('0') << ms.count();
 
 	return oss.str();
 }
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd)
-std::wstring Clock::GetFormattedDate(wchar_t dateSep /*= '/'*/)
+std::string Clock::GetFormattedDate(char dateSep /*= '/'*/)
 {
 	system_clock::time_point now = system_clock::now();
 
@@ -43,11 +43,11 @@ std::wstring Clock::GetFormattedDate(wchar_t dateSep /*= '/'*/)
 	std::tm time_tm{};
 	::localtime_s(&time_tm, &now_c);
 
-	std::wstringstream oss;
+	std::stringstream oss;
 	oss << std::put_time(&time_tm, (
-		std::wstring(L"%Y") + dateSep +
-		L"%m" + dateSep +
-		L"%d").c_str()
+		std::string("%Y") + dateSep +
+		"%m" + dateSep +
+		"%d").c_str()
 	);
 
 	return oss.str();
@@ -56,8 +56,8 @@ std::wstring Clock::GetFormattedDate(wchar_t dateSep /*= '/'*/)
 // 일자 변경 여부
 bool Clock::IsNewDay()
 {
-	static std::wstring today = GetFormattedDate();
-	std::wstring now = GetFormattedDate();
+	static std::string today = GetFormattedDate();
+	std::string now = GetFormattedDate();
 
 	// 일자변경
 	if (today != now)
