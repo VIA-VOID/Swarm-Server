@@ -14,6 +14,10 @@ void JobEventQueue::Init()
 	for (const auto& pair : allGroups)
 	{
 		JobGroupId groupId = pair.first;
+		if (groupId == JobGroups::Network)
+		{
+			continue;
+		}
 		_groupRunning[groupId].store(true, std::memory_order::memory_order_relaxed);
 		AddThread(groupId);
 	}
