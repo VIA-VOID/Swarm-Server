@@ -13,3 +13,5 @@
 #include "Pch/CorePch.h"
 #include "Protocol/Protocol.pb.h"
 #include "Network/Session.h"
+#include "Job/JobGroup.h"
+#include "Packet/PacketHandler.h"
