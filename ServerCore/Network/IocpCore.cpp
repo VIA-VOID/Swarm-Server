@@ -206,7 +206,7 @@ bool IocpCore::WSAIoctlConnectEx(SOCKET socket)
 // connectEx 실행
 void IocpCore::ProcessConnect(SessionRef session, const std::string& address, uint16 port)
 {
-	ConnectContext* connectContext = session->GetConnectContext();
+	ConnectContext* connectContext = ObjectPool<ConnectContext>::Allocate();
 	ZeroMemory(&connectContext->overlapped, sizeof(connectContext->overlapped));
 	connectContext->session = session;
 
@@ -225,6 +225,7 @@ void IocpCore::ProcessConnect(SessionRef session, const std::string& address, ui
 		if (errorCode != ERROR_IO_PENDING)
 		{
 			LogError("ConnectEx 실패", errorCode);
+			ObjectPool<ConnectContext>::Release(connectContext);
 			return;
 		}
 	}
@@ -235,7 +236,7 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 {
 	// ConnectContext 복원
 	ConnectContext* connectContext = reinterpret_cast<ConnectContext*>(overlappedEx);
-	SessionRef session = connectContext->session.lock();
+	SessionRef session = connectContext->session;
 	if (session == nullptr)
 	{
 		LOG_WARNING("세션 nullptr");
@@ -248,17 +249,20 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError("SO_UPDATE_CONNECT_CONTEXT 설정 실패", errorCode);
+		ObjectPool<ConnectContext>::Release(connectContext);
 		return false;
 	}
 
 	// 세션 초기화
 	if (session->Init(clientSocket, _iocpHandle) == false)
 	{
+		ObjectPool<ConnectContext>::Release(connectContext);
 		return false;
 	}
+	
 	// 세션 매니저에 등록
 	SessionMgr.Add(session);
-
+	ObjectPool<ConnectContext>::Release(connectContext);
 	return true;
 }
 
@@ -309,8 +313,12 @@ void IocpCore::RequestAccept()
 }
 
 // Accept 재요청
-void IocpCore::ReRequestAccept()
+void IocpCore::ReRequestAccept(AcceptContext* context/* = nullptr*/)
 {
+	if (context != nullptr)
+	{
+		ObjectPool<AcceptContext>::Release(context);
+	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	RequestAccept();
 }
@@ -319,7 +327,7 @@ void IocpCore::ReRequestAccept()
 void IocpCore::ProcessAccept(SessionRef session)
 {
 	// AcceptContext 초기화
-	AcceptContext* acceptContext = session->GetAcceptContext();
+	AcceptContext* acceptContext = ObjectPool<AcceptContext>::Allocate();
 	ZeroMemory(&acceptContext->overlapped, sizeof(acceptContext->overlapped));
 	acceptContext->type = NetworkIOType::Accept;
 	acceptContext->session = session;
@@ -336,7 +344,7 @@ void IocpCore::ProcessAccept(SessionRef session)
 		{
 			LogError("AcceptEx 실패", errorCode);
 			::closesocket(clientSocket);
-			ReRequestAccept();
+			ReRequestAccept(acceptContext);
 			return;
 		}
 	}
@@ -347,11 +355,11 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 {
 	// AcceptContext 복원
 	AcceptContext* acceptContext = reinterpret_cast<AcceptContext*>(overlappedEx);
-	SessionRef session = acceptContext->session.lock();
+	SessionRef session = acceptContext->session;
 	if (session == nullptr)
 	{
 		LOG_WARNING("세션 nullptr");
-		ReRequestAccept();
+		ReRequestAccept(acceptContext);
 ;		return false;
 	}
 	SOCKET clientSocket = session->GetSocket();
@@ -364,7 +372,7 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 		int32 errorCode = ::WSAGetLastError();
 		LogError("SO_UPDATE_ACCEPT_CONTEXT 설정 실패", errorCode);
 		::closesocket(clientSocket);
-		ReRequestAccept();
+		ReRequestAccept(acceptContext);
 		return false;
 	}
 	// 세션 초기화
@@ -378,7 +386,7 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	// 세션 매니저에 등록
 	SessionMgr.Add(session);
 	// Accept 재요청
-	ReRequestAccept();
+	ReRequestAccept(acceptContext);
 	return true;
 }
 

@@ -42,7 +42,7 @@ private:
 	// Accept 요청
 	void RequestAccept();
 	// Accept 재요청
-	void ReRequestAccept();
+	void ReRequestAccept(AcceptContext* context = nullptr);
 	// AcceptEx 실행
 	void ProcessAccept(SessionRef session);
 	// Accept 완료
