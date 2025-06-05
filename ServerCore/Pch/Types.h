@@ -33,5 +33,12 @@ using JobGroupId = uint16;
 //----------------------------------------------------------//
 // 스마트포인터
 #define SHARED_PTR(name)		using name##Ref = std::shared_ptr<class name>;
+#define WEAK_PTR(name)			using name##WRef = std::weak_ptr<class name>;
+#define UNIQUE_PTR(name)		using name##URef = std::shared_ptr<class name>;
+
+WEAK_PTR(Session)
 
 SHARED_PTR(SendBuffer)
+SHARED_PTR(Session)
+
+UNIQUE_PTR(PacketHandler)
