@@ -208,6 +208,7 @@ void IocpCore::ProcessConnect(SessionRef session, const std::string& address, ui
 {
 	ConnectContext* connectContext = ObjectPool<ConnectContext>::Allocate();
 	ZeroMemory(&connectContext->overlapped, sizeof(connectContext->overlapped));
+	connectContext->type = NetworkIOType::Connect;
 	connectContext->session = session;
 
 	SOCKADDR_IN serverAddr;
