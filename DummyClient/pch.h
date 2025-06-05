@@ -12,4 +12,7 @@
 
 #include "Pch/CorePch.h"
 #include "Protocol/Protocol.pb.h"
+#include "Protocol/Enum.pb.h"
+#include "Protocol/Struct.pb.h"
 #include "Network/Session.h"
+#include "Job/JobGroup.h"
