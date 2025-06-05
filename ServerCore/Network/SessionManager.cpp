@@ -26,7 +26,7 @@ void SessionManager::Shutdown()
 	// 활성화된 세션 종료
 	for (auto session : activeSessions)
 	{
-		if (session != nullptr && session->IsActive())
+		if (session != nullptr)
 		{
 			session->Close();
 		}
