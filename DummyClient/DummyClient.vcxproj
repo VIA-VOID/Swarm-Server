@@ -175,8 +175,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Job\ContentsJobGroups.cpp" />
     <ClCompile Include="DummyClient.cpp" />
+    <ClCompile Include="Job\JobGroup.cpp" />
     <ClCompile Include="Packet\ChatPacketHandler.cpp" />
     <ClCompile Include="Packet\PacketHandler.cpp" />
     <ClCompile Include="Packet\PacketId.cpp" />
@@ -198,7 +198,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Job\ContentsJobGroups.h" />
+    <ClInclude Include="Job\JobGroup.h" />
     <ClInclude Include="Packet\ChatPacketHandler.h" />
     <ClInclude Include="Packet\PacketHandler.h" />
     <ClInclude Include="Packet\PacketId.h" />
@@ -207,9 +207,6 @@
     <ClInclude Include="Protocol\Enum.pb.h" />
     <ClInclude Include="Protocol\Protocol.pb.h" />
     <ClInclude Include="Protocol\Struct.pb.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="Job\ContentsJob.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

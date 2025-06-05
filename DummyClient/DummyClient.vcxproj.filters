@@ -3,9 +3,6 @@
   <ItemGroup>
     <ClCompile Include="DummyClient.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Job\ContentsJobGroups.cpp">
-      <Filter>Job</Filter>
-    </ClCompile>
     <ClCompile Include="Protocol\Enum.pb.cc">
       <Filter>Protocol</Filter>
     </ClCompile>
@@ -27,12 +24,10 @@
     <ClCompile Include="Packet\PlayerPacketHandler.cpp">
       <Filter>Packet</Filter>
     </ClCompile>
+    <ClCompile Include="Job\JobGroup.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Job\ContentsJobGroups.h">
-      <Filter>Job</Filter>
-    </ClInclude>
     <ClInclude Include="Protocol\Struct.pb.h">
       <Filter>Protocol</Filter>
     </ClInclude>
@@ -54,6 +49,7 @@
     <ClInclude Include="Packet\PlayerPacketHandler.h">
       <Filter>Packet</Filter>
     </ClInclude>
+    <ClInclude Include="Job\JobGroup.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
@@ -65,10 +61,5 @@
     <Filter Include="Protocol">
       <UniqueIdentifier>{99fde6a4-b586-4c99-b0aa-8e7142d81cd6}</UniqueIdentifier>
     </Filter>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="Job\ContentsJob.txt">
-      <Filter>Job</Filter>
-    </Text>
   </ItemGroup>
 </Project>
