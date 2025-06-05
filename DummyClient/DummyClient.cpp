@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "Job/ContentsJobGroups.h"
 #include "Packet/PacketHandler.h"
 
 class GameClient : public CoreService
@@ -11,26 +10,24 @@ public:
 		// 패킷 핸들러 초기화
 		PacketHandler::Init();
 		// JobGroup 초기화
-		JobGroups::Init();
-		// Job 스레드 생성 요청
-		JobGroups::CreateThreadsForGroups();
+		JobGroup::Init();
 	}
 	virtual ~GameClient() {}
 
-	void OnConnected(Session* session) override
+	void OnConnected(SessionRef session) override
 	{
-		LOG_SYSTEM(L"Server Connect!! session: " + Utils::ToWString(session->GetSessionID().GetID()));
+		LOG_SYSTEM("Server Connect!! session: " + std::to_string(session->GetSessionID().GetID()));
 	}
 
-	void OnDisconnected(Session* session) override
-	{
-	}
-
-	void OnRecv(Session* session, BYTE* buffer, int32 len) override
+	void OnDisconnected(SessionRef session) override
 	{
 	}
 
-	void OnSend(Session* session, int32 len) override
+	void OnRecv(SessionRef session, BYTE* buffer, int32 len) override
+	{
+	}
+
+	void OnSend(SessionRef session, int32 len) override
 	{
 	}
 };
