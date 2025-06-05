@@ -34,15 +34,17 @@ private:
 	void StartWorkerThreads(uint16 maxWorkerThreadNum);
 	// connectEx 실행
 	// 서버 연결 시도
-	void ProcessConnect(Session* session, const std::string& address, uint16 port);
+	void ProcessConnect(SessionRef session, const std::string& address, uint16 port);
 	// connect 완료
 	bool OnConnectCompleted(OverlappedEx* overlappedEx);
 	// acceptEx 함수 로딩
 	bool WSAIoctlAcceptEx();
 	// Accept 요청
 	void RequestAccept();
+	// Accept 재요청
+	void ReRequestAccept();
 	// AcceptEx 실행
-	void ProcessAccept(Session* session);
+	void ProcessAccept(SessionRef session);
 	// Accept 완료
 	bool OnAcceptCompleted(OverlappedEx* overlappedEx);
 	// GQCS 워커 스레드

@@ -14,111 +14,74 @@ void SessionManager::Init()
 void SessionManager::Shutdown()
 {
 	// 모든 세션 정리
+	Vector<SessionRef> activeSessions;
 	{
 		LOCK_GUARD;
-
-		// 삭제 대기 세션 정리
-		for (auto session : _deleteSessions)
+		activeSessions.reserve(_sessions.size());
+		for (const auto& pair : _sessions)
 		{
-			ObjectPool<Session>::Release(session);
+			activeSessions.push_back(pair.second);
 		}
-		_deleteSessions.clear();
-
-		// 남아있는 세션 정리
-		for (auto& pair : _sessions)
+	}
+	// 활성화된 세션 종료
+	for (auto session : activeSessions)
+	{
+		if (session != nullptr && session->IsActive())
 		{
-			Session* session = pair.second;
-			session->SetState(SessionState::Closed);
-			ObjectPool<Session>::Release(session);
+			session->Close();
 		}
+	}
+	// 정리
+	{
+		LOCK_GUARD;
 		_sessions.clear();
+		_deleteSessions.clear();
 	}
 }
 
 // 세션 생성 및 추가
-Session* SessionManager::Create()
+SessionRef SessionManager::Create()
 {
-	return ObjectPool<Session>::Allocate();
+	return ObjectPool<Session>::MakeShared();
 }
 
 // 세션 추가
-void SessionManager::Add(Session* session)
+void SessionManager::Add(SessionRef session)
 {
 	if (session == nullptr)
 	{
 		return;
 	}
-	LOCK_GUARD;
-	SessionID sessionID = session->GetSessionID();
-	_sessions.insert({ sessionID, session });
-}
-
-// _sessions에 등록되지 않은 세션용
-// 세션 해제 + 자원 해제
-void SessionManager::Release(Session* session)
-{
-	if (session == nullptr)
 	{
-		return;
+		LOCK_GUARD;
+		SessionID sessionID = session->GetSessionID();
+		_sessions.insert({ sessionID, session });
 	}
-	// 세션이 이미 매니저에 등록되어 있는지 확인 (중복 해제 방지)
-	// 이미 등록된 세션은 Remove를 통해 정리
-	LOCK_GUARD;
-	auto it = _sessions.find(session->GetSessionID());
-	if (it != _sessions.end() && it->second == session)
-	{
-		LOG_WARNING("이미 등록된 세션입니다. Remove를 통해 제거");
-		return;
-	}
-	ObjectPool<Session>::Release(session);
 }
 
 // 세션이 종료된 후 호출
-void SessionManager::OnSessionClosed(Session* session)
+void SessionManager::OnSessionClosed(SessionRef session)
 {
 	if (session == nullptr)
 	{
 		return;
 	}
-
-	LOCK_GUARD;
-
-	auto it = _sessions.find(session->GetSessionID());
-	if (it != _sessions.end() && it->second == session)
 	{
-		// 세션 목록에서 제거
-		_sessions.erase(it);
+		LOCK_GUARD;
 
-		// 세션 상태가 CloseRequest 상태가 아니면 설정
-		if (session->GetState() != SessionState::CloseRequest)
+		auto it = _sessions.find(session->GetSessionID());
+		if (it != _sessions.end() && it->second == session)
 		{
-			session->SetState(SessionState::CloseRequest);
+			// 세션 목록에서 제거
+			_sessions.erase(it);
 		}
-
 		// 삭제 대기 추가
 		_deleteSessions.push_back(session);
 	}
 }
 
-// 활성상태인 세션 지연삭제
-void SessionManager::Remove(SessionID sessionID)
-{
-	LOCK_GUARD;
-
-	auto it = _sessions.find(sessionID);
-	if (it != _sessions.end())
-	{
-		Session* removeSession = it->second;
-		// 지연 삭제
-		if (removeSession->IsActive())
-		{
-			removeSession->Close();
-		}
-	}
-}
-
 // 세션 찾기
-Session* SessionManager::Find(SessionID sessionID)
+SessionRef SessionManager::Find(SessionID sessionID)
 {
 	LOCK_GUARD;
 
@@ -130,11 +93,11 @@ Session* SessionManager::Find(SessionID sessionID)
 	return nullptr;
 }
 
-// 타임아웃 세션 관리
+// 타임아웃 세션 닫기
 void SessionManager::Tick()
 {
 	// 타임아웃된 세션 찾기
-	Vector<Session*> timeoutSessions;
+	Vector<SessionRef> timeoutSessions;
 	{
 		LOCK_GUARD;
 		timeoutSessions.reserve(_sessions.size() / 10);
@@ -142,7 +105,7 @@ void SessionManager::Tick()
 		for (auto& pair : _sessions)
 		{
 			auto& session = pair.second;
-			if (session->IsTimeout())
+			if (session != nullptr && session->IsTimeout())
 			{
 				timeoutSessions.push_back(session);
 			}
@@ -159,44 +122,26 @@ void SessionManager::Tick()
 	// 주기적으로 삭제 대기 중인 세션 정리
 	if (NOW - _lastCleanUpTime >= CLEANUP_INTERVAL)
 	{
-		CleanUpSession();
+		CleanUpSessions();
 		_lastCleanUpTime = NOW;
 	}
 }
 
-// 현재 세션 수 가져오기
-uint32 SessionManager::GetCurrentSessionCount()
-{
-	return static_cast<uint32>(_sessions.size());
-}
-
 // 삭제 대기 중인 세션 정리
-void SessionManager::CleanUpSession()
+void SessionManager::CleanUpSessions()
 {
-	// 실제 삭제할 세션 배열
-	Vector<Session*> sessions;
+	LOCK_GUARD;
+	for (auto it = _deleteSessions.begin(); it != _deleteSessions.end();)
 	{
-		LOCK_GUARD;
-		for (auto it = _deleteSessions.begin(); it != _deleteSessions.end();)
+		SessionRef session = *it;
+		// 참조 카운트가 없다면
+		if (session.use_count() <= 1)
 		{
-			Session* session = *it;
-			if (session->GetState() == SessionState::CloseRequest)
-			{
-				// 세션 목록 삭제
-				it = _deleteSessions.erase(it);
-				// 삭제 예정 추가
-				sessions.push_back(session);
-			}
-			else
-			{
-				++it;
-			}
+			it = _deleteSessions.erase(it);
 		}
-	}
-
-	// 실제 메모리 해제
-	for (Session* session : sessions)
-	{
-		ObjectPool<Session>::Release(session);
+		else
+		{
+			++it;
+		}
 	}
 }

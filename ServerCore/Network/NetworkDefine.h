@@ -42,13 +42,12 @@ struct OverlappedEx
 // 비동기 Connect 구조체
 struct ConnectContext : public OverlappedEx
 {
-	Session* session = nullptr;
+	SessionWRef session;
 };
-
 // 비동기 Accept 구조체
 struct AcceptContext : public OverlappedEx
 {
-	Session* session = nullptr;
+	SessionWRef session;
 	Array<BYTE, ACCEPT_BUFFER_SIZE> acceptBuffer;
 };
 // 비동기 Recv 구조체

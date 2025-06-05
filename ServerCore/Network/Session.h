@@ -4,14 +4,6 @@
 
 class CoreService;
 
-// 세션상태
-enum class SessionState
-{
-	Active,			// 활성
-	CloseRequest,	// 종료 요청
-	Closed			// 완전 종료 - 메모리 해제
-};
-
 /*
 	패킷구조
 	[id][size][protobuf data]
@@ -32,11 +24,11 @@ struct PacketHeader
 - Send, Recv
 --------------------------------------------------------*/
 
-class Session
+class Session : public std::enable_shared_from_this<Session>
 {
 public:
 	Session();
-	~Session();
+	virtual ~Session();
 
 	// 초기화
 	bool Init(SOCKET socket, HANDLE iocpHandle);
@@ -58,17 +50,16 @@ public:
 	SessionID GetSessionID();
 	// 소켓 가져오기
 	SOCKET GetSocket();
-	// 세션 상태
-	SessionState GetState();
 	// ConnectContext 가져오기
 	ConnectContext* GetConnectContext();
 	// AcceptContext 가져오기
 	AcceptContext* GetAcceptContext();
-	// 세션 상태 변경
-	void SetState(SessionState state);
-	// 활성상태 여부
-	bool IsActive();
-
+	// 유저 클래스 설정
+	template <typename T>
+	void SetPlayer(T* player);
+	// 유저 클래스 얻기
+	template <typename T>
+	T* GetPlayer();
 
 private:
 	// WSARecv 실행
@@ -99,10 +90,23 @@ private:
 	Queue<SendBuffer*> _sendQueue;
 	std::atomic<bool> _sending;
 
-	// 세션 상태 관리
-	std::atomic<SessionState> _state;
-	TimePoint _closeRequestTime;
-
 	// 서비스
 	CoreService* _service;
+
+	// 유저클래스(플레이어)
+	void* _playerClass;
 };
+
+// 유저 클래스 설정
+template<typename T>
+inline void Session::SetPlayer(T* player)
+{
+	_playerClass = static_cast<void*>(player);
+}
+
+// 유저 클래스 얻기
+template<typename T>
+inline T* Session::GetPlayer()
+{
+	return static_cast<T*>(_playerClass);
+}

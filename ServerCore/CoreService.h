@@ -25,10 +25,10 @@ public:
 	void Stop();
 
 	// 컨텐츠 로직에서 구현
-	virtual void OnConnected(Session* session) = 0;
-	virtual void OnDisconnected(Session* session) = 0;
-	virtual void OnRecv(Session* session, BYTE* buffer, int32 len) = 0;
-	virtual void OnSend(Session* session, int32 len) = 0;
+	virtual void OnConnected(SessionRef session) = 0;
+	virtual void OnDisconnected(SessionRef session) = 0;
+	virtual void OnRecv(SessionRef session, BYTE* buffer, int32 len) = 0;
+	virtual void OnSend(SessionRef session, int32 len) = 0;
 
 private:
 	void DummyConnect(uint16 port, const std::string& address, uint16 connectCount);

@@ -8,7 +8,7 @@
 
 Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
-	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr)
+	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr), _playerClass(nullptr)
 {
 	_connectContext.type = NetworkIOType::Connect;
 	_acceptContext.type = NetworkIOType::Accept;
@@ -16,7 +16,6 @@ Session::Session()
 	_sendContext.type = NetworkIOType::Send;
 
 	_sending.store(0, std::memory_order_relaxed);
-	_state.store(SessionState::Active, std::memory_order_relaxed);
 }
 
 Session::~Session()
@@ -33,7 +32,6 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 	_connectedTime = NOW;
 	_iocpHandle = iocpHandle;
 	_sending.store(0, std::memory_order_relaxed);
-	_state.store(SessionState::Active, std::memory_order_relaxed);
 
 	// IOCP에 등록
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(_socket), _iocpHandle, reinterpret_cast<ULONG_PTR>(this), 0);
@@ -51,7 +49,7 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 	ProcessRecv();
 	// 접속 이벤트 호출
 	// 컨텐츠 로직에서 구현
-	_service->OnConnected(this);
+	_service->OnConnected(shared_from_this());
 
 	return true;
 }
@@ -59,15 +57,6 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 // 세션 종료
 void Session::Close()
 {
-	// 이미 종료 요청된 세션이면 리턴
-	SessionState currentState = _state.load();
-	if (currentState == SessionState::CloseRequest || currentState == SessionState::Closed)
-	{
-		return;
-	}
-	// 세션 상태를 종료 요청으로 변경
-	_state.store(SessionState::CloseRequest);
-	_closeRequestTime = NOW;
 	// 소켓 닫기
 	if (_socket != INVALID_SOCKET)
 	{
@@ -90,9 +79,9 @@ void Session::Close()
 	}
 	// 연결 종료 이벤트 호출
 	// 컨텐츠 로직에서 구현
-	_service->OnDisconnected(this);
+	_service->OnDisconnected(shared_from_this());
 	// 지연삭제
-	SessionMgr.OnSessionClosed(this);
+	SessionMgr.OnSessionClosed(shared_from_this());
 }
 
 // 세션에 소켓, 서비스 설정
@@ -102,17 +91,11 @@ void Session::PreInit(SOCKET socket, CoreService* service)
 	_service = service;
 	_lastRecvTime = NOW;
 	_connectedTime = NOW;
-	_state.store(SessionState::Active, std::memory_order_relaxed);
 }
 
 // WSASend 실행전 유효성, 버퍼 할당
 void Session::Send(const BYTE* data, int32 len)
 {
-	// 활성 상태가 아니면 리턴
-	if (IsActive() == false)
-	{
-		return;
-	}
 	// 유효성 검사
 	if (len <= 0 || len > MAX_PACKET_SIZE)
 	{
@@ -148,11 +131,6 @@ void Session::Send(const BYTE* data, int32 len)
 // WSARecv 실행
 void Session::ProcessRecv()
 {
-	// 활성 상태가 아니면 리턴
-	if (IsActive() == false)
-	{
-		return;
-	}
 	// 링버퍼의 특성을 활용하여 나눠서 받을수 있으면 받아서 recv한다
 	uint32 directWriteSize = _recvContext.recvBuffer.GetDirectRecvSize();
 	uint32 wsaBufCount = 0;
@@ -189,11 +167,6 @@ void Session::ProcessRecv()
 // WSASend 실행
 void Session::ProcessSend()
 {
-	// 활성 상태가 아니면 리턴
-	if (IsActive() == false)
-	{
-		return;
-	}
 	ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
 	_sendContext.buffers.reserve(MAX_SEND_BUFFER_COUNT);
 
@@ -292,7 +265,7 @@ void Session::OnRecvCompleted(int32 bytesTransferred)
 		Vector<BYTE> buffer(header.size);
 		_recvContext.recvBuffer.Read(buffer.data(), header.size, header.size);
 		// 컨텐츠 로직에서 구현
-		_service->OnRecv(this, buffer.data(), header.size);
+		_service->OnRecv(shared_from_this(), buffer.data(), header.size);
 	}
 	// 수신버퍼 초기화
 	_recvContext.recvBuffer.CleanPos();
@@ -342,7 +315,7 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 	}
 	// 송신 이벤트 호출
 	// 컨텐츠 로직에서 구현
-	_service->OnSend(this, bytesTransferred);
+	_service->OnSend(shared_from_this(), bytesTransferred);
 
 	// 큐에 남은 데이터가 있거나 부분 전송된 버퍼가 있으면 이어서 전송
 	{
@@ -388,7 +361,7 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 // 타임아웃 체크
 bool Session::IsTimeout(std::chrono::seconds timeout /*= TIMEOUT_SECONDS*/)
 {
-	return IsActive() && (NOW - _lastRecvTime) > timeout;
+	return (NOW - _lastRecvTime) > timeout;
 }
 
 // 세션 ID 얻기
@@ -403,12 +376,6 @@ SOCKET Session::GetSocket()
 	return _socket;
 }
 
-// 세션 상태
-SessionState Session::GetState()
-{
-	return _state.load();
-}
-
 // ConnectContext 가져오기
 ConnectContext* Session::GetConnectContext()
 {
@@ -419,23 +386,6 @@ ConnectContext* Session::GetConnectContext()
 AcceptContext* Session::GetAcceptContext()
 {
 	return &_acceptContext;
-}
-
-// 세션 상태 변경
-void Session::SetState(SessionState state)
-{
-	// 세션 상태 변경 이후 시간 업데이트
-	SessionState prevState = _state.exchange(state);
-	if (prevState != state && state == SessionState::CloseRequest)
-	{
-		_closeRequestTime = NOW;
-	}
-}
-
-// 활성상태 여부
-bool Session::IsActive()
-{
-	return _state.load() == SessionState::Active;
 }
 
 // 로그 찍기

@@ -69,7 +69,7 @@ bool IocpCore::Start(uint16 port)
 		return false;
 	}
 	// Accept 시작
-	for (int32 acceptCount = 0; acceptCount < ACCEPT_NUM; acceptCount++)
+	for (uint32 acceptCount = 0; acceptCount < ACCEPT_NUM; acceptCount++)
 	{
 		RequestAccept();
 	}
@@ -87,7 +87,7 @@ bool IocpCore::Start(uint16 port)
 bool IocpCore::Connect(const std::string& address, uint16 port, uint16 maxWorkerThreadNum)
 {
 	// session 생성
-	Session* session = SessionMgr.Create();
+	SessionRef session = SessionMgr.Create();
 	// 소켓 생성
 	SOCKET clientSocket = INVALID_SOCKET;
 	// 소켓 생성 및 Bind
@@ -204,7 +204,7 @@ bool IocpCore::WSAIoctlConnectEx(SOCKET socket)
 }
 
 // connectEx 실행
-void IocpCore::ProcessConnect(Session* session, const std::string& address, uint16 port)
+void IocpCore::ProcessConnect(SessionRef session, const std::string& address, uint16 port)
 {
 	ConnectContext* connectContext = session->GetConnectContext();
 	ZeroMemory(&connectContext->overlapped, sizeof(connectContext->overlapped));
@@ -235,7 +235,12 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 {
 	// ConnectContext 복원
 	ConnectContext* connectContext = reinterpret_cast<ConnectContext*>(overlappedEx);
-	Session* session = connectContext->session;
+	SessionRef session = connectContext->session.lock();
+	if (session == nullptr)
+	{
+		LOG_WARNING("세션 nullptr");
+		return false;
+	}
 	SOCKET clientSocket = session->GetSocket();
 
 	// 소켓 옵션 업데이트 (SO_UPDATE_CONNECT_CONTEXT)
@@ -243,14 +248,12 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError("SO_UPDATE_CONNECT_CONTEXT 설정 실패", errorCode);
-		SessionMgr.Release(session);
 		return false;
 	}
 
 	// 세션 초기화
 	if (session->Init(clientSocket, _iocpHandle) == false)
 	{
-		SessionMgr.Release(session);
 		return false;
 	}
 	// 세션 매니저에 등록
@@ -280,12 +283,12 @@ bool IocpCore::WSAIoctlAcceptEx()
 void IocpCore::RequestAccept()
 {
 	// 세션 생성
-	Session* session = SessionMgr.Create();
+	SessionRef session = SessionMgr.Create();
 	if (session == nullptr)
 	{
-		// 다시 accept 걸어줌
+		// Accept 재요청
 		LOG_WARNING("세션 생성 실패");
-		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
+		ReRequestAccept();
 		return;
 	}
 
@@ -293,10 +296,9 @@ void IocpCore::RequestAccept()
 	SOCKET clientSocket = ::WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 	if (clientSocket == INVALID_SOCKET)
 	{
-		// 다시 accept 걸어줌
+		// Accept 재요청
 		LogError("클라이언트 소켓 생성 실패", -1);
-		SessionMgr.Release(session);
-		JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
+		ReRequestAccept();
 		return;
 	}
 
@@ -306,8 +308,15 @@ void IocpCore::RequestAccept()
 	ProcessAccept(session);
 }
 
+// Accept 재요청
+void IocpCore::ReRequestAccept()
+{
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	RequestAccept();
+}
+
 // AcceptEx 실행
-void IocpCore::ProcessAccept(Session* session)
+void IocpCore::ProcessAccept(SessionRef session)
 {
 	// AcceptContext 초기화
 	AcceptContext* acceptContext = session->GetAcceptContext();
@@ -327,9 +336,7 @@ void IocpCore::ProcessAccept(Session* session)
 		{
 			LogError("AcceptEx 실패", errorCode);
 			::closesocket(clientSocket);
-			SessionMgr.Release(session);
-			// 다시 accept 걸어줌
-			JobQ.DoAsyncAfter(100, [this]() { RequestAccept(); }, JobGroups::Network);
+			ReRequestAccept();
 			return;
 		}
 	}
@@ -340,7 +347,13 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 {
 	// AcceptContext 복원
 	AcceptContext* acceptContext = reinterpret_cast<AcceptContext*>(overlappedEx);
-	Session* session = acceptContext->session;
+	SessionRef session = acceptContext->session.lock();
+	if (session == nullptr)
+	{
+		LOG_WARNING("세션 nullptr");
+		ReRequestAccept();
+;		return false;
+	}
 	SOCKET clientSocket = session->GetSocket();
 
 	// 소켓 옵션 업데이트 (SO_UPDATE_ACCEPT_CONTEXT)
@@ -351,9 +364,7 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 		int32 errorCode = ::WSAGetLastError();
 		LogError("SO_UPDATE_ACCEPT_CONTEXT 설정 실패", errorCode);
 		::closesocket(clientSocket);
-		SessionMgr.Release(session);
-		// 다시 accept 걸어줌
-		RequestAccept();
+		ReRequestAccept();
 		return false;
 	}
 	// 세션 초기화
@@ -366,8 +377,8 @@ bool IocpCore::OnAcceptCompleted(OverlappedEx* overlappedEx)
 	}
 	// 세션 매니저에 등록
 	SessionMgr.Add(session);
-	// 다시 accept 걸어줌
-	RequestAccept();
+	// Accept 재요청
+	ReRequestAccept();
 	return true;
 }
 
