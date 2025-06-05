@@ -20,5 +20,5 @@ public:
 
 private:
 	// 자동생성
-	static void Handle_SC_CHAT_MSG(Session* session, Protocol::SC_CHAT_MSG& packet);
+	static void Handle_SC_CHAT_MSG(SessionRef session, Protocol::SC_CHAT_MSG& packet);
 };
