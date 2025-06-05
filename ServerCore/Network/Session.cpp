@@ -10,8 +10,6 @@ Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
 	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr), _playerClass(nullptr)
 {
-	_connectContext.type = NetworkIOType::Connect;
-	_acceptContext.type = NetworkIOType::Accept;
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
 
@@ -374,18 +372,6 @@ SessionID Session::GetSessionID()
 SOCKET Session::GetSocket()
 {
 	return _socket;
-}
-
-// ConnectContext 가져오기
-ConnectContext* Session::GetConnectContext()
-{
-	return &_connectContext;
-}
-
-// AcceptContext 가져오기
-AcceptContext* Session::GetAcceptContext()
-{
-	return &_acceptContext;
 }
 
 // 로그 찍기

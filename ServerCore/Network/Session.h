@@ -50,10 +50,6 @@ public:
 	SessionID GetSessionID();
 	// 소켓 가져오기
 	SOCKET GetSocket();
-	// ConnectContext 가져오기
-	ConnectContext* GetConnectContext();
-	// AcceptContext 가져오기
-	AcceptContext* GetAcceptContext();
 	// 유저 클래스 설정
 	template <typename T>
 	void SetPlayer(T* player);
@@ -81,8 +77,6 @@ private:
 
 	// I/O 작업 관련
 	HANDLE _iocpHandle;
-	ConnectContext _connectContext;
-	AcceptContext _acceptContext;
 	RecvContext _recvContext;
 	SendContext _sendContext;
 
