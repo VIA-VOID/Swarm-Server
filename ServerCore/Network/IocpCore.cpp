@@ -402,6 +402,7 @@ void IocpCore::IOWorkerThread()
 
 		// 완료된 I/O 작업 대기
 		BOOL ret = ::GetQueuedCompletionStatus(_iocpHandle, &bytesTransferred, &completionKey, &overlapped, INFINITE);
+		// GQCS 예외
 		if (ret == FALSE || overlapped == nullptr)
 		{
 			// 종료신호
@@ -412,11 +413,31 @@ void IocpCore::IOWorkerThread()
 			}
 
 			int32 errorCode = ::WSAGetLastError();
+			// 예상 가능한 연결 종료
+			if (IsExpectedDisConnect(errorCode))
+			{
+				if (completionKey != 0)
+				{
+					Session* session = reinterpret_cast<Session*>(completionKey);
+					if (session != nullptr)
+					{
+						uint64 sessionId = session->GetSessionID().GetID();
+						LOG_SYSTEM("[SessionID: " + std::to_string(sessionId) + "] 클라이언트 연결 종료 [ErrorCode:" + std::to_string(errorCode) + "]");
+						session->Close();
+					}
+				}
+				else
+				{
+					LOG_SYSTEM("클라이언트 연결 종료 [ErrorCode: " + std::to_string(errorCode) + "]");
+				}
+				continue;
+			}
+			// 이외 에러
 			if (errorCode != WAIT_TIMEOUT)
 			{
 				LogError("GQCS Error", errorCode);
-				continue;
 			}
+			continue;
 		}
 		// OverlappedEx 복원
 		OverlappedEx* overlappedEx = reinterpret_cast<OverlappedEx*>(overlapped);
@@ -474,6 +495,22 @@ void IocpCore::WakeUpIOWorkerThreads()
 		::PostQueuedCompletionStatus(_iocpHandle, 0, 0xFFFFFFFF, nullptr);
 	}
 	LOG_SYSTEM("모든 워커 스레드 종료 신호 전송");
+}
+
+// 연결 종료
+// 예상가능한 상황들
+bool IocpCore::IsExpectedDisConnect(int32 errorCode)
+{
+	switch (errorCode)
+	{
+	case ERROR_NETNAME_DELETED:		// 64 - 지정된 네트워크 이름을 더 이상 사용할 수 없습니다.
+	case WSAECONNABORTED:			// 1236 - 로컬 시스템에 의해 네트워크 연결이 중단되었습니다.
+	case WSAENETRESET:				// 10052 - 다시 설정할 때 네트워크 연결이 끊어지게 됩니다.
+	case WSAECONNRESET:				// 10054 - 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다.
+		return true;
+	default:
+		return false;
+	}
 }
 
 // 세션 타임아웃 체크 & Job 재등록

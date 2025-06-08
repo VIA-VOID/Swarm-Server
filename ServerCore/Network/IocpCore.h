@@ -51,6 +51,9 @@ private:
 	void IOWorkerThread();
 	// 워커 스레드 깨우기
 	void WakeUpIOWorkerThreads();
+	// 연결 종료
+	// 예상가능한 상황들
+	bool IsExpectedDisConnect(int32 errorCode);
 	// 세션 타임아웃 체크 & Job 재등록
 	void CheckTickTimeout();
 	// HeartBeat 작업 등록
