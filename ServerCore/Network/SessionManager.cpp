@@ -14,24 +14,6 @@ void SessionManager::Init()
 void SessionManager::Shutdown()
 {
 	// 모든 세션 정리
-	Vector<SessionRef> activeSessions;
-	{
-		LOCK_GUARD;
-		activeSessions.reserve(_sessions.size());
-		for (const auto& pair : _sessions)
-		{
-			activeSessions.push_back(pair.second);
-		}
-	}
-	// 활성화된 세션 종료
-	for (auto session : activeSessions)
-	{
-		if (session != nullptr)
-		{
-			session->Close();
-		}
-	}
-	// 정리
 	{
 		LOCK_GUARD;
 		_sessions.clear();
@@ -69,8 +51,9 @@ void SessionManager::OnSessionClosed(SessionRef session)
 	{
 		LOCK_GUARD;
 
-		auto it = _sessions.find(session->GetSessionID());
-		if (it != _sessions.end() && it->second == session)
+		SessionID sessionID = session->GetSessionID();
+		auto it = _sessions.find(sessionID);
+		if (it != _sessions.end())
 		{
 			// 세션 목록에서 제거
 			_sessions.erase(it);
@@ -134,7 +117,7 @@ void SessionManager::CleanUpSessions()
 	for (auto it = _deleteSessions.begin(); it != _deleteSessions.end();)
 	{
 		SessionRef session = *it;
-		// 참조 카운트가 없다면
+		// 참조 카운트가 없다면(_deleteSessions 에만 존재)
 		if (session.use_count() <= 1)
 		{
 			it = _deleteSessions.erase(it);

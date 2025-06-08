@@ -17,7 +17,7 @@ public:
 	SessionRef Create();
 	// 세션 추가
 	void Add(SessionRef session);
-	// 세션이 종료된 후 호출
+	// 세션 종료시 호출
 	void OnSessionClosed(SessionRef session);
 	// 세션 찾기
 	SessionRef Find(SessionID sessionID);
