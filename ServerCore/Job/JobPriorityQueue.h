@@ -2,13 +2,13 @@
 #include "Job.h"
 
 /*-------------------------------------------------------
-				JobEventQueue
+				JobPriorityQueue
 
 - 우선순위별 처리
-- 그룹 당 하나의 스레드, 이벤트 방식의 Job 처리
+- 그룹 당 하나의 스레드, 지정한 프레임동안 Job 처리
 --------------------------------------------------------*/
 
-class JobEventQueue : public Singleton<JobEventQueue>
+class JobPriorityQueue : public Singleton<JobPriorityQueue>
 {
 public:
 	void Init() override;
@@ -24,8 +24,8 @@ public:
 	void DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args... args);
 	// 종료
 	void Shutdown() override;
-	// 그룹별 스레드 생성
-	void RegisterThreadsForGroup(JobGroupId groupId);
+	// 스레드 등록
+	void MakeGroupThread(JobGroupId groupId);
 
 private:
 	// 작업을 큐에 추가
@@ -33,8 +33,6 @@ private:
 	// 작업 큐에서 가져옴
 	// LOCK은 호출하는 함수에서 건다.
 	Job* Pop(JobGroupId groupId);
-	// 스레드 추가
-	void AddThread(JobGroupId groupId);
 	// 워커 스레드
 	void WorkerThread(JobGroupId group);
 
@@ -69,15 +67,13 @@ private:
 	};
 	// 그룹별 작업 큐
 	HashMap<JobGroupId, GroupJobQueue> _groupJobs;
-	// 조건변수
-	HashMap<JobGroupId, ConditionVariable> _groupCVs;
 	// 스레드 실행 중 플래그
 	HashMap<JobGroupId, std::atomic<bool>> _groupRunning;
 };
 
 // 멤버 함수를 이용한 작업 등록
 template<typename T, typename Ret, typename ...Args>
-inline void JobEventQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args ...args)
+inline void JobPriorityQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args ...args)
 {
 	Job* job = ObjectPool<Job>::Allocate(owner, memFunc, 0, std::forward<Args>(args)...);
 	Push(job);
@@ -85,7 +81,7 @@ inline void JobEventQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args ..
 
 // 멤버 함수를 이용한 시간 지연 처리용 작업 등록
 template<typename T, typename Ret, typename ...Args>
-inline void JobEventQueue::DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args ...args)
+inline void JobPriorityQueue::DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args ...args)
 {
 	Job* job = ObjectPool<Job>::Allocate(owner, memFunc, delayMs, std::forward<Args>(args)...);
 	Push(job);
