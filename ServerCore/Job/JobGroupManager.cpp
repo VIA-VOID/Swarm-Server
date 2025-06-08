@@ -6,7 +6,6 @@ void JobGroupManager::Init()
 	_nextGroupId.store(JobGroups::NextStart, std::memory_order_relaxed);
 	// 기본적인 ServerCore 그룹 생성
 	RegisterGroup(JobGroups::System, "System");
-	RegisterGroup(JobGroups::Log, "Log", JobPriority::Low);
 	RegisterGroup(JobGroups::Network, "Network", JobPriority::High);
 }
 
@@ -26,23 +25,6 @@ JobGroupId JobGroupManager::RegisterContentGroup(const std::string& name, JobPri
 	// 다음 사용 가능한 컨텐츠 그룹 ID 생성
 	JobGroupId newId = _nextGroupId.fetch_add(1);
 	return RegisterGroup(newId, name, priority);
-}
-
-// 객체 인스턴스 그룹 등록
-// 동적 생성용
-JobGroupId JobGroupManager::RegisterInstanceGroup(const std::string& baseName, JobPriority priority)
-{
-	uint32 instanceCounter = ++_instanceGroupCounters[baseName];
-	std::string instanceName = baseName + "_" + std::to_string(instanceCounter);
-	// 그룹 등록
-	JobGroupId newId = _nextGroupId.fetch_add(1);
-	JobGroupId groupId = RegisterGroup(newId, instanceName, priority);
-	// 등록 후 스레드 생성 요청
-	if (groupId != JobGroups::Invalid)
-	{
-		JobQ.RegisterThreadsForGroup(groupId);
-	}
-	return groupId;
 }
 
 // ID로 그룹 정보 가져오기
