@@ -37,7 +37,7 @@ void LogManager::PushLog(const LogType type, const std::string& message, const c
 
 	JobQ.DoAsync([this, log = std::move(log)]() {
 		ProcessThread(log._type, log.ToString());
-		}, JobGroups::Log);
+		}, JobGroups::System);
 }
 
 // 스레드 일감
