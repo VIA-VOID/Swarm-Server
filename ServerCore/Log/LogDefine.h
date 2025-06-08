@@ -50,9 +50,9 @@ struct LogMessage
 			break;
 		}
 
-		// threadName 좌측 정렬 (6자 고정 너비)
+		// threadName 좌측 정렬 (12자 고정 너비)
 		std::stringstream tnStream;
-		tnStream << std::left << std::setw(6) << std::string(LThreadName.begin(), LThreadName.end());
+		tnStream << std::left << std::setw(12) << std::string(LThreadName.begin(), LThreadName.end());
 		std::string threadNameStr = tnStream.str();
 
 		// function name 좌측 정렬 (40자 고정 너비)
