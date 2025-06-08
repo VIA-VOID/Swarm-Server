@@ -1,6 +1,9 @@
 #pragma once
 #include "Pch/Types.h"
 
+// Job 워커 스레드 주기(프레임)
+constexpr auto WORKER_FRAME_INTERVAL = std::chrono::milliseconds(50);
+
 // Job 우선순위
 enum class JobPriority : uint16
 {
@@ -14,8 +17,7 @@ namespace JobGroups
 {
 	constexpr JobGroupId Invalid = UINT16_MAX;
 	constexpr JobGroupId System = 0;
-	constexpr JobGroupId Log = 1;
-	constexpr JobGroupId Network = 2;
+	constexpr JobGroupId Network = 1;
 	constexpr JobGroupId NextStart = 10;
 }
 
