@@ -10,7 +10,7 @@
 #define ThreadMgr						ThreadManager::GetInstance()
 #define MemoryMgr						MemoryManager::GetInstance()
 #define SessionMgr						SessionManager::GetInstance()
-#define JobQ							JobEventQueue::GetInstance()
+#define JobQ							JobPriorityQueue::GetInstance()
 #define JobGroupMgr						JobGroupManager::GetInstance()
 
 /*-------------------------------------
@@ -55,12 +55,8 @@
 #define USE_LOCK						Lock _mutex
 #define LOCK_GUARD						LockGuard lockGuard(&_mutex, typeid(this).name())
 #define GROUP_LOCK_GUARD(group)			LockGuard lockGuard(&((group)._mutex), typeid(this).name())
-#define UNIQUE_LOCK_GUARD				UniqueLockGuard ulockGuard(&_mutex, typeid(this).name())
-#define GROUP_UNIQUE_LOCK(group)		UniqueLockGuard ulockGuard(&((group)._mutex), typeid(this).name())
 #else
 #define USE_LOCK						std::mutex _mutex
 #define LOCK_GUARD						std::lock_guard<std::mutex> lockGuard(_mutex)
 #define GROUP_LOCK_GUARD(group)			std::lock_guard<std::mutex> lockGuard(group._mutex)
-#define UNIQUE_LOCK_GUARD				std::unique_lock<std::mutex> ulockGuard(_mutex)
-#define GROUP_UNIQUE_LOCK(group)		std::unique_lock<std::mutex> ulockGuard(group._mutex)
 #endif

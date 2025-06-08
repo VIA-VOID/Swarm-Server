@@ -15,14 +15,6 @@ using uint32 = unsigned __int32;
 using uint64 = unsigned __int64;
 
 //----------------------------------------------------------//
-// 조건부 타입 정의
-#ifdef _DEBUG
-using ConditionVariable = std::condition_variable_any;
-#else
-using ConditionVariable = std::condition_variable;
-#endif
-
-//----------------------------------------------------------//
 // 타입 정의
 using ThreadId = std::thread::id;
 using CallbackType = std::function<void()>;

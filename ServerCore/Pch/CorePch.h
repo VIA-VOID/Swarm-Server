@@ -22,7 +22,7 @@
 #include "Log/LogManager.h"
 #include "Memory/MemoryManager.h"
 #include "Memory/ObjectPool.h"
-#include "Job/JobEventQueue.h"
+#include "Job/JobPriorityQueue.h"
 #include "Job/JobGroupManager.h"
 #include "Network/NetworkDefine.h"
 
