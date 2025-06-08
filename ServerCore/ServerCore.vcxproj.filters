@@ -4,7 +4,7 @@
     <ClCompile Include="Job\Job.cpp">
       <Filter>Job</Filter>
     </ClCompile>
-    <ClCompile Include="Job\JobEventQueue.cpp">
+    <ClCompile Include="Job\JobPriorityQueue.cpp">
       <Filter>Job</Filter>
     </ClCompile>
     <ClCompile Include="Log\LogManager.cpp">
@@ -82,7 +82,7 @@
     <ClInclude Include="Job\Job.h">
       <Filter>Job</Filter>
     </ClInclude>
-    <ClInclude Include="Job\JobEventQueue.h">
+    <ClInclude Include="Job\JobPriorityQueue.h">
       <Filter>Job</Filter>
     </ClInclude>
     <ClInclude Include="Log\LogDefine.h">

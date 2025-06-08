@@ -175,7 +175,7 @@
     <ClInclude Include="Job\JobGroupManager.h" />
     <ClInclude Include="Job\JobGroupType.h" />
     <ClInclude Include="Network\IocpCore.h" />
-    <ClInclude Include="Job\JobEventQueue.h" />
+    <ClInclude Include="Job\JobPriorityQueue.h" />
     <ClInclude Include="Job\Job.h" />
     <ClInclude Include="Memory\MemoryHeader.h" />
     <ClInclude Include="Memory\MemoryLockStack.h" />
@@ -210,7 +210,7 @@
     <ClCompile Include="Job\JobGroupManager.cpp" />
     <ClCompile Include="Job\JobGroupType.cpp" />
     <ClCompile Include="Network\IocpCore.cpp" />
-    <ClCompile Include="Job\JobEventQueue.cpp" />
+    <ClCompile Include="Job\JobPriorityQueue.cpp" />
     <ClCompile Include="Job\Job.cpp" />
     <ClCompile Include="Log\LogManager.cpp" />
     <ClCompile Include="Memory\MemoryHeader.cpp" />
