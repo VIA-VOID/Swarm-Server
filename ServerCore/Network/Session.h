@@ -56,8 +56,12 @@ public:
 	// 유저 클래스 얻기
 	template <typename T>
 	T* GetPlayer();
+	// 유저 클래스 포인터 참조 정리
+	void DetachPlayer();
 
 private:
+	// 자원정리
+	void CloseResource();
 	// WSARecv 실행
 	void ProcessRecv();
 	// WSASend 실행
@@ -74,6 +78,7 @@ private:
 	SOCKADDR_IN _clientAddress;
 	TimePoint _lastRecvTime;
 	TimePoint _connectedTime;
+	bool _isClosed;
 
 	// I/O 작업 관련
 	HANDLE _iocpHandle;
@@ -102,5 +107,9 @@ inline void Session::SetPlayer(T* player)
 template<typename T>
 inline T* Session::GetPlayer()
 {
+	if (_playerClass == nullptr)
+	{
+		return nullptr;
+	}
 	return static_cast<T*>(_playerClass);
 }

@@ -8,7 +8,7 @@
 
 Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
-	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _service(nullptr), _playerClass(nullptr)
+	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _isClosed(false), _service(nullptr), _playerClass(nullptr)
 {
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
@@ -18,8 +18,12 @@ Session::Session()
 
 Session::~Session()
 {
-	// 세션종료
-	Close();
+	if (_isClosed)
+	{
+		return;
+	}
+	// 자원 해제
+	CloseResource();
 }
 
 // 초기화
@@ -55,31 +59,19 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 // 세션 종료
 void Session::Close()
 {
-	// 소켓 닫기
-	if (_socket != INVALID_SOCKET)
+	if (_isClosed)
 	{
-		::closesocket(_socket);
-		_socket = INVALID_SOCKET;
+		return;
 	}
-	// 송신 큐 비우기
-	{
-		LOCK_GUARD;
-		while (_sendQueue.empty() == false)
-		{
-			SendBuffer* buffer = _sendQueue.front();
-			_sendQueue.pop();
-			// 자원 해제
-			if (buffer != nullptr)
-			{
-				ObjectPool<SendBuffer>::Release(buffer);
-			}
-		}
-	}
+	// flag 변경
+	_isClosed = true;
 	// 연결 종료 이벤트 호출
 	// 컨텐츠 로직에서 구현
 	_service->OnDisconnected(shared_from_this());
 	// 지연삭제
 	SessionMgr.OnSessionClosed(shared_from_this());
+	// 자원 해제
+	CloseResource();
 }
 
 // 세션에 소켓, 서비스 설정
@@ -122,6 +114,37 @@ void Session::Send(const BYTE* data, int32 len)
 		{
 			_sending.store(true);
 			ProcessSend();
+		}
+	}
+}
+
+// 유저 클래스 포인터 참조 정리
+void Session::DetachPlayer()
+{
+	_playerClass = nullptr;
+}
+
+// 자원정리
+void Session::CloseResource()
+{
+	// 소켓 닫기
+	if (_socket != INVALID_SOCKET)
+	{
+		::closesocket(_socket);
+		_socket = INVALID_SOCKET;
+	}
+	// 송신 큐 비우기
+	{
+		LOCK_GUARD;
+		while (_sendQueue.empty() == false)
+		{
+			SendBuffer* buffer = _sendQueue.front();
+			_sendQueue.pop();
+			// 자원 해제
+			if (buffer != nullptr)
+			{
+				ObjectPool<SendBuffer>::Release(buffer);
+			}
 		}
 	}
 }
