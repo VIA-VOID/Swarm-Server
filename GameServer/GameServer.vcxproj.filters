@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="Job\ContentsJobGroups.cpp">
+    <ClCompile Include="Job\JobGroup.cpp">
       <Filter>Job</Filter>
     </ClCompile>
     <ClCompile Include="Protocol\Enum.pb.cc">
@@ -27,13 +27,21 @@
       <Filter>Packet</Filter>
     </ClCompile>
     <ClCompile Include="GameServer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Character\CharacterObject.cpp">
+      <Filter>Character</Filter>
+    </ClCompile>
+    <ClCompile Include="Character\Player.cpp">
+      <Filter>Character</Filter>
+    </ClCompile>
+    <ClCompile Include="Map\BaseMap.cpp" />
+    <ClCompile Include="Map\TownMap.cpp" />
+    <ClCompile Include="Map\MapManager.cpp" />
+    <ClCompile Include="Character\PlayerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Job\ContentsJob.txt">
-      <Filter>Job</Filter>
-    </ClInclude>
-    <ClInclude Include="Job\ContentsJobGroups.h">
+    <ClInclude Include="Job\JobGroup.h">
       <Filter>Job</Filter>
     </ClInclude>
     <ClInclude Include="Protocol\Enum.pb.h">
@@ -57,6 +65,21 @@
     <ClInclude Include="Packet\PlayerPacketHandler.h">
       <Filter>Packet</Filter>
     </ClInclude>
+    <ClInclude Include="GameServer.h" />
+    <ClInclude Include="Character\CharacterObject.h">
+      <Filter>Character</Filter>
+    </ClInclude>
+    <ClInclude Include="Character\Player.h">
+      <Filter>Character</Filter>
+    </ClInclude>
+    <ClInclude Include="Map\BaseMap.h" />
+    <ClInclude Include="Map\TownMap.h" />
+    <ClInclude Include="Map\MapManager.h" />
+    <ClInclude Include="GameMacro.h" />
+    <ClInclude Include="Character\PlayerManager.h" />
+    <ClInclude Include="Map\MapDefine.h" />
+    <ClInclude Include="GameDefine.h" />
+    <ClInclude Include="Character\CharacterDefine.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
@@ -67,6 +90,9 @@
     </Filter>
     <Filter Include="Packet">
       <UniqueIdentifier>{d4a8df1b-1f49-4c4a-8fc7-79579b836a6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Character">
+      <UniqueIdentifier>{ded251c0-b3f7-4410-88b7-497141039c68}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
