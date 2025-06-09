@@ -1,53 +1,51 @@
 #include "pch.h"
-#include "Job/ContentsJobGroups.h"
-#include "Packet/PacketHandler.h"
+#include "GameServer.h"
+#include "Map/MapManager.h"
+#include "Character/Player.h"
 
-class GameServer : public CoreService
+/*----------------------------
+		GameServer
+----------------------------*/
+
+GameServer::GameServer() 
+	: CoreService(ServiceType::Server)
 {
-public:
-	GameServer()
-		: CoreService(ServiceType::Server)
-	{
-		// 패킷 핸들러 초기화
-		PacketHandler::Init();
-		// JobGroup 초기화
-		JobGroups::Init();
-		// Job 스레드 생성 요청
-		JobGroups::CreateThreadsForGroups();
-	}
-	virtual ~GameServer() {}
-	
-	void OnConnected(Session* session) override
-	{
-		LOG_SYSTEM(L"Client Connect!! session: " + Utils::ToWString(session->GetSessionID().GetID()));
-	}
+	// 패킷 핸들러 초기화
+	PacketHandler::Init();
+	// JobGroup 초기화
+	JobGroup::Init();
+	// MapManager 초기화
+	MapMgr.Init();
+}
 
-	void OnDisconnected(Session* session) override
-	{
-	}
-
-	void OnRecv(Session* session, BYTE* buffer, int32 len) override
-	{
-
-
-		PacketHandler::HandlePacket(session, buffer, len);
-	}
-
-	void OnSend(Session* session, int32 len) override
-	{
-	}
-
-};
-
-int wmain()
+void GameServer::OnConnected(SessionRef session)
 {
-	GameServer server;
-	server.Run(7777);
+	LOG_INFO("Client Connect!! session: " + std::to_string(session->GetSessionID().GetID()));
+}
 
-	ThreadMgr.JoinAll();
+void GameServer::OnDisconnected(SessionRef session)
+{
+	// 상호참조 해제
+	if (session)
+	{
+		LOG_INFO("Client OnDisconnected!! session: " + std::to_string(session->GetSessionID().GetID()));
 
-	//std::this_thread::sleep_for(std::chrono::seconds(2));
-	//server.Stop();
+		Player* player = session->GetPlayer<Player>();
+		if (player)
+		{
+			player->DetachSession();
+			ObjectPool<Player>::Release(player);
+			session->DetachPlayer();
+		}
+	}
+}
 
-	return 0;
+void GameServer::OnRecv(SessionRef session, BYTE* buffer, int32 len)
+{
+	PacketHandler::HandlePacket(session, buffer, len);
+}
+
+void GameServer::OnSend(SessionRef session, int32 len)
+{
+
 }
