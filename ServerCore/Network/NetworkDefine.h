@@ -58,7 +58,7 @@ struct RecvContext : public OverlappedEx
 // 비동기 Send 구조체
 struct SendContext : public OverlappedEx
 {
-	Vector<SendBuffer*> buffers;
+	Vector<SendBufferRef> buffers;
 };
 // 세션 ID 클래스
 class SessionID
