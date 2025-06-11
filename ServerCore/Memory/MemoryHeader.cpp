@@ -32,9 +32,11 @@ void* MemoryHeader::AttachHeader(void* ptr, uint32 blockSize)
 	// 위쪽 guard 메모리 초기화
 	::memset(nextHeaderPtr, GUARD_PATTERN, GUARD_SIZE);
 	// 아래쪽 guard 메모리 초기화
-	::memset(nextHeaderPtr + GUARD_SIZE + blockSize, GUARD_PATTERN, GUARD_SIZE);
+	uint8* dataPtr = nextHeaderPtr + GUARD_SIZE;
+	uint8* overGuard = dataPtr + blockSize;
+	::memset(overGuard, GUARD_PATTERN, GUARD_SIZE);
 
-	return static_cast<void*>(nextHeaderPtr + GUARD_SIZE);
+	return static_cast<void*>(dataPtr);
 #else
 	return static_cast<void*>(header + 1);
 #endif 
@@ -61,7 +63,7 @@ MemoryHeader* MemoryHeader::DetachHeader(void* ptr)
 	for (int guard = 0; guard < GUARD_SIZE; guard++)
 	{
 		ASSERT_CRASH(under[guard] == GUARD_PATTERN);
-		ASSERT_CRASH(*under == *over);
+		ASSERT_CRASH(over[guard] == GUARD_PATTERN);
 	}
 #endif
 
