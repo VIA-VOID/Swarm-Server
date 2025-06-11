@@ -55,11 +55,11 @@ void SessionManager::OnSessionClosed(SessionRef session)
 		auto it = _sessions.find(sessionID);
 		if (it != _sessions.end())
 		{
+			// 삭제 대기 추가
+			_deleteSessions.insert({sessionID, session });
 			// 세션 목록에서 제거
 			_sessions.erase(it);
 		}
-		// 삭제 대기 추가
-		_deleteSessions.push_back(session);
 	}
 }
 
@@ -116,7 +116,7 @@ void SessionManager::CleanUpSessions()
 	LOCK_GUARD;
 	for (auto it = _deleteSessions.begin(); it != _deleteSessions.end();)
 	{
-		SessionRef session = *it;
+		SessionRef session = it->second;
 		// 참조 카운트가 없다면(_deleteSessions 에만 존재)
 		if (session.use_count() <= 1)
 		{

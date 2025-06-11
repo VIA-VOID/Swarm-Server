@@ -33,7 +33,7 @@ private:
 	// 세션 목록
 	HashMap<SessionID, SessionRef> _sessions;
 	// 삭제 대기 세션 목록
-	Vector<SessionRef> _deleteSessions;
+	HashMap<SessionID, SessionRef> _deleteSessions;
 	TimePoint _lastCleanUpTime;
 
 };
