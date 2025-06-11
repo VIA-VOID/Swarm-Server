@@ -422,13 +422,9 @@ void IocpCore::IOWorkerThread()
 					if (session != nullptr)
 					{
 						uint64 sessionId = session->GetSessionID().GetID();
-						LOG_SYSTEM("[SessionID: " + std::to_string(sessionId) + "] 클라이언트 연결 종료 [ErrorCode:" + std::to_string(errorCode) + "]");
+						LOG_SYSTEM("[SessionID: " + std::to_string(sessionId) + "] 클라이언트 연결 종료");
 						session->Close();
 					}
-				}
-				else
-				{
-					LOG_SYSTEM("클라이언트 연결 종료 [ErrorCode: " + std::to_string(errorCode) + "]");
 				}
 				continue;
 			}
@@ -504,8 +500,7 @@ bool IocpCore::IsExpectedDisConnect(int32 errorCode)
 	switch (errorCode)
 	{
 	case ERROR_NETNAME_DELETED:		// 64 - 지정된 네트워크 이름을 더 이상 사용할 수 없습니다.
-	case WSAECONNABORTED:			// 1236 - 로컬 시스템에 의해 네트워크 연결이 중단되었습니다.
-	case WSAENETRESET:				// 10052 - 다시 설정할 때 네트워크 연결이 끊어지게 됩니다.
+	case ERROR_CONNECTION_ABORTED:	// 1236 - 로컬 시스템에 의해 네트워크 연결이 중단되었습니다.
 	case WSAECONNRESET:				// 10054 - 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다.
 		return true;
 	default:
