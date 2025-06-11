@@ -30,6 +30,8 @@ using JobGroupId = uint16;
 
 WEAK_PTR(Session)
 
+SHARED_PTR(Job)
+SHARED_PTR(JobGroupType)
 SHARED_PTR(SendBuffer)
 SHARED_PTR(Session)
 
