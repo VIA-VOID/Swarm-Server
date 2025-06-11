@@ -27,12 +27,6 @@ public:
 	TimePoint GetExecuteTime() const;
 	uint64 GetCreationOrder() const;
 
-	// 객체 생성/소멸 처리를 위한 함수
-	template <typename T, typename Ret, typename... Args>
-	static Job* Allocate(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs = 0, Args... args);
-	static Job* Allocate(CallbackType&& callback, JobGroupId groupId = JobGroups::System, uint64 delayMs = 0);
-	static void Release(Job* job);
-
 private:
 	// 작업 생성 순서를 위한 카운터
 	static uint64 GetNextOrderNum();
@@ -69,11 +63,4 @@ inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args ...ar
 	{
 		_priority = groupInfo->GetGroupPriority();
 	}
-}
-
-// 정적 객체 생성
-template <typename T, typename Ret, typename... Args>
-inline Job* Job::Allocate(T* owner, Ret(T::* memFunc)(Args...), uint64 delayMs, Args... args)
-{
-	return ObjectPool<Job>::Allocate(owner, memFunc, delayMs, std::forward<Args>(args)...);
 }

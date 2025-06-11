@@ -13,7 +13,7 @@ Job::Job(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/, ui
 	_orderNum(GetNextOrderNum())
 {
 	// 우선순위 지정
-	const JobGroupType* groupInfo = JobGroupMgr.GetGroupInfo(_groupId);
+	const JobGroupTypeRef groupInfo = JobGroupMgr.GetGroupInfo(_groupId);
 	if (groupInfo)
 	{
 		_priority = groupInfo->GetGroupPriority();
@@ -64,19 +64,4 @@ uint64 Job::GetNextOrderNum()
 {
 	static std::atomic<uint64> counter = 0;
 	return counter.fetch_add(1, std::memory_order_relaxed);
-}
-
-// 정적 생성 함수
-Job* Job::Allocate(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/, uint64 delayMs /*= 0*/)
-{
-	return ObjectPool<Job>::Allocate(std::move(callback), groupId, delayMs);
-}
-
-// 객체 해제 함수
-void Job::Release(Job* job)
-{
-	if (job)
-	{
-		ObjectPool<Job>::Release(job);
-	}
 }
