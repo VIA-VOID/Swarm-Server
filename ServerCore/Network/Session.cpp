@@ -8,12 +8,11 @@
 
 Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
-	_clientAddress({}), _lastRecvTime(NOW), _connectedTime(NOW), _isClosed(false), _service(nullptr), _playerClass(nullptr)
+	_clientAddress({}), _lastRecvTime(NOW), _lastSendTime(NOW), _connectedTime(NOW), 
+	_isClosed(false), _sending(false), _service(nullptr), _playerClass(nullptr)
 {
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
-
-	_sending.store(0, std::memory_order_relaxed);
 }
 
 Session::~Session()
@@ -31,9 +30,9 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 {
 	_socket = socket;
 	_lastRecvTime = NOW;
+	_lastSendTime = NOW;
 	_connectedTime = NOW;
 	_iocpHandle = iocpHandle;
-	_sending.store(0, std::memory_order_relaxed);
 
 	// IOCP에 등록
 	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(_socket), _iocpHandle, reinterpret_cast<ULONG_PTR>(this), 0);
@@ -80,6 +79,7 @@ void Session::PreInit(SOCKET socket, CoreService* service)
 	_socket = socket;
 	_service = service;
 	_lastRecvTime = NOW;
+	_lastSendTime = NOW;
 	_connectedTime = NOW;
 }
 
@@ -94,13 +94,12 @@ void Session::Send(const BYTE* data, int32 len)
 		return;
 	}
 	// 버퍼 할당 및 데이터 복사
-	SendBuffer* sendBuffer = ObjectPool<SendBuffer>::Allocate(len);
+	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(len);
 	if (sendBuffer->Write(data, len) == false)
 	{
 		// 세션종료
 		int32 errorCode = ::WSAGetLastError();
 		LogError("SendBuffer Write 실패, 해당 세션 종료", errorCode);
-		ObjectPool<SendBuffer>::Release(sendBuffer);
 		Close();
 		return;
 	}
@@ -110,9 +109,9 @@ void Session::Send(const BYTE* data, int32 len)
 		_sendQueue.push(sendBuffer);
 
 		// WSASend 실행
-		if (_sending.load() == false)
+		if (_sending == false)
 		{
-			_sending.store(true);
+			_sending = true;
 			ProcessSend();
 		}
 	}
@@ -136,16 +135,8 @@ void Session::CloseResource()
 	// 송신 큐 비우기
 	{
 		LOCK_GUARD;
-		while (_sendQueue.empty() == false)
-		{
-			SendBuffer* buffer = _sendQueue.front();
-			_sendQueue.pop();
-			// 자원 해제
-			if (buffer != nullptr)
-			{
-				ObjectPool<SendBuffer>::Release(buffer);
-			}
-		}
+		Queue<SendBufferRef> empty;
+		std::swap(_sendQueue, empty);
 	}
 }
 
@@ -194,43 +185,27 @@ void Session::ProcessSend()
 	// 한 번에 최대 MAX_SEND_BUFFER_COUNT개의 버퍼를 보냄
 	WSABUF wsaBufs[MAX_SEND_BUFFER_COUNT * 2];
 	uint32 sendCount = 0;
+	uint32 maxCount = min(MAX_SEND_BUFFER_COUNT, static_cast<uint32>(_sendQueue.size()));
+	for (uint32 count = 0; count < maxCount; count++)
 	{
-		LOCK_GUARD;
-		uint32 maxCount = min(MAX_SEND_BUFFER_COUNT, static_cast<uint32>(_sendQueue.size()));
-		for (uint32 count = 0; count < maxCount; count++)
+		SendBufferRef buffer = _sendQueue.front();
+		if (buffer == nullptr)
 		{
-			SendBuffer* buffer = _sendQueue.front();
-			if (buffer == nullptr)
-			{
-				continue;
-			}
-			// 링버퍼의 특성을 활용하여 나눠서 읽을수 있으면 합쳐서 send한다
-			uint32 directReadSize = buffer->GetDirectSendSize();
-			if (directReadSize > 0)
-			{
-				wsaBufs[sendCount].buf = reinterpret_cast<CHAR*>(buffer->GetSendPtr());
-				wsaBufs[sendCount].len = directReadSize;
-				++sendCount;
-			}
-
-			// 읽을수 있는 크기가 남아있다면 앞에서 가져온다.
-			uint32 readSize = buffer->GetUseSize() - directReadSize;
-			if (readSize > 0)
-			{
-				wsaBufs[sendCount].buf = reinterpret_cast<CHAR*>(buffer->GetBufferStart());
-				wsaBufs[sendCount].len = readSize;
-				++sendCount;
-			}
-
-			_sendContext.buffers.push_back(buffer);
-			_sendQueue.pop();
+			continue;
 		}
+		
+		wsaBufs[sendCount].buf = reinterpret_cast<CHAR*>(buffer->GetSendPtr());
+		wsaBufs[sendCount].len = buffer->GetRemainSize();
+		++sendCount;
+
+		_sendContext.buffers.push_back(buffer);
+		_sendQueue.pop();
 	}
 
 	// 보낼 데이터가 없다면 송신 종료
 	if (sendCount == 0)
 	{
-		_sending.store(false);
+		_sending = false;
 		return;
 	}
 
@@ -242,16 +217,10 @@ void Session::ProcessSend()
 		if (errorCode != WSA_IO_PENDING)
 		{
 			// 전송실패 - 모든 버퍼 해제
-			for (SendBuffer* buffer : _sendContext.buffers)
-			{
-				if (buffer != nullptr)
-				{
-					ObjectPool<SendBuffer>::Release(buffer);
-				}
-			}
 			int32 errorCode = ::WSAGetLastError();
 			LogError("WSASend 실패, 해당 세션 종료", errorCode);
-			_sending.store(false);
+			_sendContext.buffers.clear();
+			_sending = false;
 			Close();
 			return;
 		}
@@ -297,12 +266,14 @@ void Session::OnRecvCompleted(int32 bytesTransferred)
 // Send 완료 & 남은 데이터 있을시 이어서 전송
 void Session::OnSendCompleted(int32 bytesTransferred)
 {
+	// 마지막 송신 시간 업데이트
+	_lastSendTime = NOW;
 	// 각 버퍼마다 ReadPos 이동 처리
 	int32 transferred = bytesTransferred;
 	// 부분 전송된 버퍼
-	Vector<SendBuffer*> partialSendArray;
+	Vector<SendBufferRef> partialSendArray;
 
-	for (SendBuffer* buffer : _sendContext.buffers)
+	for (SendBufferRef& buffer : _sendContext.buffers)
 	{
 		if (transferred == 0)
 		{
@@ -312,28 +283,23 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		{
 			continue;
 		}
-		int32 useSize = buffer->GetUseSizeLock();
-		// 남은 데이터만큼 ReadPos 이동
-		if (transferred >= useSize)
+		int32 remainSize = buffer->GetRemainSize();
+		// 완전 전송
+		if (transferred >= remainSize)
 		{
-			// 완전 전송
-			buffer->CommitSend(useSize);
-			buffer->CleanPosLock();
-			transferred -= useSize;
-			// 모든 데이터가 전송되었을 경우 해제
-			if (buffer->GetUseSizeLock() == 0)
-			{
-				ObjectPool<SendBuffer>::Release(buffer);
-			}
+			transferred -= remainSize;
 		}
 		else
 		{
-			// 부분 전송
+			// 부분 전송 - 나머지는 다음에 전송
 			buffer->CommitSend(transferred);
 			partialSendArray.push_back(buffer);
 			transferred = 0;
 		}
 	}
+	// 버퍼 초기화
+	_sendContext.buffers.clear();
+
 	// 송신 이벤트 호출
 	// 컨텐츠 로직에서 구현
 	_service->OnSend(shared_from_this(), bytesTransferred);
@@ -345,36 +311,32 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		// 부분 전송된 버퍼가 있다면, 다음에 전송하기 위해 _sendQueue 앞쪽에 삽입함
 		if (partialSendArray.empty() == false)
 		{
-			// 임시버퍼
-			Vector<SendBuffer*> tempBuffer;
-			tempBuffer.reserve(_sendQueue.size() + partialSendArray.size());
-			// 임시버퍼에 sendQueue에 담겨있는 데이터를 빼낸다.
-			while (_sendQueue.empty() == false)
+			// 임시큐
+			Queue<SendBufferRef> tempQueue;
+			// 부분 전송된 버퍼 삽입
+			for (const SendBufferRef& buffer : partialSendArray)
 			{
-				tempBuffer.push_back(_sendQueue.front());
+				tempQueue.push(buffer);
+			}
+			// 미전송 버퍼 이어붙이기
+			while (_sendQueue.empty() == false) 
+			{
+				tempQueue.push(_sendQueue.front());
 				_sendQueue.pop();
 			}
-			// 순서대로 다시 조립한다.
-			// 부분 전송된 버퍼 + 임시버퍼(sendQueue에 원래 있던 데이터)
-			for (auto it = partialSendArray.rbegin(); it != partialSendArray.rend(); ++it)
-			{
-				_sendQueue.push(*it);
-			}
-			for (SendBuffer* buffer : tempBuffer)
-			{
-				_sendQueue.push(buffer);
-			}
+			// 전송되지 않은 데이터로 교체
+			_sendQueue = std::move(tempQueue);
 		}
 
 		if (_sendQueue.empty() == false)
 		{
-			_sending.store(true);
+			_sending = true;
 			// 남아있는 데이터 send
 			ProcessSend();
 		}
 		else
 		{
-			_sending.store(false);
+			_sending = false;
 		}
 	}
 }
@@ -382,7 +344,7 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 // 타임아웃 체크
 bool Session::IsTimeout(std::chrono::seconds timeout /*= TIMEOUT_SECONDS*/)
 {
-	return (NOW - _lastRecvTime) > timeout;
+	return (NOW - _lastSendTime) > timeout;
 }
 
 // 세션 ID 얻기

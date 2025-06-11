@@ -77,6 +77,7 @@ private:
 	SOCKET _socket;
 	SOCKADDR_IN _clientAddress;
 	TimePoint _lastRecvTime;
+	TimePoint _lastSendTime;
 	TimePoint _connectedTime;
 	bool _isClosed;
 
@@ -86,8 +87,8 @@ private:
 	SendContext _sendContext;
 
 	// 버퍼 관련
-	Queue<SendBuffer*> _sendQueue;
-	std::atomic<bool> _sending;
+	Queue<SendBufferRef> _sendQueue;
+	bool _sending;
 
 	// 서비스
 	CoreService* _service;
