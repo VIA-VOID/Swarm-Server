@@ -14,15 +14,12 @@ public:
 	bool Write(const BYTE* src, uint32 size);
 	// readPos 이동
 	void CommitSend(uint32 size);
-	// cleanPos with Lock
-	void CleanPosLock();
-	// 사용중인 용량 얻기 with Lock
-	uint32 GetUseSizeLock();
-
-	// getter -
+	// readPos 가져오기
 	BYTE* GetSendPtr();
-	uint32 GetDirectSendSize();
+	// 전송하지 못한 데이터 크기
+	int32 GetRemainSize();
 
 private:
 	USE_LOCK;
+	int32 _dataSize;
 };

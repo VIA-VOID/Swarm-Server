@@ -6,46 +6,31 @@
 ----------------------------*/
 
 SendBuffer::SendBuffer(uint32 bufferSize/* = BUFFER_SIZE*/)
-	: RingBuffer(bufferSize)
+	: RingBuffer(bufferSize), _dataSize(0)
 {
 }
 
 // 데이터 쓰기
 bool SendBuffer::Write(const BYTE* src, uint32 size)
 {
-	LOCK_GUARD;
+	_dataSize = size;
 	return Enqueue(src, size);
 }
 
 // readPos 이동
 void SendBuffer::CommitSend(uint32 size)
 {
-	LOCK_GUARD;
 	MoveReadPos(size);
 }
 
-// cleanPos with Lock
-void SendBuffer::CleanPosLock()
-{
-	LOCK_GUARD;
-	CleanPos();
-}
-
-// 사용중인 용량 얻기 with Lock
-uint32 SendBuffer::GetUseSizeLock()
-{
-	LOCK_GUARD;
-	return GetUseSize();
-}
-
+// readPos 가져오기
 BYTE* SendBuffer::GetSendPtr()
 {
-	LOCK_GUARD;
 	return GetReadPtr();
 }
 
-uint32 SendBuffer::GetDirectSendSize()
+// 전송하지 못한 데이터 크기
+int32 SendBuffer::GetRemainSize()
 {
-	LOCK_GUARD;
-	return GetDirectDequeSize();
+	return _dataSize - _readPos;
 }
