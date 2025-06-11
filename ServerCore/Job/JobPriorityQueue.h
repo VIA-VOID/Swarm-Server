@@ -29,10 +29,10 @@ public:
 
 private:
 	// 작업을 큐에 추가
-	void Push(Job* job);
+	void Push(const JobRef& job);
 	// 작업 큐에서 가져옴
 	// LOCK은 호출하는 함수에서 건다.
-	Job* Pop(JobGroupId groupId);
+	JobRef Pop(JobGroupId groupId);
 	// 워커 스레드
 	void WorkerThread(JobGroupId group);
 
@@ -40,7 +40,7 @@ private:
 	// 우선순위 비교 연산자
 	struct JobComparator
 	{
-		bool operator()(const Job* a, const Job* b)
+		bool operator()(const JobRef& a, const JobRef& b)
 		{
 			// 1. 우선순위 비교 (높은 우선순위가 먼저)
 			if (a->GetPriority() != b->GetPriority())
@@ -59,7 +59,7 @@ private:
 
 private:
 	// 우선순위 큐 타입
-	using JobType = PriorityQueue<Job*, Vector<Job*>, JobComparator>;
+	using JobType = PriorityQueue<JobRef, Vector<JobRef>, JobComparator>;
 	struct GroupJobQueue
 	{
 		JobType jobQueue;
@@ -75,7 +75,7 @@ private:
 template<typename T, typename Ret, typename ...Args>
 inline void JobPriorityQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args ...args)
 {
-	Job* job = ObjectPool<Job>::Allocate(owner, memFunc, 0, std::forward<Args>(args)...);
+	JobRef job = ObjectPool<Job>::MakeShared(owner, memFunc, 0, std::forward<Args>(args)...);
 	Push(job);
 }
 
@@ -83,6 +83,6 @@ inline void JobPriorityQueue::DoAsync(T* owner, Ret(T::* memFunc)(Args...), Args
 template<typename T, typename Ret, typename ...Args>
 inline void JobPriorityQueue::DoAsyncAfter(uint64 delayMs, T* owner, Ret(T::* memFunc)(Args...), Args ...args)
 {
-	Job* job = ObjectPool<Job>::Allocate(owner, memFunc, delayMs, std::forward<Args>(args)...);
+	JobRef job = ObjectPool<Job>::MakeShared(owner, memFunc, delayMs, std::forward<Args>(args)...);
 	Push(job);
 }

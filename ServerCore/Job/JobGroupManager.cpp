@@ -11,11 +11,6 @@ void JobGroupManager::Init()
 
 void JobGroupManager::Shutdown()
 {
-	// JobGroupType 반환
-	for (auto& group : _groups)
-	{
-		ObjectPool<JobGroupType>::Release(group.second);
-	}
 	_groups.clear();
 }
 
@@ -28,7 +23,7 @@ JobGroupId JobGroupManager::RegisterContentGroup(const std::string& name, JobPri
 }
 
 // ID로 그룹 정보 가져오기
-const JobGroupType* JobGroupManager::GetGroupInfo(JobGroupId id) const
+const JobGroupTypeRef JobGroupManager::GetGroupInfo(JobGroupId id) const
 {
 	auto it = _groups.find(id);
 	if (it != _groups.end())
@@ -39,7 +34,7 @@ const JobGroupType* JobGroupManager::GetGroupInfo(JobGroupId id) const
 }
 
 // 모든 JobGroup 정보 가져오기
-const HashMap<JobGroupId, JobGroupType*>& JobGroupManager::GetAllGroups() const
+const HashMap<JobGroupId, JobGroupTypeRef>& JobGroupManager::GetAllGroups() const
 {
 	return _groups;
 }
@@ -71,7 +66,7 @@ JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name
 		return JobGroups::Invalid;
 	}
 
-	JobGroupType* newGroup = ObjectPool<JobGroupType>::Allocate(id, name, priority);
+	JobGroupTypeRef newGroup = ObjectPool<JobGroupType>::MakeShared(id, name, priority);
 	_groups[id] = newGroup;
 	return id;
 }

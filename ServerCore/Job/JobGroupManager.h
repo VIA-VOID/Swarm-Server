@@ -15,9 +15,9 @@ public:
 	// 컨텐츠 그룹 등록
 	JobGroupId RegisterContentGroup(const std::string& name, JobPriority priority = JobPriority::Normal);
 	// ID로 그룹 정보 가져오기
-	const JobGroupType* GetGroupInfo(JobGroupId id) const;
+	const JobGroupTypeRef GetGroupInfo(JobGroupId id) const;
 	// 모든 JobGroup 정보 가져오기
-	const HashMap<JobGroupId, JobGroupType*>& GetAllGroups() const;
+	const HashMap<JobGroupId, JobGroupTypeRef>& GetAllGroups() const;
 	// ID에 해당하는 이름 가져오기
 	const char* GetGroupName(JobGroupId id) const;
 	// 클래스 타입을 JobGroupId에 매핑 - 매크로에서 사용
@@ -35,7 +35,7 @@ private:
 
 private:
 	std::atomic<JobGroupId> _nextGroupId;
-	HashMap<JobGroupId, JobGroupType*> _groups;
+	HashMap<JobGroupId, JobGroupTypeRef> _groups;
 	HashMap<std::type_index, JobGroupId> _typeToGroup;
 };
 

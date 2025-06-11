@@ -25,14 +25,14 @@ void JobPriorityQueue::Init()
 // 즉시 처리용 작업 등록 (일반 콜백)
 void JobPriorityQueue::DoAsync(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/)
 {
-	Job* job = Job::Allocate(std::move(callback), groupId, 0);
+	JobRef job = ObjectPool<Job>::MakeShared(std::move(callback), groupId, 0);
 	Push(job);
 }
 
 // 시간 지연 처리용 작업 등록 (일반 콜백)
 void JobPriorityQueue::DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/)
 {
-	Job* job = Job::Allocate(std::move(callback), groupId, delayMs);
+	JobRef job = ObjectPool<Job>::MakeShared(std::move(callback), groupId, delayMs);
 	Push(job);
 }
 
@@ -67,7 +67,7 @@ void JobPriorityQueue::MakeGroupThread(JobGroupId groupId)
 }
 
 // 작업을 큐에 추가
-void JobPriorityQueue::Push(Job* job)
+void JobPriorityQueue::Push(const JobRef& job)
 {
 	JobGroupId groupId = job->GetGroupId();
 	{
@@ -78,7 +78,7 @@ void JobPriorityQueue::Push(Job* job)
 
 // 작업 큐에서 가져옴
 // LOCK은 호출하는 함수에서 건다.
-Job* JobPriorityQueue::Pop(JobGroupId groupId)
+JobRef JobPriorityQueue::Pop(JobGroupId groupId)
 {
 	// 우선순위 큐
 	auto& groupQueue = _groupJobs[groupId].jobQueue;
@@ -86,7 +86,7 @@ Job* JobPriorityQueue::Pop(JobGroupId groupId)
 	{
 		return nullptr;
 	}
-	Job* job = groupQueue.top();
+	JobRef job = groupQueue.top();
 	if (job->IsExecute() == false)
 	{
 		return nullptr;
@@ -104,7 +104,7 @@ void JobPriorityQueue::WorkerThread(JobGroupId groupId)
 	while (_groupRunning[groupId].load())
 	{
 		auto startTime = NOW;
-		Job* job = nullptr;
+		JobRef job = nullptr;
 		bool hasJob = false;
 		{
 			GROUP_LOCK_GUARD(_groupJobs[groupId]);
@@ -128,8 +128,6 @@ void JobPriorityQueue::WorkerThread(JobGroupId groupId)
 		{
 			// 작업 실행
 			job->Execute();
-			// 완료후 해제
-			Job::Release(job);
 		}
 
 		// 프레임 보정
