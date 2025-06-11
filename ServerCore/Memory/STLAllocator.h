@@ -34,3 +34,15 @@ public:
 		PoolAllocator::Release(ptr);
 	}
 };
+
+template<typename T, typename U>
+bool operator==(const STLAllocator<T>&, const STLAllocator<U>&) 
+{ 
+	return true;
+}
+
+template<typename T, typename U>
+bool operator!=(const STLAllocator<T>&, const STLAllocator<U>&)
+{ 
+	return false;
+}
