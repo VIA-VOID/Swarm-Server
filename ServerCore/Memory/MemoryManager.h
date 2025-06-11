@@ -21,7 +21,7 @@ class MemoryManager : public Singleton<MemoryManager>
 	enum
 	{
 		PAGE_SIZE = 4096,				// 4KB, 페이지 크기
-		CHUNK_SIZE = PAGE_SIZE * 16,	// 64KB, 전체 할당받을 크기
+		CHUNK_SIZE = PAGE_SIZE * 128,	// 512KB, 전체 할당받을 크기
 		MIN_BLOCK_SIZE = 16,			// BLOCK 최소 크기
 		MAX_BLOCK_SIZE = 2048,			// BLOCK 최대 크기
 	};

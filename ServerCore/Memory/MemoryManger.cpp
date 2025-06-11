@@ -6,7 +6,7 @@
 constexpr uint16 _blockArray[DIVIDED_NUM] = { 32, 64, 128, 256, 512, 1024, 2048 };
 // 비율단위 배열
 // - CHUNK_SIZE를 블록단위당 몇 %로 가져갈지 작성
-constexpr uint16 _ratioArray[DIVIDED_NUM] = { 16, 18, 18, 10, 8, 8, 6 };
+constexpr uint16 _ratioArray[DIVIDED_NUM] = { 8, 10, 14, 14, 18, 12, 8 };
 
 /*----------------------------
 		MemoryManager
@@ -117,31 +117,32 @@ void MemoryManager::PushChunk()
 	{
 		uint32 blockSize = _blockArray[div];
 		uint32 realBlockSize = MemoryHeader::GetRealSize(blockSize);
-
 		uint16 ratio = _ratioArray[div];
 		// 비율에 따라 할당할 사이즈
-		uint16 totalBytes = CHUNK_SIZE * ratio / totalWeight;
-		uint16 count = totalBytes / realBlockSize;
-
-		// 결정된 크기로 비율(개수)만큼 pool에 저장
-		for (uint16 cnt = 0; cnt < count; cnt++)
+		double totalBytes = (static_cast<double>(CHUNK_SIZE) * ratio) / totalWeight;
+		uint32 allocBytes = static_cast<uint32>(totalBytes);
+		// 실제 할당 가능한 블록 개수 계산
+		uint32 blockCount = allocBytes / realBlockSize;
+		// 실제 할당될 메모리 크기
+		uint32 realAllocBytes = blockCount * realBlockSize;
+		// 메모리 부족시 break
+		if (realAllocBytes > chunkSize)
 		{
-			if (chunkSize < realBlockSize)
-			{
-				return;
-			}
+			break;
+		}
+		// 결정된 크기로 비율(개수)만큼 pool에 저장
+		for (uint16 cnt = 0; cnt < blockCount; cnt++)
+		{
 			// 헤더 붙이기
 			void* dataPtr = MemoryHeader::AttachHeader(cursor, blockSize);
-
 			// 풀에 저장
 			_poolTable[div]->Push(dataPtr, false);
-
 			// 포인터 이동
 			cursor += realBlockSize;
-			chunkSize -= realBlockSize;
 		}
+		// 할당된 메모리 감소
+		chunkSize -= realAllocBytes;
 	}
-
 }
 
 // size를 pool index번호로 변환
