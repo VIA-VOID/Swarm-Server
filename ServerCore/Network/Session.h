@@ -37,7 +37,7 @@ public:
 	// 세션에 소켓, 서비스 설정
 	void PreInit(SOCKET socket, CoreService* service);
 	// WSASend 실행전 유효성, 버퍼 할당
-	void Send(const BYTE* data, int32 len);
+	void Send(const SendBufferRef& sendBuffer, int32 len);
 	// Recv 완료 & 패킷처리
 	void OnRecvCompleted(int32 bytesTransferred);
 	// Send 완료 & 남은 데이터 있을시 이어서 전송
@@ -79,7 +79,7 @@ private:
 	TimePoint _lastRecvTime;
 	TimePoint _lastSendTime;
 	TimePoint _connectedTime;
-	bool _isClosed;
+	std::atomic<bool> _isClosed;
 
 	// I/O 작업 관련
 	HANDLE _iocpHandle;
@@ -87,8 +87,8 @@ private:
 	SendContext _sendContext;
 
 	// 버퍼 관련
-	Queue<SendBufferRef> _sendQueue;
-	bool _sending;
+	Deque<SendBufferRef> _sendDequeue;
+	std::atomic<bool> _sending;
 
 	// 서비스
 	CoreService* _service;
