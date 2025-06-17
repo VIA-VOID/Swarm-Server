@@ -1,12 +1,12 @@
 #pragma once
-#include "CharacterObject.h"
-#include "Map/MapDefine.h"
+#include "Object/GameObject.h"
+#include "Zone/MapDefine.h"
 
 /*-------------------------------------------------------
 				Player
 --------------------------------------------------------*/
 
-class Player : public CharacterObject
+class Player : public GameObject
 {
 public:
 	Player(SessionRef session, const Protocol::PlayerType& playerType, const std::string& name);

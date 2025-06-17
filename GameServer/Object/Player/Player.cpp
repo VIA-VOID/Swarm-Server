@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "Player.h"
-#include "Map/MapDefine.h"
+#include "Zone/MapDefine.h"
 
 /*----------------------------
 		Player
@@ -9,7 +9,7 @@
 Player::Player(SessionRef session, const Protocol::PlayerType& playerType, const std::string& name)
 	: _session(session), _playerType(playerType), _currentMap(MapIds::Invalid)
 {
-	_type = Protocol::Character_TYPE_PLAYER;
+	_objectType = Protocol::OBJECT_TYPE_PLAYER;
 	_name = name;
 }
 
@@ -52,7 +52,7 @@ void Player::SetPosition(const Protocol::PosInfo& posInfo)
 Protocol::PlayerInfo Player::MakePlayerInfo()
 {
 	Protocol::PlayerInfo playerInfo;
-	*playerInfo.mutable_info() = MakeCharacterInfo();
+	*playerInfo.mutable_info() = MakeObjectInfo();
 	playerInfo.set_playertype(_playerType);
 
 	return playerInfo;
