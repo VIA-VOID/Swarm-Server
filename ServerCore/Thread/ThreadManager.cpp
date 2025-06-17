@@ -12,6 +12,26 @@ void ThreadManager::Init()
 	_threads.reserve(doubleThreadCount);
 }
 
+// 스레드 생성 & 일감 투척
+void ThreadManager::Launch(const std::string& threadName, uint16 count, CallbackType jobCallback)
+{
+	LOCK_GUARD;
+
+	for (uint16 thread = 0; thread < count; thread++)
+	{
+		std::string name = threadName + "-" + std::to_string(thread);
+
+		_threads.emplace_back([=]()
+			{
+				SetThreadName(name);
+				jobCallback();
+			}
+		);
+
+		LOG_INFO("Thread Created :: " + name);
+	}
+}
+
 // 그룹별 스레드 생성 & 일감 투척
 void ThreadManager::LaunchGroup(JobGroupId groupId, uint16 count, CallbackType jobCallback)
 {

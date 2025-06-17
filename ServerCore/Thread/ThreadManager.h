@@ -11,6 +11,8 @@ class ThreadManager : public Singleton<ThreadManager>
 public:
 	// 초기화
 	void Init() override;
+	// 스레드 생성 & 일감 투척
+	void Launch(const std::string& threadName, uint16 count, CallbackType jobCallback);
 	// 그룹별 스레드 생성 & 일감 투척
 	void LaunchGroup(JobGroupId groupId, uint16 count, CallbackType jobCallback);
 	// TLS 데이터 제거
