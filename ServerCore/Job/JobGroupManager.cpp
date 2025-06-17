@@ -5,8 +5,7 @@ void JobGroupManager::Init()
 {
 	_nextGroupId.store(JobGroups::NextStart, std::memory_order_relaxed);
 	// 기본적인 ServerCore 그룹 생성
-	RegisterGroup(JobGroups::System, "System");
-	RegisterGroup(JobGroups::Network, "Network", JobPriority::High);
+	RegisterGroup(JobGroups::System, "System", JobPriority::Low);
 }
 
 void JobGroupManager::Shutdown()

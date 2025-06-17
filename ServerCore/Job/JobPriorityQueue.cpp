@@ -14,10 +14,6 @@ void JobPriorityQueue::Init()
 	for (const auto& pair : allGroups)
 	{
 		JobGroupId groupId = pair.first;
-		if (groupId == JobGroups::Network)
-		{
-			continue;
-		}
 		MakeGroupThread(groupId);
 	}
 }
