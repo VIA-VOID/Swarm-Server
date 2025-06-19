@@ -19,7 +19,7 @@ public:
 	template <typename ...Args>
 	static std::shared_ptr<T> MakeShared(Args&&... args);
 	template <typename ...Args>
-	static std::unique_ptr<T> MakeUniqueShared(Args&&... args);
+	static std::unique_ptr<T, void(*)(T*)> MakeUnique(Args&&... args);
 };
 
 // 메모리 대여
@@ -51,7 +51,10 @@ inline std::shared_ptr<T> ObjectPool<T>::MakeShared(Args&&... args)
 
 template<typename T>
 template<typename ...Args>
-inline std::unique_ptr<T> ObjectPool<T>::MakeUniqueShared(Args&&... args)
+inline std::unique_ptr<T, void(*)(T*)> ObjectPool<T>::MakeUnique(Args&&... args)
 {
-	return { Allocate(std::forward<Args>(args)...), Release };
+	return std::unique_ptr<T, void(*)(T*)>(
+		Allocate(std::forward<Args>(args)...),
+		Release
+	);
 }
