@@ -42,17 +42,12 @@ private:
 	{
 		bool operator()(const JobRef& a, const JobRef& b)
 		{
-			// 1. 우선순위 비교 (높은 우선순위가 먼저)
-			if (a->GetPriority() != b->GetPriority())
-			{
-				return static_cast<uint8>(a->GetPriority()) < static_cast<uint8>(b->GetPriority());
-			}
-			// 2. 실행 시간 비교 (빠른 시간이 먼저)
+			// 1. 실행 시간 비교 (빠른 시간이 먼저)
 			if (a->GetExecuteTime() != b->GetExecuteTime())
 			{
 				return a->GetExecuteTime() > b->GetExecuteTime();
 			}
-			// 3. 생성 순서 비교 (먼저 생성된 것이 먼저)
+			// 2. 생성 순서 비교 (먼저 생성된 것이 먼저)
 			return a->GetCreationOrder() > b->GetCreationOrder();
 		}
 	};

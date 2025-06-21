@@ -94,12 +94,8 @@ JobRef JobPriorityQueue::Pop(JobGroupId groupId)
 // 워커 스레드
 void JobPriorityQueue::WorkerThread(JobGroupId groupId)
 {
-	// 다음 프레임 시간
-	auto nextFrameTime = NOW + WORKER_FRAME_INTERVAL;
-
 	while (_groupRunning[groupId].load())
 	{
-		auto startTime = NOW;
 		JobRef job = nullptr;
 		bool hasJob = false;
 		{
@@ -125,15 +121,11 @@ void JobPriorityQueue::WorkerThread(JobGroupId groupId)
 			// 작업 실행
 			job->Execute();
 		}
-
-		// 프레임 보정
-		auto endFrameTime = NOW;
-		if (nextFrameTime > endFrameTime)
+		else
 		{
-			// 다음 프레임 시간까지 대기
-			std::this_thread::sleep_until(nextFrameTime);
+			// 없으면 잠시 대기
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
-		// 다음 프레임 시간 설정
-		nextFrameTime += WORKER_FRAME_INTERVAL;
+
 	}
 }
