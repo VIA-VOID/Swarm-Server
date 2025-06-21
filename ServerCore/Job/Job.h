@@ -22,7 +22,6 @@ public:
 	// 실행가능여부
 	bool IsExecute();
 	// getter
-	JobPriority GetPriority() const;
 	JobGroupId GetGroupId() const;
 	TimePoint GetExecuteTime() const;
 	uint64 GetCreationOrder() const;
@@ -34,8 +33,6 @@ private:
 private:
 	// 콜백 functional 함수
 	CallbackType _callback;
-	// 작업 우선순위
-	JobPriority _priority;
 	// 작업 그룹
 	JobGroupId _groupId;
 	// 실행 시간
@@ -47,8 +44,7 @@ private:
 // 멤버 함수 포인터를 이용한 생성자
 template<typename T, typename Ret, typename ...Args>
 inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), JobGroupId groupId, uint64 delayMs, Args ...args)
-	: _priority(JobPriority::Normal),
-	_groupId(groupId),
+	: _groupId(groupId),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())
 {
@@ -56,11 +52,4 @@ inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), JobGroupId groupId, uint64
 		{
 			((*owner).*memFunc)(args...);
 		};
-
-	// 우선순위 지정
-	const JobGroupType* groupInfo = JobGroupMgr.GetGroupInfo(_groupId);
-	if (groupInfo)
-	{
-		_priority = groupInfo->GetGroupPriority();
-	}
 }

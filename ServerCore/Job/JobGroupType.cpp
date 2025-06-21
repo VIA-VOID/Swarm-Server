@@ -5,8 +5,8 @@
 		JobGroupType
 ----------------------------*/
 
-JobGroupType::JobGroupType(JobGroupId id, const std::string& name, JobPriority priority)
-	: _id(id), _name(name), _priority(priority)
+JobGroupType::JobGroupType(JobGroupId id, const std::string& name)
+	: _id(id), _name(name)
 {
 }
 
@@ -18,11 +18,6 @@ JobGroupId JobGroupType::GetGroupId() const
 const std::string& JobGroupType::GetGroupName() const
 {
 	return _name;
-}
-
-JobPriority JobGroupType::GetGroupPriority() const
-{
-	return _priority;
 }
 
 bool JobGroupType::operator==(const JobGroupType& other) const

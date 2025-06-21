@@ -12,16 +12,6 @@ Job::Job(CallbackType&& callback, JobGroupId groupId /*= JobGroups::System*/, ui
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())
 {
-	// 우선순위 지정
-	const JobGroupTypeRef groupInfo = JobGroupMgr.GetGroupInfo(_groupId);
-	if (groupInfo)
-	{
-		_priority = groupInfo->GetGroupPriority();
-	}
-	else
-	{
-		_priority = JobPriority::Normal;
-	}
 }
 
 // 작업 실행
@@ -37,11 +27,6 @@ void Job::Execute()
 bool Job::IsExecute()
 {
 	return NOW >= _executeTime;
-}
-
-JobPriority Job::GetPriority() const
-{
-	return _priority;
 }
 
 TimePoint Job::GetExecuteTime() const

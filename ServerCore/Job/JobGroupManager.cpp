@@ -5,7 +5,7 @@ void JobGroupManager::Init()
 {
 	_nextGroupId.store(JobGroups::NextStart, std::memory_order_relaxed);
 	// 기본적인 ServerCore 그룹 생성
-	RegisterGroup(JobGroups::System, "System", JobPriority::Low);
+	RegisterGroup(JobGroups::System, "System");
 }
 
 void JobGroupManager::Shutdown()
@@ -14,11 +14,11 @@ void JobGroupManager::Shutdown()
 }
 
 // 컨텐츠 그룹 등록
-JobGroupId JobGroupManager::RegisterContentGroup(const std::string& name, JobPriority priority /*= JobPriority::Normal*/)
+JobGroupId JobGroupManager::RegisterContentGroup(const std::string& name)
 {
 	// 다음 사용 가능한 컨텐츠 그룹 ID 생성
 	JobGroupId newId = _nextGroupId.fetch_add(1);
-	return RegisterGroup(newId, name, priority);
+	return RegisterGroup(newId, name);
 }
 
 // ID로 그룹 정보 가져오기
@@ -50,7 +50,7 @@ const char* JobGroupManager::GetGroupName(JobGroupId id) const
 }
 
 // 그룹 등록
-JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name, JobPriority priority /*= JobPriority::Normal*/)
+JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name)
 {
 	// 이미 등록된 ID인지 확인
 	if (_groups.find(id) != _groups.end())
@@ -59,7 +59,7 @@ JobGroupId JobGroupManager::RegisterGroup(JobGroupId id, const std::string& name
 		return JobGroups::Invalid;
 	}
 
-	JobGroupTypeRef newGroup = ObjectPool<JobGroupType>::MakeShared(id, name, priority);
+	JobGroupTypeRef newGroup = ObjectPool<JobGroupType>::MakeShared(id, name);
 	_groups[id] = newGroup;
 	return id;
 }

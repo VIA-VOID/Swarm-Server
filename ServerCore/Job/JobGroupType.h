@@ -1,17 +1,6 @@
 #pragma once
 #include "Pch/Types.h"
 
-// Job 워커 스레드 주기(프레임)
-constexpr auto WORKER_FRAME_INTERVAL = std::chrono::milliseconds(50);
-
-// Job 우선순위
-enum class JobPriority : uint16
-{
-	Low = 0,
-	Normal = 1,
-	High = 2,
-};
-
 // Job 그룹
 namespace JobGroups
 {
@@ -27,12 +16,11 @@ namespace JobGroups
 class JobGroupType
 {
 public:
-	JobGroupType(JobGroupId id, const std::string& name, JobPriority priority);
+	JobGroupType(JobGroupId id, const std::string& name);
 
 	// Getter-
 	JobGroupId GetGroupId() const;
 	const std::string& GetGroupName() const;
-	JobPriority GetGroupPriority() const;
 
 	// operator-
 	bool operator==(const JobGroupType& other) const;
@@ -47,5 +35,4 @@ public:
 private:
 	JobGroupId _id;         // 고유 ID
 	std::string _name;      // 그룹 이름(스레드 이름으로 사용)
-	JobPriority _priority;  // 우선순위
 };

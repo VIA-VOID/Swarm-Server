@@ -13,7 +13,7 @@ public:
 	void Init() override;
 	void Shutdown() override;
 	// 컨텐츠 그룹 등록
-	JobGroupId RegisterContentGroup(const std::string& name, JobPriority priority = JobPriority::Normal);
+	JobGroupId RegisterContentGroup(const std::string& name);
 	// ID로 그룹 정보 가져오기
 	const JobGroupTypeRef GetGroupInfo(JobGroupId id) const;
 	// 모든 JobGroup 정보 가져오기
@@ -23,7 +23,7 @@ public:
 
 private:
 	// 그룹 등록
-	JobGroupId RegisterGroup(JobGroupId id, const std::string& name, JobPriority priority = JobPriority::Normal);
+	JobGroupId RegisterGroup(JobGroupId id, const std::string& name);
 
 private:
 	std::atomic<JobGroupId> _nextGroupId;
