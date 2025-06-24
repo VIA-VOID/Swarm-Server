@@ -1,0 +1,74 @@
+{
+  "totalType": 3,
+  "playerTypes": [
+    {
+      "playerType": 1,
+      "playerName": "Warrior",
+      "baseStat": {
+        "level": 1,
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 30,
+        "maxMp": 30,
+        "attack": 18,
+        "defense": 15,
+        "moveSpeed": 450,
+        "attackSpeed": 90
+      },
+      "growth": {
+        "hp": 25,
+        "maxHp": 25,
+        "mp": 5,
+        "maxMp": 5,
+        "attack": 4,
+        "defense": 3
+      }
+    },
+    {
+      "playerType": 2,
+      "playerName": "archer",
+      "baseStat": {
+        "level": 1,
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 30,
+        "maxMp": 30,
+        "attack": 18,
+        "defense": 15,
+        "moveSpeed": 450,
+        "attackSpeed": 90
+      },
+      "growth": {
+        "hp": 25,
+        "maxHp": 25,
+        "mp": 5,
+        "maxMp": 5,
+        "attack": 4,
+        "defense": 3
+      }
+    },
+    {
+      "playerType": 3,
+      "playerName": "priest",
+      "baseStat": {
+        "level": 1,
+        "hp": 120,
+        "maxHp": 120,
+        "mp": 30,
+        "maxMp": 30,
+        "attack": 18,
+        "defense": 15,
+        "moveSpeed": 450,
+        "attackSpeed": 90
+      },
+      "growth": {
+        "hp": 25,
+        "maxHp": 25,
+        "mp": 5,
+        "maxMp": 5,
+        "attack": 4,
+        "defense": 3
+      }
+    }
+  ]
+}
