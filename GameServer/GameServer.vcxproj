@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -91,7 +91,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)..\Build\$(Platform)$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\Output\$(Platform)$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(ProjectDir)\..\ServerCore\;$(ProjectDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)ServerCore\;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)Libraries\Libs\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -189,9 +189,17 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Map\MapManager.cpp" />
-    <ClCompile Include="Map\BaseMap.cpp" />
-    <ClCompile Include="Character\CharacterObject.cpp" />
+    <ClCompile Include="Data\BaseJsonLoader.cpp" />
+    <ClCompile Include="Object\Stat\BaseStatLoader.cpp" />
+    <ClCompile Include="Object\Stat\BaseStat.cpp" />
+    <ClCompile Include="Object\Stat\PlayerStatLoader.cpp" />
+    <ClCompile Include="Protocol\ProtoOperator.cpp" />
+    <ClCompile Include="Zone\Vector3d.cpp" />
+    <ClCompile Include="Zone\TownZone.cpp" />
+    <ClCompile Include="Zone\BaseZone.cpp" />
+    <ClCompile Include="Object\GameObject.cpp" />
+    <ClCompile Include="Zone\MapDataLoader.cpp" />
+    <ClCompile Include="Zone\WorldManager.cpp" />
     <ClCompile Include="Job\JobGroup.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -205,30 +213,39 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Character\Player.cpp" />
-    <ClCompile Include="Character\PlayerManager.cpp" />
+    <ClCompile Include="Object\Player\Player.cpp" />
+    <ClCompile Include="Object\Player\PlayerManager.cpp" />
     <ClCompile Include="Protocol\Enum.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Protocol\Protocol.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Protocol\Struct.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Map\TownMap.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Character\CharacterDefine.h" />
+    <ClInclude Include="Data\BaseJsonLoader.h" />
+    <ClInclude Include="Object\Stat\BaseStatLoader.h" />
+    <ClInclude Include="Object\Stat\BaseStat.h" />
+    <ClInclude Include="Object\Stat\PlayerStatLoader.h" />
+    <ClInclude Include="Protocol\ProtoOperator.h" />
+    <ClInclude Include="Zone\Vector3d.h" />
+    <ClInclude Include="Zone\TownZone.h" />
+    <ClInclude Include="Zone\BaseZone.h" />
+    <ClInclude Include="Object\ObjectDefine.h" />
     <ClInclude Include="GameDefine.h" />
     <ClInclude Include="GameMacro.h" />
-    <ClInclude Include="Map\MapDefine.h" />
-    <ClInclude Include="Map\MapManager.h" />
-    <ClInclude Include="Map\BaseMap.h" />
-    <ClInclude Include="Character\CharacterObject.h" />
+    <ClInclude Include="Object\GameObject.h" />
+    <ClInclude Include="Zone\MapDataLoader.h" />
+    <ClInclude Include="Zone\WorldManager.h" />
     <ClInclude Include="GameServer.h" />
     <ClInclude Include="Job\JobGroup.h" />
     <ClInclude Include="Packet\ChatPacketHandler.h" />
@@ -236,12 +253,16 @@
     <ClInclude Include="Packet\PacketId.h" />
     <ClInclude Include="Packet\PlayerPacketHandler.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Character\Player.h" />
-    <ClInclude Include="Character\PlayerManager.h" />
+    <ClInclude Include="Object\Player\Player.h" />
+    <ClInclude Include="Object\Player\PlayerManager.h" />
     <ClInclude Include="Protocol\Enum.pb.h" />
     <ClInclude Include="Protocol\Protocol.pb.h" />
     <ClInclude Include="Protocol\Struct.pb.h" />
-    <ClInclude Include="Map\TownMap.h" />
+    <ClInclude Include="Zone\ZoneDefine.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\MapData.json" />
+    <None Include="Data\PlayerStats.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

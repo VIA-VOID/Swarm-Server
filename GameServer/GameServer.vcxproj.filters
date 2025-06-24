@@ -28,16 +28,45 @@
     </ClCompile>
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Character\CharacterObject.cpp">
-      <Filter>Character</Filter>
+    <ClCompile Include="Data\BaseJsonLoader.cpp">
+      <Filter>Data</Filter>
     </ClCompile>
-    <ClCompile Include="Character\Player.cpp">
-      <Filter>Character</Filter>
+    <ClCompile Include="Object\GameObject.cpp">
+      <Filter>Object</Filter>
     </ClCompile>
-    <ClCompile Include="Map\BaseMap.cpp" />
-    <ClCompile Include="Map\TownMap.cpp" />
-    <ClCompile Include="Map\MapManager.cpp" />
-    <ClCompile Include="Character\PlayerManager.cpp" />
+    <ClCompile Include="Object\Player\Player.cpp">
+      <Filter>Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Player\PlayerManager.cpp">
+      <Filter>Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Stat\BaseStat.cpp">
+      <Filter>Object\Stat</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Stat\BaseStatLoader.cpp">
+      <Filter>Object\Stat</Filter>
+    </ClCompile>
+    <ClCompile Include="Object\Stat\PlayerStatLoader.cpp">
+      <Filter>Object\Stat</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\BaseZone.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\MapDataLoader.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\TownZone.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\Vector3d.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\WorldManager.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Protocol\ProtoOperator.cpp">
+      <Filter>Protocol</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -66,20 +95,53 @@
       <Filter>Packet</Filter>
     </ClInclude>
     <ClInclude Include="GameServer.h" />
-    <ClInclude Include="Character\CharacterObject.h">
-      <Filter>Character</Filter>
-    </ClInclude>
-    <ClInclude Include="Character\Player.h">
-      <Filter>Character</Filter>
-    </ClInclude>
-    <ClInclude Include="Map\BaseMap.h" />
-    <ClInclude Include="Map\TownMap.h" />
-    <ClInclude Include="Map\MapManager.h" />
     <ClInclude Include="GameMacro.h" />
-    <ClInclude Include="Character\PlayerManager.h" />
-    <ClInclude Include="Map\MapDefine.h" />
     <ClInclude Include="GameDefine.h" />
-    <ClInclude Include="Character\CharacterDefine.h" />
+    <ClInclude Include="Data\BaseJsonLoader.h">
+      <Filter>Data</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\GameObject.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\ObjectDefine.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\Player\Player.h">
+      <Filter>Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\Player\PlayerManager.h">
+      <Filter>Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\Stat\BaseStat.h">
+      <Filter>Object\Stat</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\Stat\BaseStatLoader.h">
+      <Filter>Object\Stat</Filter>
+    </ClInclude>
+    <ClInclude Include="Object\Stat\PlayerStatLoader.h">
+      <Filter>Object\Stat</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\BaseZone.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\MapDataLoader.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\TownZone.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\Vector3d.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\WorldManager.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\ZoneDefine.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol\ProtoOperator.h">
+      <Filter>Protocol</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
@@ -94,5 +156,28 @@
     <Filter Include="Character">
       <UniqueIdentifier>{ded251c0-b3f7-4410-88b7-497141039c68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Data">
+      <UniqueIdentifier>{62a48c55-65e0-4a2f-ac32-8e35c4882e1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{6e110586-a015-4e26-89f3-c6db099d1dbd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Player">
+      <UniqueIdentifier>{61f4e9ec-1621-4a50-83ee-ff76a7634b4c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Stat">
+      <UniqueIdentifier>{adbc8e16-a1a1-428e-90b7-92db460caa6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Zone">
+      <UniqueIdentifier>{824e7936-e4b3-43f5-86f6-af8403028dc4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Data\MapData.json">
+      <Filter>Data</Filter>
+    </None>
+    <None Include="Data\PlayerStats.json">
+      <Filter>Data</Filter>
+    </None>
   </ItemGroup>
 </Project>
