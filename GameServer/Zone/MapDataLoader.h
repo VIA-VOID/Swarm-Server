@@ -1,29 +1,27 @@
 #pragma once
+#include "Data/BaseJsonLoader.h"
 #include "ZoneDefine.h"
 #include <rapidjson/document.h>
 
 /*-------------------------------------------------------
 				MapDataLoader
 
-- RapidJSON 사용 - https://rapidjson.org/
 - 맵 (좌표)데이터를 읽고 파싱
 --------------------------------------------------------*/
 
-class MapDataLoader
+class MapDataLoader : public BaseJsonLoader
 {
 public:
-	// JSON 파일 로드 및 파싱
-	static bool LoadFromFile(const std::string& filePath, MapData& outData);
+	// 맵 데이터 읽고 파싱
+	static bool LoadMapData(const std::string& filePath, MapData& outData);
 
 private:
-	// 파일 읽기
-	static void ReadFileToString(const std::string& filePath, std::string& outBuffer);
 	// JSON 파싱
-	static bool ParseJSON(const std::string& jsonContent, MapData& outData);
+	static void ParseMapData(const rapidjson::Document& document, MapData& outData);
 	// Zone 정보 파싱
 	static bool ParseZones(const rapidjson::Value& zonesArray, Vector<ZoneInfo>& outZones);
 	// MapData 좌표 파싱
-	static bool ParseMapGrid(const rapidjson::Value& mapDataArray, Vector<Vector<int32>>& outGrid, int32 gridX, int32 gridY);
+	static bool ParseMapGrid(const rapidjson::Value& mapDataArray, Vector<Vector<bool>>& outGrid, int32 gridX, int32 gridY);
 	// Zone 위치 정보 파싱
 	static bool ParseZonePosition(const rapidjson::Value& posObj, ZonePos& outPos);
 };
