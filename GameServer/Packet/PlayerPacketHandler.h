@@ -15,12 +15,12 @@ public:
 	// 함수 테이블 등록
 	void RegisterHandlers() override
 	{
-		RegisterPacket<Protocol::CS_PLAYER_CREATE>(PacketID::CS_PLAYER_CREATE, Handle_CS_PLAYER_CREATE);
+		RegisterPacket<Protocol::CS_PLAYER_ENTER_GAME>(PacketID::CS_PLAYER_ENTER_GAME, Handle_CS_PLAYER_ENTER_GAME);
 		RegisterPacket<Protocol::CS_PLAYER_MOVE>(PacketID::CS_PLAYER_MOVE, Handle_CS_PLAYER_MOVE);
 	}
 
 private:
 	// 자동생성
-	static void Handle_CS_PLAYER_CREATE(Session* session, Protocol::CS_PLAYER_CREATE& packet);
-	static void Handle_CS_PLAYER_MOVE(Session* session, Protocol::CS_PLAYER_MOVE& packet);
+	static void Handle_CS_PLAYER_ENTER_GAME(SessionRef session, const Protocol::CS_PLAYER_ENTER_GAME& packet);
+	static void Handle_CS_PLAYER_MOVE(SessionRef session, const Protocol::CS_PLAYER_MOVE& packet);
 };
