@@ -4,6 +4,7 @@
 	싱글톤 패턴 적용된 클래스들 정의
 -------------------------------------*/
 #define WorldMgr						WorldManager::GetInstance()
+#define StatMgr							StatManager::GetInstance()
 
 
 
