@@ -67,6 +67,7 @@
     <ClCompile Include="Protocol\ProtoOperator.cpp">
       <Filter>Protocol</Filter>
     </ClCompile>
+    <ClCompile Include="Object\Stat\StatManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -142,6 +143,7 @@
     <ClInclude Include="Protocol\ProtoOperator.h">
       <Filter>Protocol</Filter>
     </ClInclude>
+    <ClInclude Include="Object\Stat\StatManager.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
@@ -152,9 +154,6 @@
     </Filter>
     <Filter Include="Packet">
       <UniqueIdentifier>{d4a8df1b-1f49-4c4a-8fc7-79579b836a6e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Character">
-      <UniqueIdentifier>{ded251c0-b3f7-4410-88b7-497141039c68}</UniqueIdentifier>
     </Filter>
     <Filter Include="Data">
       <UniqueIdentifier>{62a48c55-65e0-4a2f-ac32-8e35c4882e1e}</UniqueIdentifier>
