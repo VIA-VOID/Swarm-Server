@@ -12,6 +12,13 @@
 
 #include "Pch/CorePch.h"
 #include "Protocol/Protocol.pb.h"
+#include "Protocol/Enum.pb.h"
+#include "Protocol/Struct.pb.h"
+#include "Protocol/ProtoOperator.h"
 #include "Network/Session.h"
 #include "Job/JobGroup.h"
+
+#include "GameDefine.h"
+#include "GameMacro.h"
 #include "Packet/PacketHandler.h"
+#include "Zone/Vector3d.h"
