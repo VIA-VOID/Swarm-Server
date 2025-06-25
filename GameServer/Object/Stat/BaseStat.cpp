@@ -1,18 +1,22 @@
 #include "pch.h"
 #include "BaseStat.h"
 
-// 레벨업시 스텟 계산
-void BaseStat::CalculateLevelUpStat(Protocol::StatInfo& currentStat) const
+void BaseStat::GetStatInfo(Protocol::StatInfo& outStatInfo) const
 {
-	currentStat += _statGrowth;
+	outStatInfo.CopyFrom(_statInfo);
 }
 
-void BaseStat::SetStatInfo(const Protocol::StatInfo& statInfo)
+void BaseStat::GetStatGrowth(Protocol::StatInfo& outStatGrowth) const
 {
-	_statInfo.CopyFrom(statInfo);
+	outStatGrowth.CopyFrom(_statGrowth);
 }
 
-void BaseStat::SetStatGrowth(const Protocol::StatInfo& statGrowth)
+void BaseStat::SetStatInfo(const Protocol::StatInfo& outStatInfo)
 {
-	_statGrowth.CopyFrom(statGrowth);
+	_statInfo.CopyFrom(outStatInfo);
+}
+
+void BaseStat::SetStatGrowth(const Protocol::StatInfo& outStatGrowth)
+{
+	_statGrowth.CopyFrom(outStatGrowth);
 }

@@ -9,12 +9,11 @@
 class BaseStat
 {
 public:
-	// 레벨업시 스텟 계산
-	void CalculateLevelUpStat(Protocol::StatInfo& currentStat) const;
-
-	// Setter-
-	void SetStatInfo(const Protocol::StatInfo& statInfo);
-	void SetStatGrowth(const Protocol::StatInfo& statGrowth);
+	// Getter Setter-
+	void GetStatInfo(Protocol::StatInfo& outStatInfo) const;
+	void GetStatGrowth(Protocol::StatInfo& outStatGrowth) const;
+	void SetStatInfo(const Protocol::StatInfo& outStatInfo);
+	void SetStatGrowth(const Protocol::StatInfo& outStatGrowth);
 
 private:
 	// 기본스텟 정보
