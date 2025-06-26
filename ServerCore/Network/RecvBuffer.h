@@ -1,17 +1,19 @@
 #pragma once
-#include "Container/RingBuffer.h"
+#include "Container/BaseBuffer.h"
+#include <ws2def.h>
 
 /*-------------------------------------------------------
 				RecvBuffer
 --------------------------------------------------------*/
 
-class RecvBuffer : public RingBuffer
+class RecvBuffer : public BaseBuffer
 {
 public:
 	RecvBuffer(uint32 bufferSize);
-	virtual ~RecvBuffer() {};
-	// 데이터 읽기
-	bool Read(BYTE* dest, uint32 destSize, uint32 size);
-	// 패킷 크기 만큼의 연속 공간이 있는지 확인
-	bool CanRecvPacketSize(uint32 packetSize);
+	virtual ~RecvBuffer() = default;
+
+	// WSARecv용 버퍼 정보 반환
+	void GetWSABUF(WSABUF& wsabuf);
+	// WSARecv 완료 후 쓰기 위치 이동
+	void OnRecvCompleted(uint32 bytesTransferred);
 };

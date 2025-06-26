@@ -1,32 +1,24 @@
 #include "pch.h"
 #include "RecvBuffer.h"
-#include "Container/RingBuffer.h"
 
 /*----------------------------
 		RecvBuffer
 ----------------------------*/
 
 RecvBuffer::RecvBuffer(uint32 bufferSize)
-	: RingBuffer(bufferSize)
+	: BaseBuffer(bufferSize)
 {
 }
 
-// 데이터 읽기
-bool RecvBuffer::Read(BYTE* dest, uint32 destSize, uint32 size)
+// WSARecv용 버퍼 정보 반환
+void RecvBuffer::GetWSABUF(WSABUF& wsabuf)
 {
-	if (size > GetUseSize())
-	{
-		return false;
-	}
-	// 데이터 빼오기
-	Peek(dest, destSize, size);
-	// readPos 이동
-	MoveReadPos(size);
-	return true;
+	wsabuf.buf = reinterpret_cast<CHAR*>(GetWritePtr());
+	wsabuf.len = GetFreeSize();
 }
 
-// 패킷 크기 만큼의 연속 공간이 있는지 확인
-bool RecvBuffer::CanRecvPacketSize(uint32 packetSize)
+// WSARecv 완료 후 쓰기 위치 이동
+void RecvBuffer::OnRecvCompleted(uint32 bytesTransferred)
 {
-	return GetUseSize() >= packetSize;
+	MoveWritePos(bytesTransferred);
 }
