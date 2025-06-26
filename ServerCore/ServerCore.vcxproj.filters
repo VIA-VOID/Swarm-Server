@@ -64,7 +64,7 @@
     <ClCompile Include="Network\SocketUtil.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="Container\RingBuffer.cpp">
+    <ClCompile Include="Container\BaseBuffer.cpp">
       <Filter>Container</Filter>
     </ClCompile>
     <ClCompile Include="CoreService.cpp" />
@@ -166,7 +166,7 @@
     <ClInclude Include="Network\SocketUtil.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="Container\RingBuffer.h">
+    <ClInclude Include="Container\BaseBuffer.h">
       <Filter>Container</Filter>
     </ClInclude>
     <ClInclude Include="CoreService.h" />

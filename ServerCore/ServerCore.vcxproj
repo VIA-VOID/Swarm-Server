@@ -183,7 +183,7 @@
     <ClInclude Include="Memory\ObjectPool.h" />
     <ClInclude Include="Memory\STLAllocator.h" />
     <ClInclude Include="Network\NetworkDefine.h" />
-    <ClInclude Include="Container\RingBuffer.h" />
+    <ClInclude Include="Container\BaseBuffer.h" />
     <ClInclude Include="Network\Session.h" />
     <ClInclude Include="Network\RecvBuffer.h" />
     <ClInclude Include="Network\SendBuffer.h" />
@@ -215,7 +215,7 @@
     <ClCompile Include="Log\LogManager.cpp" />
     <ClCompile Include="Memory\MemoryHeader.cpp" />
     <ClCompile Include="Memory\STLAllocator.cpp" />
-    <ClCompile Include="Container\RingBuffer.cpp" />
+    <ClCompile Include="Container\BaseBuffer.cpp" />
     <ClCompile Include="Network\Session.cpp" />
     <ClCompile Include="Network\RecvBuffer.cpp" />
     <ClCompile Include="Network\SendBuffer.cpp" />
