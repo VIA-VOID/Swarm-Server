@@ -116,7 +116,7 @@ void JobPriorityQueue::WorkerThread(JobGroupId groupId)
 		}
 		
 		// 작업 처리
-		if (hasJob)
+		if (hasJob && _groupRunning[groupId].load())
 		{
 			// 작업 실행
 			job->Execute();
