@@ -17,6 +17,4 @@ public:
 	void OnSendCompleted(uint32 bytesTransferred);
 	// 송신 완료 여부
 	bool IsCompleted() const;
-	// 데이터 쓰기
-	bool Write(const BYTE* data, uint32 size);
 };

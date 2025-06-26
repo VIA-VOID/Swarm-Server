@@ -28,17 +28,3 @@ bool SendBuffer::IsCompleted() const
 {
 	return GetDataSize() == 0;
 }
-
-// 데이터 쓰기
-bool SendBuffer::Write(const BYTE* data, uint32 size)
-{
-	if (GetFreeSize() < size)
-	{
-		return false;
-	}
-
-	::memcpy(GetWritePtr(), data, size);
-	MoveWritePos(size);
-
-	return true;
-}
