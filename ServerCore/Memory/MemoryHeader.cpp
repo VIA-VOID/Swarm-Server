@@ -19,13 +19,14 @@ uint32 MemoryHeader::GetRealSize(uint32 allocSize)
 }
 
 // header 붙이기
-void* MemoryHeader::AttachHeader(void* ptr, uint32 blockSize)
+void* MemoryHeader::AttachHeader(void* ptr, uint32 blockSize, AllocType type)
 {
 	uint8* cursor = static_cast<uint8*>(ptr);
 
 	// 헤더 세팅
 	MemoryHeader* header = reinterpret_cast<MemoryHeader*>(cursor);
 	header->allocSize = blockSize;
+	header->allocType = type;
 
 #ifdef _DEBUG
 	uint8* nextHeaderPtr = reinterpret_cast<uint8*>(header + 1);

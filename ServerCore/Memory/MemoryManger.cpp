@@ -34,11 +34,8 @@ void* MemoryManager::Allocate(uint32 size)
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* virtualPtr = ::VirtualAlloc(nullptr, realSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
-		// TODO: 차후 모니터링 수치로 반영
-		// LOG_SYSTEM(std::to_wstring(size) + L"bytes 만큼 VirtualAlloc 할당");
-
 		// 헤더 붙이기
-		return MemoryHeader::AttachHeader(virtualPtr, size);
+		return MemoryHeader::AttachHeader(virtualPtr, size, AllocType::Virtual);
 	}
 	// pool index
 	uint16 idx = SizeToIndex(size);
@@ -51,16 +48,8 @@ void* MemoryManager::Allocate(uint32 size)
 		uint32 realSize = MemoryHeader::GetRealSize(size);
 		void* mallocPtr = ::malloc(realSize);
 
-		// TODO: 차후 모니터링 수치로 반영
-		/*
-		LOG_WARNING(
-			std::to_wstring(realSize) +
-			L"bytes 만큼 새로 할당. 요청 크기: " +
-			std::to_wstring(size) + L"bytes"
-		);
-		*/
 		// 헤더 붙이기
-		return MemoryHeader::AttachHeader(mallocPtr, size);
+		return MemoryHeader::AttachHeader(mallocPtr, size, AllocType::Malloc);
 	}
 
 	return ptr;
@@ -74,6 +63,7 @@ void MemoryManager::Release(void* ptr)
 	// 헤더 분리
 	MemoryHeader* header = MemoryHeader::DetachHeader(ptr);
 	uint32 size = header->allocSize;
+	AllocType type = header->allocType;
 
 	// MAX_BLOCK_SIZE 크기보다 클 경우 pool로 관리하지 않고 반납
 	if (size > MAX_BLOCK_SIZE)
@@ -82,9 +72,31 @@ void MemoryManager::Release(void* ptr)
 		return;
 	}
 
-	// 메모리 반납
-	uint16 idx = SizeToIndex(size);
-	_poolTable[idx]->Push(ptr);
+	// 할당 타입에 따라 해제
+	switch (type)
+	{
+	case AllocType::Pool:
+	{
+		// Pool로 반납
+		uint16 idx = SizeToIndex(size);
+		_poolTable[idx]->Push(ptr);
+	}
+	break;
+
+	case AllocType::Malloc:
+	{
+		void* originalPtr = static_cast<void*>(header);
+		::free(originalPtr);
+	}
+	break;
+
+	case AllocType::Virtual:
+	{
+		void* originalPtr = static_cast<void*>(header);
+		::VirtualFree(originalPtr, 0, MEM_RELEASE);
+	}
+	break;
+	}
 }
 
 // 종료
@@ -98,8 +110,6 @@ void MemoryManager::PushChunk()
 	// chunk 크기만큼 할당
 	void* chunk = ::VirtualAlloc(nullptr, CHUNK_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 	ASSERT_CRASH(chunk != nullptr);
-
-	_chunkPtr = chunk;
 
 	// 전체 비율
 	uint16 totalWeight = 0;
@@ -134,7 +144,7 @@ void MemoryManager::PushChunk()
 		for (uint16 cnt = 0; cnt < blockCount; cnt++)
 		{
 			// 헤더 붙이기
-			void* dataPtr = MemoryHeader::AttachHeader(cursor, blockSize);
+			void* dataPtr = MemoryHeader::AttachHeader(cursor, blockSize, AllocType::Pool);
 			// 풀에 저장
 			_poolTable[div]->Push(dataPtr, false);
 			// 포인터 이동

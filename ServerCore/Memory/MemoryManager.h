@@ -30,13 +30,13 @@ public:
 	// 초기화
 	// BLOCK 개수만큼 새로 할당
 	void Init() override;
+	// 종료
+	void Shutdown() override;
 	// pool에서 메모리 꺼내기
 	// 4K 이상은 새로 할당, pool 관리하지 않음
 	void* Allocate(uint32 size);
 	// pool에 메모리 반납
 	void Release(void* ptr);
-	// 종료
-	void Shutdown() override;
 
 private:
 	// CHUNK_SIZE 만큼 한번에 할당해서 pool에 저장
@@ -48,5 +48,4 @@ private:
 	// 메모리 풀 테이블
 	// 크기에 따라 관리
 	MemoryPool* _poolTable[DIVIDED_NUM] = {};
-	void* _chunkPtr = nullptr;
 };
