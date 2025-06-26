@@ -23,7 +23,7 @@ struct LogMessage
 	std::string _timeStamp;
 	std::string _functionName;
 
-	LogMessage(LogType type, std::string msg, std::string timeStamp, const char* fnName)
+	LogMessage(LogType type, std::string msg, std::string timeStamp, std::string fnName)
 		: _type(type), _message(msg), _timeStamp(timeStamp), _functionName(fnName)
 	{
 	}
@@ -56,7 +56,10 @@ struct LogMessage
 			threadName = threadName.substr(0, 12);
 		}
 		// 스레드명 패딩
-		threadName.resize(12, ' ');
+		if (threadName.length() < 12)
+		{
+			threadName.append(12 - threadName.length(), ' ');
+		}
 
 		// 함수명
 		std::string fnName(_functionName);
@@ -65,7 +68,10 @@ struct LogMessage
 			fnName = fnName.substr(0, 40);
 		}
 		// 함수명 패딩
-		fnName.resize(40, ' ');
+		if (fnName.length() < 40)
+		{
+			fnName.append(40 - fnName.length(), ' ');
+		}
 
 		std::string result;
 		result.reserve(256);
