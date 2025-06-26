@@ -21,7 +21,7 @@ struct LogMessage
 	LogType _type = LogType::Info;
 	std::string _message;
 	std::string _timeStamp;
-	const char* _functionName;
+	std::string _functionName;
 
 	LogMessage(LogType type, std::string msg, std::string timeStamp, const char* fnName)
 		: _type(type), _message(msg), _timeStamp(timeStamp), _functionName(fnName)
@@ -67,7 +67,9 @@ struct LogMessage
 		// 함수명 패딩
 		fnName.resize(40, ' ');
 
-		std::string result = _timeStamp + " " + typeStr + " " + threadName + "--- " + fnName + " : " + _message + "\n";
+		std::string result;
+		result.reserve(256);
+		result = _timeStamp + " " + typeStr + " " + threadName + "--- " + fnName + " : " + _message + "\n";
 		return result;
 	}
 };
