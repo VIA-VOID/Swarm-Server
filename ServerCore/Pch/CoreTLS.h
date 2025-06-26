@@ -9,3 +9,5 @@ extern thread_local std::stack<uint64> LHoldLock;
 extern thread_local std::string LThreadName;
 // 스레드 그룹 ID
 extern thread_local JobGroupId LJobGroupId;
+// 현재일자
+extern thread_local std::string LToday;
