@@ -20,18 +20,19 @@ std::string Clock::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= L':
 	std::tm time_tm{};
 	::localtime_s(&time_tm, &now_c);
 
-	std::stringstream oss;
-	oss << std::put_time(&time_tm, (
-		std::string("%Y") + dateSep +
-		"%m" + dateSep +
-		"%d %H" + timeSep +
-		"%M" + timeSep +
-		"%S").c_str()
+	char buffer[32];
+	std::snprintf(buffer, sizeof(buffer),
+		"%04d%c%02d%c%02d %02d%c%02d%c%02d.%03d",
+		time_tm.tm_year + 1900, dateSep,
+		time_tm.tm_mon + 1, dateSep,
+		time_tm.tm_mday,
+		time_tm.tm_hour, timeSep,
+		time_tm.tm_min, timeSep,
+		time_tm.tm_sec,
+		static_cast<int>(ms.count())
 	);
 
-	oss << "." << std::setw(3) << std::setfill('0') << ms.count();
-
-	return oss.str();
+	return std::string(buffer);
 }
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd)
@@ -43,26 +44,27 @@ std::string Clock::GetFormattedDate(char dateSep /*= '/'*/)
 	std::tm time_tm{};
 	::localtime_s(&time_tm, &now_c);
 
-	std::stringstream oss;
-	oss << std::put_time(&time_tm, (
-		std::string("%Y") + dateSep +
-		"%m" + dateSep +
-		"%d").c_str()
+	char buffer[16];
+	std::snprintf(buffer, sizeof(buffer),
+		"%04d%c%02d%c%02d",
+		time_tm.tm_year + 1900, dateSep,
+		time_tm.tm_mon + 1, dateSep,
+		time_tm.tm_mday
 	);
 
-	return oss.str();
+	return std::string(buffer);
 }
 
 // 일자 변경 여부
 bool Clock::IsNewDay()
 {
-	static std::string today = GetFormattedDate();
+	LToday = GetFormattedDate();
 	std::string now = GetFormattedDate();
 
 	// 일자변경
-	if (today != now)
+	if (LToday != now)
 	{
-		today = now;
+		LToday = now;
 		return true;
 	}
 	return false;

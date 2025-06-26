@@ -33,9 +33,9 @@ void LogManager::Shutdown()
 // 로그 쌓기
 void LogManager::PushLog(const LogType type, const std::string& message, const char* fnName)
 {
-	LogMessage log(type, message, Clock::GetFormattedTime(), std::this_thread::get_id(), fnName);
+	LogMessage logMsg(type, message, Clock::GetFormattedTime(), fnName);
 
-	JobQ.DoAsync([this, log = std::move(log)]() {
+	JobQ.DoAsync([this, log = std::move(logMsg)]() {
 		ProcessThread(log._type, log.ToString());
 		}, JobGroups::System);
 }

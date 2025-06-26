@@ -23,49 +23,51 @@ struct LogMessage
 	std::string _timeStamp;
 	const char* _functionName;
 
-	LogMessage(LogType type, std::string msg, std::string timeStamp, ThreadId id, const char* fnName)
+	LogMessage(LogType type, std::string msg, std::string timeStamp, const char* fnName)
 		: _type(type), _message(msg), _timeStamp(timeStamp), _functionName(fnName)
 	{
 	}
 
 	std::string ToString() const
 	{
-		std::stringstream ss;
-
-		// 로그 타입 문자열
 		std::string typeStr = "UNKNOWN";
 		switch (_type)
 		{
 		case LogType::Info:
-			typeStr = " INFO    ";
+			typeStr = "INFO";
 			break;
 		case LogType::System:
-			typeStr = " SYSTEM  ";
+			typeStr = "SYSTEM";
 			break;
 		case LogType::Warning:
-			typeStr = " WARNING ";
+			typeStr = "WARNING";
 			break;
 		case LogType::Error:
-			typeStr = " ERROR   ";
+			typeStr = "ERROR";
 			break;
 		}
+		// 로그타입 패딩
+		typeStr.resize(8, ' ');
 
-		// threadName 좌측 정렬 (12자 고정 너비)
-		std::stringstream tnStream;
-		tnStream << std::left << std::setw(12) << std::string(LThreadName.begin(), LThreadName.end());
-		std::string threadNameStr = tnStream.str();
+		// 스레드명
+		std::string threadName(LThreadName.begin(), LThreadName.end());
+		if (threadName.length() > 12) 
+		{
+			threadName = threadName.substr(0, 12);
+		}
+		// 스레드명 패딩
+		threadName.resize(12, ' ');
 
-		// function name 좌측 정렬 (40자 고정 너비)
-		std::stringstream fnStream;
-		fnStream << std::left << std::setw(40) << std::string(_functionName, _functionName + strlen(_functionName));
-		std::string fnStr = fnStream.str();
+		// 함수명
+		std::string fnName(_functionName);
+		if (fnName.length() > 40) 
+		{
+			fnName = fnName.substr(0, 40);
+		}
+		// 함수명 패딩
+		fnName.resize(40, ' ');
 
-		ss << _timeStamp << " "
-			<< typeStr << " "
-			<< threadNameStr << "--- "
-			<< fnStr << " : "
-			<< _message << "\n";
-
-		return ss.str();
+		std::string result = _timeStamp + " " + typeStr + " " + threadName + "--- " + fnName + " : " + _message + "\n";
+		return result;
 	}
 };
