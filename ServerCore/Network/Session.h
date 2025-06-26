@@ -36,8 +36,8 @@ public:
 	void Close();
 	// 세션에 소켓, 서비스 설정
 	void PreInit(SOCKET socket, CoreService* service);
-	// WSASend 실행전 유효성, 버퍼 할당
-	void Send(const SendBufferRef& sendBuffer, int32 len);
+	// 비동기 송신 시작
+	void Send(const SendBufferRef& sendBuffer);
 	// Recv 완료 & 패킷처리
 	void OnRecvCompleted(int32 bytesTransferred);
 	// Send 완료 & 남은 데이터 있을시 이어서 전송

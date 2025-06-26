@@ -86,14 +86,11 @@ void Session::PreInit(SOCKET socket, CoreService* service)
 	_connectedTime = NOW;
 }
 
-// WSASend 실행전 유효성, 버퍼 할당
-void Session::Send(const SendBufferRef& sendBuffer, int32 len)
+// 비동기 송신 시작
+void Session::Send(const SendBufferRef& sendBuffer)
 {
-	// 유효성 검사
-	if (len <= 0 || len > MAX_PACKET_SIZE)
+	if (_isClosed.load())
 	{
-		// 세션종료
-		Close();
 		return;
 	}
 	// 비동기 송신 시작
@@ -128,35 +125,39 @@ void Session::CloseResource()
 	// 송신 큐 비우기
 	{
 		LOCK_GUARD;
-		Deque<SendBufferRef> empty;
-		std::swap(_sendDequeue, empty);
+		_sendDequeue.clear();
 	}
 }
 
 // WSARecv 실행
 void Session::ProcessRecv()
 {
-	// 링버퍼의 특성을 활용하여 나눠서 받을수 있으면 받아서 recv한다
-	uint32 directWriteSize = _recvContext.recvBuffer.GetDirectEnqueSize();
-	uint32 wsaBufCount = 0;
+	// 초기화
+	ZeroMemory(&_recvContext.overlapped, sizeof(_recvContext.overlapped));
 
-	WSABUF wsaBufs[2];
-	wsaBufs[wsaBufCount].buf = reinterpret_cast<CHAR*>(_recvContext.recvBuffer.GetWritePtr());
-	wsaBufs[wsaBufCount].len = directWriteSize;
-	++wsaBufCount;
+	// wsabuf 세팅
+	WSABUF wsabuf;
+	_recvContext.recvBuffer.GetWSABUF(wsabuf);
 
-	// 쓸수있는 크기가 남아있다면 앞에서 채운다
-	uint32 writeSize = _recvContext.recvBuffer.GetFreeSize() - directWriteSize;
-	if (writeSize > 0)
+	// 수신 가능한 공간이 없으면 버퍼 정리
+	if (wsabuf.len == 0)
 	{
-		wsaBufs[wsaBufCount].buf = reinterpret_cast<CHAR*>(_recvContext.recvBuffer.GetBufferStart());
-		wsaBufs[wsaBufCount].len = writeSize;
-		++wsaBufCount;
+		// 정리 시도 후 다시 wsabuf 세팅
+		_recvContext.recvBuffer.Compact();
+		_recvContext.recvBuffer.GetWSABUF(wsabuf);
+		
+		// 그래도 없으면 세션종료
+		if (wsabuf.len == 0)
+		{
+			LOG_ERROR("RecvBuffer 공간 부족");
+			Close();
+			return;
+		}
 	}
 
 	DWORD recvBytes = 0;
 	DWORD flags = 0;
-	if (::WSARecv(_socket, wsaBufs, wsaBufCount, &recvBytes, &flags, reinterpret_cast<OVERLAPPED*>(&_recvContext), NULL) == SOCKET_ERROR)
+	if (::WSARecv(_socket, &wsabuf, 1, &recvBytes, &flags, reinterpret_cast<OVERLAPPED*>(&_recvContext), NULL) == SOCKET_ERROR)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
@@ -173,26 +174,28 @@ void Session::ProcessRecv()
 void Session::ProcessSend()
 {
 	ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
+	_sendContext.buffers.clear();
 	_sendContext.buffers.reserve(MAX_SEND_BUFFER_COUNT);
 
 	// 한 번에 최대 MAX_SEND_BUFFER_COUNT개의 버퍼를 보냄
-	WSABUF wsaBufs[MAX_SEND_BUFFER_COUNT * 2];
+	WSABUF wsabufs[MAX_SEND_BUFFER_COUNT];
 	uint32 sendCount = 0;
-	uint32 maxCount = min(MAX_SEND_BUFFER_COUNT, static_cast<uint32>(_sendDequeue.size()));
-	for (uint32 count = 0; count < maxCount; count++)
+	
+	// 보내야할 패킷 꺼내기
+	while (_sendDequeue.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
 	{
 		SendBufferRef buffer = _sendDequeue.front();
-		if (buffer == nullptr)
+		_sendDequeue.pop_front();
+
+		if (buffer == nullptr || buffer->IsCompleted())
 		{
 			continue;
 		}
-		
-		wsaBufs[sendCount].buf = reinterpret_cast<CHAR*>(buffer->GetReadPtr());
-		wsaBufs[sendCount].len = buffer->GetUseSize();
-		++sendCount;
 
+		// wsabuf 세팅
+		buffer->GetWSABUF(wsabufs[sendCount]);
 		_sendContext.buffers.push_back(buffer);
-		_sendDequeue.pop_front();
+		++sendCount;
 	}
 
 	// 보낼 데이터가 없다면 송신 종료
@@ -204,7 +207,7 @@ void Session::ProcessSend()
 
 	// 비동기 송신 요청
 	DWORD sendBytes = 0;
-	if (::WSASend(_socket, wsaBufs, sendCount, &sendBytes, 0, reinterpret_cast<OVERLAPPED*>(&_sendContext), NULL) == SOCKET_ERROR)
+	if (::WSASend(_socket, wsabufs, sendCount, &sendBytes, 0, reinterpret_cast<OVERLAPPED*>(&_sendContext), NULL) == SOCKET_ERROR)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		if (errorCode != WSA_IO_PENDING)
@@ -238,27 +241,34 @@ void Session::OnRecvCompleted(int32 bytesTransferred)
 	while (true)
 	{
 		// 헤더 크기 이상의 데이터가 있는지 확인
-		uint32 packetSize = _recvContext.recvBuffer.GetUseSize();
+		uint32 packetSize = _recvContext.recvBuffer.GetDataSize();
 		if (sizeof(PacketHeader) > packetSize)
 		{
 			break;
 		}
 		// 헤더 읽어오기
-		PacketHeader header;
-		_recvContext.recvBuffer.Peek(reinterpret_cast<BYTE*>(&header), sizeof(header), sizeof(header));
+		const PacketHeader* header = reinterpret_cast<const PacketHeader*>(_recvContext.recvBuffer.GetReadPtr());
+		const uint16 dataSize = header->size;
+
+		// 사이즈 검사
+		if (dataSize > MAX_PACKET_SIZE || sizeof(PacketHeader) > dataSize)
+		{
+			LOG_ERROR("잘못된 패킷 크기: " + std::to_string(dataSize));
+			Close();
+			return;
+		}
+		
 		// 패킷 전체크기만큼 데이터를 수신했는지 확인
-		if (header.size > packetSize)
+		if (dataSize > _recvContext.recvBuffer.GetDataSize())
 		{
 			break;
 		}
-		// 패킷 전체 데이터 읽어오기 + buffer Pos 이동
-		Vector<BYTE> buffer(header.size);
-		_recvContext.recvBuffer.Read(buffer.data(), header.size, header.size);
-		// 컨텐츠 로직에서 구현
-		_service->OnRecv(shared_from_this(), buffer.data(), header.size);
+		// 패킷 처리
+		_service->OnRecv(shared_from_this(), _recvContext.recvBuffer.GetReadPtr(), dataSize);
+		_recvContext.recvBuffer.MoveReadPos(dataSize);
 	}
-	// 수신버퍼 초기화
-	_recvContext.recvBuffer.CleanPos();
+	// 버퍼 정리
+	_recvContext.recvBuffer.Compact();
 	// 다음 수신 요청
 	ProcessRecv();
 }
@@ -266,6 +276,9 @@ void Session::OnRecvCompleted(int32 bytesTransferred)
 // Send 완료 & 남은 데이터 있을시 이어서 전송
 void Session::OnSendCompleted(int32 bytesTransferred)
 {
+	// 마지막 송신 시간 업데이트
+	_lastSendTime = NOW;
+
 	// 송신 데이터가 0일 경우 연결 해제
 	if (bytesTransferred == 0)
 	{
@@ -275,64 +288,67 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		Close();
 		return;
 	}
-	// 마지막 송신 시간 업데이트
-	_lastSendTime = NOW;
 	
-	// 전송된 크기
-	int32 transferred = bytesTransferred;
-	
+	// 남은 전송 크기
+	int32 remainBytes = bytesTransferred;
 	// 부분 전송된 버퍼
-	Vector<SendBufferRef> remainSendArray;
-	remainSendArray.reserve(MAX_SEND_BUFFER_COUNT);
+	Vector<SendBufferRef> remainSendBuffer;
+	remainSendBuffer.reserve(MAX_SEND_BUFFER_COUNT);
 
 	for (SendBufferRef& buffer : _sendContext.buffers)
 	{
-		// 사용크기(데이터 크기)
-		int32 useSize = buffer->GetUseSize();
-		
-		// 완전전송됨
-		if (transferred >= useSize)
+		if (remainBytes <= 0)
 		{
-			transferred -= useSize;
+			break;
+		}
+		if (buffer == nullptr)
+		{
 			continue;
+		}
+
+		// 사용크기(데이터 크기)
+		int32 useSize = static_cast<int32>(buffer->GetDataSize());
+		if (remainBytes >= useSize)
+		{
+			// 완전 송신
+			buffer->OnSendCompleted(useSize);
+			remainBytes -= useSize;
 		}
 		else
 		{
-			// 부분전송됨
-			buffer->MoveReadPos(transferred);
-			remainSendArray.push_back(buffer);
-			transferred = 0;
+			// 부분 송신
+			buffer->OnSendCompleted(remainBytes);
+			remainBytes = 0;
+		}
+		// 미전송 버퍼 저장
+		if (buffer->IsCompleted() == false)
+		{
+			remainSendBuffer.push_back(buffer);
 		}
 	}
-	// 버퍼 초기화
-	_sendContext.buffers.clear();
-
-	// 송신 이벤트 호출
-	// 컨텐츠 로직에서 구현
-	_service->OnSend(shared_from_this(), bytesTransferred);
-
 	// 큐에 남은 데이터가 있거나 부분 전송된 버퍼가 있으면 이어서 전송
 	{
 		LOCK_GUARD;
 
 		// 부분 전송된 버퍼가 있다면, 다음에 전송하기 위해 _sendDequeue 앞쪽에 삽입함
-		if (remainSendArray.empty() == false)
+		for (auto it = remainSendBuffer.rbegin(); it != remainSendBuffer.rend(); ++it)
 		{
-			for (auto it = remainSendArray.rbegin(); it != remainSendArray.rend(); ++it)
-			{
-				_sendDequeue.push_front(*it);
-			}
-			remainSendArray.clear();
+			_sendDequeue.push_front(*it);
 		}
-		
 		// 남아있는 데이터 send
 		if (_sendDequeue.empty() == false)
 		{
-			_sending.store(true);
 			ProcessSend();
 		}
+		else
+		{
+			_sending.store(false);
+		}
 	}
-	_sending.store(false);
+
+	// 송신 이벤트 호출
+	// 컨텐츠 로직에서 구현
+	_service->OnSend(shared_from_this(), bytesTransferred);
 }
 
 // 타임아웃 체크
