@@ -14,7 +14,7 @@ class Job
 public:
 	// 멤버 함수 포인터를 이용한 생성자
 	template <typename T, typename Ret, typename... Args>
-	Job(T* owner, Ret(T::* memFunc)(Args...), JobGroupId groupId = JobGroups::System, uint64 delayMs = 0, Args... args);
+	Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId = JobGroups::System, uint64 delayMs = 0, Args... args);
 	// 우선순위에 따라 즉시 처리용 생성자
 	Job(CallbackType&& callback, JobGroupId groupId = JobGroups::System, uint64 delayMs = 0);
 	// 작업 실행
@@ -43,13 +43,19 @@ private:
 
 // 멤버 함수 포인터를 이용한 생성자
 template<typename T, typename Ret, typename ...Args>
-inline Job::Job(T* owner, Ret(T::* memFunc)(Args...), JobGroupId groupId, uint64 delayMs, Args ...args)
+inline Job::Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId, uint64 delayMs, Args ...args)
 	: _groupId(groupId),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())
 {
-	_callback = [owner, memFunc, args...]()
+	std::weak_ptr<T> weakOwner = owner;
+
+	_callback = [weakOwner, memFunc, args...]()
 		{
-			((*owner).*memFunc)(args...);
+			// 객체 생존시 실행
+			if (auto sharedOwner = weakOwner.lock())
+			{
+				((*sharedOwner).*memFunc)(args...);
+			}
 		};
 }
