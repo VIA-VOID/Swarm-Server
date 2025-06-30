@@ -13,44 +13,20 @@ void ThreadManager::Init()
 }
 
 // 스레드 생성 & 일감 투척
-void ThreadManager::Launch(const std::string& threadName, uint16 count, CallbackType jobCallback)
+void ThreadManager::Launch(const std::string& threadName, uint16 count, CallbackType&& jobCallback)
 {
 	LOCK_GUARD;
 
-	for (uint16 thread = 0; thread < count; thread++)
-	{
-		std::string name = threadName + "-" + std::to_string(thread);
-
-		_threads.emplace_back([=]()
-			{
-				SetThreadName(name);
-				jobCallback();
-			}
-		);
-
-		LOG_INFO("Thread Created :: " + name);
-	}
+	LaunchThread(threadName, count, std::move(jobCallback));
 }
 
 // 그룹별 스레드 생성 & 일감 투척
-void ThreadManager::LaunchGroup(JobGroupId groupId, uint16 count, CallbackType jobCallback)
+void ThreadManager::LaunchGroup(JobGroupId groupId, uint16 count, CallbackType&& jobCallback)
 {
 	LOCK_GUARD;
 
 	std::string groupName = JobGroupMgr.GetGroupName(groupId);
-	for (uint16 thread = 0; thread < count; thread++)
-	{
-		std::string name = groupName + "-" + std::to_string(thread);
-
-		_threads.emplace_back([=]()
-			{
-				SetThreadName(name);
-				jobCallback();
-			}
-		);
-
-		LOG_INFO("Thread Created :: " + name);
-	}
+	LaunchThread(groupName, count, std::move(jobCallback));
 }
 
 // TLS 데이터 제거
@@ -109,4 +85,21 @@ void ThreadManager::SetThreadName(const std::string& name)
 		RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER) {}
+}
+
+void ThreadManager::LaunchThread(const std::string& threadName, uint16 threadCount, CallbackType jobCallback)
+{
+	for (uint16 thread = 0; thread < threadCount; thread++)
+	{
+		std::string name = threadName + "-" + std::to_string(thread);
+
+		_threads.emplace_back([=]()
+			{
+				SetThreadName(name);
+				jobCallback();
+			}
+		);
+
+		LOG_INFO("Thread Created :: " + name);
+	}
 }
