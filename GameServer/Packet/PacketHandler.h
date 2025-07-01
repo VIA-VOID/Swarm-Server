@@ -80,18 +80,24 @@ inline void PacketHandler::SendPacket(SessionRef session, const T& packet, Packe
 	const uint16 payloadSize = static_cast<uint16>(packet.ByteSizeLong());
 	const uint16 totalSize = sizeof(PacketHeader) + payloadSize;
 
+	// 패킷 크기 검증
+	if (totalSize > MAX_PACKET_SIZE)
+	{
+		LOG_ERROR("패킷 크기 초과: " + std::to_string(totalSize));
+		return;
+	}
+
 	// sendBuffer 헤더 세팅
-	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(totalSize + 1);
-	PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->GetReadPtr());
+	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(totalSize);
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->GetWritePtr());
 	header->size = totalSize;
 	header->id = static_cast<uint16>(packetId);
 
 	// 데이터 세팅
-	BYTE* payload = sendBuffer->GetReadPtr() + sizeof(PacketHeader);
+	BYTE* payload = sendBuffer->GetWritePtr() + sizeof(PacketHeader);
 	packet.SerializeToArray(payload, payloadSize);
 	sendBuffer->MoveWritePos(totalSize);
 
 	// 데이터 전송
-	LOG_INFO("[패킷전송] PacketId: " + std::to_string(header->id) + " PacketSize: " + std::to_string(totalSize) + " Packet: " + typeid(packet).name());
-	session->Send(sendBuffer, totalSize);
+	session->Send(sendBuffer);
 }
