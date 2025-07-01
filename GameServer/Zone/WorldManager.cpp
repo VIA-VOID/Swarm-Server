@@ -6,6 +6,11 @@
 #include "Object/Player/Player.h"
 #include "Utils/Utils.h"
 
+// 캐릭터 시야범위
+// ex) 캐릭터 좌표가 (50, 50)이면 (0,0) ~ (100, 100)이 보여야함
+constexpr int32 playerVisibleRange = static_cast<int32>(PLAYER_VISUAL_RANGE / 2);
+
+// 게임 입장
 void WorldManager::Init()
 {
 	// 맵데이터 읽기
@@ -15,55 +20,41 @@ void WorldManager::Init()
 		CRASH("맵 데이터 읽기 실패");
 		return;
 	}
-	// 그리드 초기화
-	_grid.resize(_mapData.gridY);
-	for (int32 y = 0; y < _mapData.gridY; y++)
-	{
-		_grid[y].resize(_mapData.gridX);
-	}
 	// zone 초기화
 	InitZones();
+	// Zone별 Grid 초기화
+	InitZoneGrids();
 }
 
 void WorldManager::Shutdown()
 {
 	LOCK_GUARD;
 	
-	_grid.clear();
+	_zoneGrids.clear();
 	_zones.clear();
 }
 
-// 게임 입장
-bool WorldManager::EnterGame(GameObjectRef obj)
+// Zone별 오브젝트 추가
+bool WorldManager::AddObjectToZone(GameObjectRef obj, ZoneType zoneType, const GridIndex& gridIndex)
 {
-	BaseZone* townZone = GetZone(ZoneType::Town);
-	ZonePos zonePos = townZone->GetZoneInfo().worldPos;
-	// 스폰 좌표 설정
-	// todo: 맵 디자인 완료 후 스폰 zone 별도 생성, 현재는 맵 내 랜덤좌표
-	int32 randomX = Utils::GetRandom<int32>(zonePos.minX, zonePos.maxX);
-	int32 randomY = Utils::GetRandom<int32>(zonePos.minY, zonePos.maxY);
-	int32 worldZ = 180 * POS_REVISE_NUM;
-	int32 randomYaw = Utils::GetRandom<int32>(POS_REVISE_NUM, 180 * POS_REVISE_NUM);
-	Vector3d spawnVector(randomX, randomY, _mapData.gridSize, worldZ, randomYaw);
-
-	// 그리드셀에 오브젝트 추가
-	GridIndex gridIndex;
-	spawnVector.MakeGridIndex(gridIndex);
-
+	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
+	if (zoneGrid == nullptr)
 	{
-		LOCK_GUARD;
-
-		// 셀 업데이트
-		if (AddObjectToCell(obj, gridIndex) == false)
-		{
-			return false;
-		}
+		return false;
 	}
-
-	// 위치 업데이트
-	obj->SetWorldPosition(spawnVector);
-	// 마을에 스폰
-	townZone->ObjectSpawn(obj);
+	// 그리드 범위 유효성 검사
+	if (zoneGrid->IsValidGridIndex(gridIndex) == false)
+	{
+		return false;
+	}
+	{
+		GROUP_LOCK_GUARD(*zoneGrid);
+		
+		// 셀에 오브젝트 추가
+		GridCell& cell = zoneGrid->grid[gridIndex.y][gridIndex.x];
+		cell.objects.insert({ obj->GetObjectId(), obj });
+		cell.isUpdate = true;
+	}
 
 	return true;
 }
@@ -83,6 +74,15 @@ void WorldManager::InitZones()
 	}
 }
 
+// Zone별 Grid 초기화
+void WorldManager::InitZoneGrids()
+{
+	for (const ZoneInfo& zoneInfo : _mapData.zones) 
+	{
+		_zoneGrids[zoneInfo.zoneType] = ObjectPool<ZoneGrid>::MakeUnique(zoneInfo);
+	}
+}
+
 // 그리드좌표 유효성 검사
 bool WorldManager::IsVaildGridIndex(const GridIndex& gridIndex) const
 {
@@ -93,30 +93,139 @@ bool WorldManager::IsVaildGridIndex(const GridIndex& gridIndex) const
 	return true;
 }
 
-// 셀에 오브젝트 추가
-bool WorldManager::AddObjectToCell(const GameObjectRef obj, const GridIndex& gridIndex)
+// 시야 내의 플레이어의 Id 목록 가져오기
+// 단일 Zone 검색
+void WorldManager::GetVisiblePlayersInZone(ZoneType zoneType, const Vector3d& position, Vector<PlayerRef>& outPlayers)
 {
-	// 유효성 검사
-	if (IsVaildGridIndex(gridIndex) == false)
+	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
+	if (zoneGrid == nullptr)
 	{
-		return false;
+		return;
 	}
+	{
+		GROUP_LOCK_GUARD(*zoneGrid);
+		
+		// 시야범위
+		GridIndex gridIndex = position.MakeGridIndex(zoneGrid->worldPos);
 
-	// 셀 삽입
-	GridCell& cell = _grid[gridIndex.y][gridIndex.x];
-	cell.objects.insert(obj);
-	cell.isUpdate = true;
+		LOG_ERROR("position: x -> " + std::to_string(position.GetWorldX()) + " y -> " + std::to_string(position.GetWorldY()));
+		LOG_ERROR("gridIndex: x -> " + std::to_string(gridIndex.x) + " y -> " + std::to_string(gridIndex.y));
 
-	return true;
+		int32 startX = max(0, gridIndex.x - playerVisibleRange);
+		int32 startY = max(0, gridIndex.y - playerVisibleRange);
+		int32 endX = min(static_cast<int32>(zoneGrid->grid[0].size()) - 1, gridIndex.x + playerVisibleRange);
+		int32 endY = min(static_cast<int32>(zoneGrid->grid.size()) - 1, gridIndex.y + playerVisibleRange);
+
+		outPlayers.reserve(playerVisibleRange);
+
+		// 플레이어 id 삽입
+		for (int32 y = startY; y <= endY; y++) 
+		{
+			for (int32 x = startX; x <= endX; x++) 
+			{
+				const GridCell& cell = zoneGrid->grid[y][x];
+				if (cell.objects.empty()) 
+				{
+					continue;
+				}
+				for (const auto& it : cell.objects) 
+				{
+					if (it.second->IsPlayer()) 
+					{
+						const PlayerRef& player = std::static_pointer_cast<Player>(it.second);
+						outPlayers.push_back(player);
+					}
+				}
+			}
+		}
+
+	}
+}
+
+// 시야 내 플레이어 검색
+// 여러 Zone 검색
+void WorldManager::GetVisiblePlayersInZones(const Vector3d& position, Vector<PlayerRef>& outPlayers)
+{
+	Vector<ZoneType> zoneTypes;
+	GetVisibleZones(position, zoneTypes);
+
+	// 각 zoneType별 시야내에 속하는 objectId 가져오기
+	for (ZoneType zoneType : zoneTypes)
+	{
+		GetVisiblePlayersInZone(zoneType, position, outPlayers);
+	}
+}
+
+// 시야 범위에 포함되는 Zone 목록 가져오기
+void WorldManager::GetVisibleZones(const Vector3d& position, Vector<ZoneType>& outZoneTypes)
+{
+	// 현재 위치 zone
+	ZoneType currentZone = GetZoneByPosition(position);
+	outZoneTypes.push_back(currentZone);
+
+	// 시야 범위내에 다른 zone이 있다면 삽입
+	for (const ZoneInfo& zoneInfo : _mapData.zones) 
+	{
+		if (zoneInfo.zoneType != currentZone && IsInRange(position, zoneInfo.worldPos, _mapData.gridSize))
+		{
+			outZoneTypes.push_back(zoneInfo.zoneType);
+		}
+	}
+}
+
+// 시야 범위에 Zone이 속하는지 여부
+bool WorldManager::IsInRange(const Vector3d& position, const ZonePos& worldPos, int32 gridSize)
+{
+	int32 playerWorldRange = playerVisibleRange * gridSize * POS_REVISE_NUM;
+	int32 playerMinX = position.GetWorldX() - playerWorldRange;
+	int32 playerMaxX = position.GetWorldX() + playerWorldRange;
+	int32 playerMinY = position.GetWorldY() - playerWorldRange;
+	int32 playerMaxY = position.GetWorldY() + playerWorldRange;
+
+	// 모든 축에서 겹치는지 확인
+	bool xOverlap = (playerMinX < worldPos.maxX) && (playerMaxX > worldPos.minX);
+	bool yOverlap = (playerMinY < worldPos.maxY) && (playerMaxY > worldPos.minY);
+
+	return xOverlap && yOverlap;
+}
+
+// 월드 좌표로 Zone 타입 찾기
+ZoneType WorldManager::GetZoneByPosition(const Vector3d& position) const
+{
+	for (const ZoneInfo& zoneInfo : _mapData.zones) 
+	{
+		const ZonePos& zonePos = zoneInfo.worldPos;
+
+		if (position.GetWorldX() >= zonePos.minX && position.GetWorldX() < zonePos.maxX
+			&& position.GetWorldY() >= zonePos.minY && position.GetWorldY() < zonePos.maxY) 
+		{
+			return zoneInfo.zoneType;
+		}
+	}
+	// 기본값
+	return ZoneType::Town;
 }
 
 // zone 가져오기
-BaseZone* WorldManager::GetZone(const ZoneType zoneType)
+BaseZone* WorldManager::FindZone(const ZoneType zoneType)
 {
 	auto findit = _zones.find(zoneType);
 	if (findit != _zones.end())
 	{
 		return findit->second.get();
 	}
+	CRASH("NOT INIT ZONE!!");
+	return nullptr;
+}
+
+// zoneGrid 가져오기
+ZoneGrid* WorldManager::FindZoneGrid(const ZoneType zoneType)
+{
+	auto findit = _zoneGrids.find(zoneType);
+	if (findit != _zoneGrids.end())
+	{
+		return findit->second.get();
+	}
+	CRASH("NOT INIT GRID!!");
 	return nullptr;
 }
