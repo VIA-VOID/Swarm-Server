@@ -9,7 +9,7 @@ class GameServer : public CoreService
 {
 public:
 	GameServer();
-	virtual ~GameServer() = default;
+	virtual ~GameServer();
 
 	void OnConnected(SessionRef session) override;
 	void OnDisconnected(SessionRef session) override;

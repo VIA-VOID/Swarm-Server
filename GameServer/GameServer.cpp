@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "GameServer.h"
-#include "Map/MapManager.h"
-#include "Character/Player.h"
+#include "Zone/WorldManager.h"
+#include "Object/Stat/StatManager.h"
+#include "Object/Player/Player.h"
 
 /*----------------------------
 		GameServer
@@ -14,8 +15,16 @@ GameServer::GameServer()
 	PacketHandler::Init();
 	// JobGroup 초기화
 	JobGroup::Init();
-	// MapManager 초기화
-	MapMgr.Init();
+	// WorldManager 초기화
+	WorldMgr.Init();
+	// StatManager 초기화
+	StatMgr.Init();
+}
+
+GameServer::~GameServer()
+{
+	WorldMgr.Shutdown();
+	StatMgr.Shutdown();
 }
 
 void GameServer::OnConnected(SessionRef session)
