@@ -6,9 +6,9 @@ class TownZone : public BaseZone
 public:
 	TownZone(const ZoneInfo& zoneInfo);
 	virtual ~TownZone();
-	void ZoneUpdateWorkerThread() override;
-	// Object 스폰
-	void ObjectSpawn(GameObjectRef obj) override;
-	// Object 디스폰
-	void ObjectDespawn(GameObjectRef obj) override;
+	
+	void ZoneUpdate() override;
+
+	// 랜덤 스폰 위치 가져오기
+	Vector3d GetRandomSpawnPosition();
 };

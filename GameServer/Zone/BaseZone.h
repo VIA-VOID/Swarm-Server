@@ -13,15 +13,9 @@ public:
 	virtual ~BaseZone();
 
 	// Zone 업데이트, 스레드에서 실행
-	virtual void ZoneUpdateWorkerThread() = 0;
-	// Object 스폰
-	virtual void ObjectSpawn(GameObjectRef obj) = 0;
-	// Object 디스폰
-	virtual void ObjectDespawn(GameObjectRef obj) = 0;
-
-	// Getter
-	ZoneType GetZoneType() const;
-	const ZoneInfo& GetZoneInfo() const;
+	virtual void ZoneUpdate() = 0;
+	// Zone World 좌표 가져오기
+	ZonePos GetWorldPosition() const;
 
 protected:
 	ZoneInfo _zoneInfo;

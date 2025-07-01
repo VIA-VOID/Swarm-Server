@@ -10,12 +10,8 @@ BaseZone::~BaseZone()
 {
 }
 
-ZoneType BaseZone::GetZoneType() const
+// Zone World 좌표 가져오기
+ZonePos BaseZone::GetWorldPosition() const
 {
-	return _zoneInfo.zoneType;
-}
-
-const ZoneInfo& BaseZone::GetZoneInfo() const
-{
-	return _zoneInfo;
+	return _zoneInfo.worldPos;
 }
