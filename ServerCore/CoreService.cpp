@@ -70,6 +70,6 @@ void CoreService::DummyConnect(uint16 port, const std::string& address, uint16 c
 	for (uint16 i = 0; i < connectCount; i++)
 	{
 		_iocpCore->Connect(address, port, MAX_WORKER_THREAD_NUM);
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
