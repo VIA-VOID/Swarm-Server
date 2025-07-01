@@ -14,14 +14,15 @@
 class Vector3d
 {
 public:
-	Vector3d();
+	Vector3d(const ZoneInfo& zoneInfo);
 	Vector3d(int32 worldX, int32 worldY, int32 gridSize);
 	Vector3d(int32 worldX, int32 worldY, int32 worldZ, int32 worldYaw, int32 gridSize);
 	
-	// Grid 좌표로 만들어 전달
-	void MakeGridIndex(GridIndex& outGridIndex) const;
+	// Grid 좌표 만들어 반환
+	GridIndex MakeGridIndex(const ZonePos& zonePos) const;
 
 	// 연산자 오버로딩
+	void operator=(const Vector3d& other);
 	Vector3d operator+(const Vector3d& other) const;
 	Vector3d& operator+=(const Vector3d& other);
 	Vector3d operator-(const Vector3d& other) const;
@@ -34,8 +35,10 @@ public:
 	// Getter-
 	int32 GetWorldX() const;
 	int32 GetWorldY() const;
-	void SetWorldX(int32 WorldX);
-	void SetWorldY(int32 WorldY);
+	int32 GetWorldZ() const;
+	int32 GetWorldYaw() const;
+	// Protocol::PosInfo의 값으로 멤버 업데이트
+	void UpdatePosition(const Protocol::PosInfo& InPosInfo);
 
 private:
 	int32 _worldX;
