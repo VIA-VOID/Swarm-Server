@@ -16,7 +16,7 @@ public:
 	// ObjectId 가져오기
 	ObjectId GetObjectId() const;
 	// 위치 가져오기
-	void GetWorldPosition(Vector3d& outVector3d) const;
+	Vector3d GetWorldPosition() const;
 	void GetWorldPosition(Protocol::PosInfo& outPosInfo) const;
 	// 위치 업데이트
 	void SetWorldPosition(const Protocol::PosInfo& posInfo);
@@ -28,6 +28,10 @@ public:
 
 protected:
 	// Object 공용 정보(Protocol::ObjectInfo) 만들기
+	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType);
+	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::MonsterType monsterType);
+
+private:
 	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo);
 
 protected:

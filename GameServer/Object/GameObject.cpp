@@ -3,7 +3,7 @@
 
 GameObject::GameObject()
 	: _objectId(ObjectId::Generate()), _objectType(Protocol::ObjectType::OBJECT_TYPE_NONE),
-	_objectState(Protocol::ObjectState::OBJECT_STATE_NONE), _vectorPos()
+	_objectState(Protocol::ObjectState::OBJECT_STATE_NONE), _vectorPos(0, 0, 0)
 {
 }
 
@@ -18,9 +18,9 @@ ObjectId GameObject::GetObjectId() const
 }
 
 // 위치 가져오기(Vector3d)
-void GameObject::GetWorldPosition(Vector3d& outVector3d) const
+Vector3d GameObject::GetWorldPosition() const
 {
-	outVector3d = _vectorPos;
+	return _vectorPos;
 }
 
 // 위치 가져오기(Protocol::PosInfo)
@@ -33,17 +33,17 @@ void GameObject::GetWorldPosition(Protocol::PosInfo& outPosInfo) const
 void GameObject::SetWorldPosition(const Protocol::PosInfo& posInfo)
 {
 	_pos.CopyFrom(posInfo);
-	_vectorPos.SetWorldX(posInfo.x());
-	_vectorPos.SetWorldY(posInfo.y());
+	_vectorPos.UpdatePosition(posInfo);
 }
 
 // 위치 업데이트
 void GameObject::SetWorldPosition(const Vector3d& vectorPos)
 {
-	_vectorPos.SetWorldX(vectorPos.GetWorldX());
-	_vectorPos.SetWorldY(vectorPos.GetWorldY());
+	_vectorPos = vectorPos;
 	_pos.set_x(vectorPos.GetWorldX());
-	_pos.set_x(vectorPos.GetWorldY());
+	_pos.set_y(vectorPos.GetWorldY());
+	_pos.set_z(vectorPos.GetWorldZ());
+	_pos.set_yaw(vectorPos.GetWorldYaw());
 }
 
 // Player인지 확인
@@ -59,6 +59,20 @@ bool GameObject::IsMonster() const
 }
 
 // Object 공용 정보(Protocol::ObjectInfo) 만들기
+void GameObject::MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType)
+{
+	MakeObjectInfo(outObjectInfo);
+	outObjectInfo.set_playertype(playerType);
+	outObjectInfo.set_monstertype(Protocol::MonsterType::MONSTER_TYPE_NONE);
+}
+
+void GameObject::MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::MonsterType monsterType)
+{
+	MakeObjectInfo(outObjectInfo);
+	outObjectInfo.set_playertype(Protocol::PlayerType::PLAYER_TYPE_NONE);
+	outObjectInfo.set_monstertype(monsterType);
+}
+
 void GameObject::MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo)
 {
 	outObjectInfo.set_objectid(_objectId.GetId());
