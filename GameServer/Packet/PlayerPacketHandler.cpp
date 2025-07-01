@@ -12,7 +12,7 @@ void PlayerPacketHandler::Handle_CS_PLAYER_ENTER_GAME(SessionRef session, const 
 	session->SetPlayer(player.get());
 
 	// 입장
-	WorldMgr.EnterGame(player);
+	player->EnterGame(ZoneType::Town);
 }
 
 void PlayerPacketHandler::Handle_CS_PLAYER_MOVE(SessionRef session, const Protocol::CS_PLAYER_MOVE& packet)
