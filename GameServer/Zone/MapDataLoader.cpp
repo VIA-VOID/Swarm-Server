@@ -69,7 +69,7 @@ void MapDataLoader::ParseMapData(const rapidjson::Document& document, MapData& o
 	// Zone 정보 파싱
 	if (document.HasMember("zones") && document["zones"].IsArray())
 	{
-		if (ParseZones(document["zones"], outData.zones) == false)
+		if (ParseZones(document["zones"], outData.gridSize, outData.zones) == false)
 		{
 			LOG_ERROR("zones 파싱 실패");
 			return;
@@ -87,7 +87,7 @@ void MapDataLoader::ParseMapData(const rapidjson::Document& document, MapData& o
 }
 
 // Zone 정보 파싱
-bool MapDataLoader::ParseZones(const rapidjson::Value& zonesArray, Vector<ZoneInfo>& outZones)
+bool MapDataLoader::ParseZones(const rapidjson::Value& zonesArray, int32 gridSize, Vector<ZoneInfo>& outZones)
 {
 	if (zonesArray.IsArray() == false)
 	{
@@ -104,15 +104,13 @@ bool MapDataLoader::ParseZones(const rapidjson::Value& zonesArray, Vector<ZoneIn
 		}
 		ZoneInfo zone;
 		
+		// gridSize
+		zone.gridSize = gridSize;
+
 		// zoneType
 		if (zoneObj.HasMember("zoneType") && zoneObj["zoneType"].IsInt())
 		{
 			zone.zoneType = static_cast<ZoneType>(zoneObj["zoneType"].GetInt());
-		}
-		// zoneName
-		if (zoneObj.HasMember("zoneName") && zoneObj["zoneName"].IsString())
-		{
-			zone.zoneName = zoneObj["zoneName"].GetString();
 		}
 		// worldPos 파싱
 		if (zoneObj.HasMember("worldPos") && zoneObj["worldPos"].IsObject())
@@ -122,6 +120,11 @@ bool MapDataLoader::ParseZones(const rapidjson::Value& zonesArray, Vector<ZoneIn
 				LOG_ERROR("Zone " + zone.zoneName + " worldPos 파싱 실패");
 				continue;
 			}
+		}
+		// zoneName
+		if (zoneObj.HasMember("zoneName") && zoneObj["zoneName"].IsString())
+		{
+			zone.zoneName = zoneObj["zoneName"].GetString();
 		}
 		outZones.push_back(zone);
 	}

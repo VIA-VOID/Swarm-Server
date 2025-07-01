@@ -3,7 +3,7 @@
 #include "ZoneDefine.h"
 #include <rapidjson/document.h>
 
-/*-------------------------------------------------------
+/*--------l-----------------------------------------------
 				MapDataLoader
 
 - 맵 (좌표)데이터를 읽고 파싱
@@ -19,7 +19,7 @@ private:
 	// JSON 파싱
 	static void ParseMapData(const rapidjson::Document& document, MapData& outData);
 	// Zone 정보 파싱
-	static bool ParseZones(const rapidjson::Value& zonesArray, Vector<ZoneInfo>& outZones);
+	static bool ParseZones(const rapidjson::Value& zonesArray, int32 gridSize, Vector<ZoneInfo>& outZones);
 	// MapData 좌표 파싱
 	static bool ParseMapGrid(const rapidjson::Value& mapDataArray, Vector<Vector<bool>>& outGrid, int32 gridX, int32 gridY);
 	// Zone 위치 정보 파싱
