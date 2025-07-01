@@ -12,8 +12,8 @@ public:
 	// Getter Setter-
 	void GetStatInfo(Protocol::StatInfo& outStatInfo) const;
 	void GetStatGrowth(Protocol::StatInfo& outStatGrowth) const;
-	void SetStatInfo(const Protocol::StatInfo& outStatInfo);
-	void SetStatGrowth(const Protocol::StatInfo& outStatGrowth);
+	void SetStatInfo(const Protocol::StatInfo& statInfo);
+	void SetStatGrowth(const Protocol::StatInfo& statGrowth);
 
 private:
 	// 기본스텟 정보

@@ -11,12 +11,12 @@ void BaseStat::GetStatGrowth(Protocol::StatInfo& outStatGrowth) const
 	outStatGrowth.CopyFrom(_statGrowth);
 }
 
-void BaseStat::SetStatInfo(const Protocol::StatInfo& outStatInfo)
+void BaseStat::SetStatInfo(const Protocol::StatInfo& statInfo)
 {
-	_statInfo.CopyFrom(outStatInfo);
+	_statInfo.CopyFrom(statInfo);
 }
 
-void BaseStat::SetStatGrowth(const Protocol::StatInfo& outStatGrowth)
+void BaseStat::SetStatGrowth(const Protocol::StatInfo& statGrowth)
 {
-	_statGrowth.CopyFrom(outStatGrowth);
+	_statGrowth.CopyFrom(statGrowth);
 }
