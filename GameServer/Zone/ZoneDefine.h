@@ -1,5 +1,6 @@
 #pragma once
 #include "pch/Types.h"
+#include "Object/ObjectDefine.h"
 #include <string>
 
 // Zone 타입
@@ -25,6 +26,7 @@ struct ZoneInfo
 {
 	ZoneType zoneType;
 	ZonePos worldPos;
+	int32 gridSize;
 	std::string zoneName;
 };
 
@@ -42,13 +44,6 @@ struct MapData
 	int32 totalCells;
 	Vector<ZoneInfo> zones;
 	Vector<Vector<bool>> mapGrid;
-};
-
-// Zone 분할 단위
-struct GridCell
-{
-	HashSet<GameObjectRef> objects;
-	bool isUpdate;
 };
 
 // 그리드 인덱스
@@ -71,4 +66,11 @@ struct GridIndex
 	{
 		return !(*this == other);
 	}
+};
+
+// Zone 분할 단위
+struct GridCell
+{
+	HashMap<ObjectId, GameObjectRef> objects;
+	bool isUpdate;
 };
