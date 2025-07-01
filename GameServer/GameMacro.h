@@ -15,3 +15,4 @@ SHARED_PTR(Player)
 SHARED_PTR(GameObject)
 
 UNIQUE_PTR(BaseZone)
+UNIQUE_PTR(ZoneGrid)
