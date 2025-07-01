@@ -195,6 +195,7 @@
     <ClCompile Include="Object\Stat\PlayerStatLoader.cpp" />
     <ClCompile Include="Protocol\ProtoOperator.cpp" />
     <ClCompile Include="Object\Stat\StatManager.cpp" />
+    <ClCompile Include="Zone\ZoneGrid.cpp" />
     <ClCompile Include="Zone\Vector3d.cpp" />
     <ClCompile Include="Zone\TownZone.cpp" />
     <ClCompile Include="Zone\BaseZone.cpp" />
@@ -215,7 +216,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Object\Player\Player.cpp" />
-    <ClCompile Include="Object\Player\PlayerManager.cpp" />
     <ClCompile Include="Protocol\Enum.pb.cc">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
@@ -239,6 +239,7 @@
     <ClInclude Include="Object\Stat\PlayerStatLoader.h" />
     <ClInclude Include="Protocol\ProtoOperator.h" />
     <ClInclude Include="Object\Stat\StatManager.h" />
+    <ClInclude Include="Zone\ZoneGrid.h" />
     <ClInclude Include="Zone\Vector3d.h" />
     <ClInclude Include="Zone\TownZone.h" />
     <ClInclude Include="Zone\BaseZone.h" />
@@ -256,7 +257,6 @@
     <ClInclude Include="Packet\PlayerPacketHandler.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Object\Player\Player.h" />
-    <ClInclude Include="Object\Player\PlayerManager.h" />
     <ClInclude Include="Protocol\Enum.pb.h" />
     <ClInclude Include="Protocol\Protocol.pb.h" />
     <ClInclude Include="Protocol\Struct.pb.h" />
