@@ -8,7 +8,7 @@ class Session;
 const uint16 CPU_THREAD_COUNT = std::thread::hardware_concurrency();
 // 버퍼 크기 (8KB)
 constexpr uint32 BUFFER_SIZE = 8196;
-// 타임아웃 시간 (300초)
+// 세션 타임아웃 시간 (300초)
 constexpr std::chrono::seconds TIMEOUT_SECONDS(300);
 // 최대 패킷 크기 (2KB)
 constexpr uint32 MAX_PACKET_SIZE = 2048;
@@ -23,8 +23,8 @@ constexpr uint32 ACCEPT_NUM = 10;
 constexpr uint32 MAX_SEND_BUFFER_COUNT = 10;
 // GQCS WorkerThread 개수
 const uint16 MAX_WORKER_THREAD_NUM = static_cast<uint16>(CPU_THREAD_COUNT * 1.5);
-// 삭제 대기 Session 정리 주기
-constexpr std::chrono::milliseconds CLEANUP_INTERVAL = std::chrono::milliseconds(1500);
+// 업데이트 주기(프레임)
+constexpr std::chrono::milliseconds FRAME_INTERVAL = std::chrono::milliseconds(50);
 // 네트워크 I/O 타입
 enum class NetworkIOType : uint16
 {
