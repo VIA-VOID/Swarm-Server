@@ -17,7 +17,6 @@ void SessionManager::Shutdown()
 	{
 		LOCK_GUARD;
 		_sessions.clear();
-		_deleteSessions.clear();
 	}
 }
 
@@ -41,28 +40,6 @@ void SessionManager::Add(SessionRef session)
 	}
 }
 
-// 세션이 종료된 후 호출
-void SessionManager::OnSessionClosed(SessionRef session)
-{
-	if (session == nullptr)
-	{
-		return;
-	}
-	{
-		LOCK_GUARD;
-
-		SessionID sessionID = session->GetSessionID();
-		auto it = _sessions.find(sessionID);
-		if (it != _sessions.end())
-		{
-			// 삭제 대기 추가
-			_deleteSessions.insert({sessionID, session });
-			// 세션 목록에서 제거
-			_sessions.erase(it);
-		}
-	}
-}
-
 // 세션 찾기
 SessionRef SessionManager::Find(SessionID sessionID)
 {
@@ -83,48 +60,38 @@ void SessionManager::Tick()
 	Vector<SessionRef> timeoutSessions;
 	{
 		LOCK_GUARD;
-		timeoutSessions.reserve(_sessions.size() / 10);
 
-		for (auto& pair : _sessions)
+		for (auto it = _sessions.begin(); it != _sessions.end();)
 		{
-			auto& session = pair.second;
-			if (session != nullptr && session->IsTimeout())
+			auto& session = it->second;
+			
+			// 이미 닫혔으면 제거
+			if (session == nullptr || session->IsClosed())
 			{
+				it = _sessions.erase(it);
+				continue;
+			}
+
+			// 타임아웃 체크
+			if (session->IsTimeout())
+			{
+				LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
 				timeoutSessions.push_back(session);
+				it = _sessions.erase(it);
+			}
+			else
+			{
+				++it;
 			}
 		}
 	}
 
-	// 타임아웃 세션 닫기
+	// 타임아웃된 세션 닫기
 	for (auto& session : timeoutSessions)
 	{
-		LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
-		session->Close();
-	}
-
-	// 주기적으로 삭제 대기 중인 세션 정리
-	if (NOW - _lastCleanUpTime >= CLEANUP_INTERVAL)
-	{
-		CleanUpSessions();
-		_lastCleanUpTime = NOW;
-	}
-}
-
-// 삭제 대기 중인 세션 정리
-void SessionManager::CleanUpSessions()
-{
-	LOCK_GUARD;
-	for (auto it = _deleteSessions.begin(); it != _deleteSessions.end();)
-	{
-		SessionRef session = it->second;
-		// 참조 카운트가 없다면(_deleteSessions 에만 존재)
-		if (session.use_count() <= 1)
+		if (session->IsClosed() == false)
 		{
-			it = _deleteSessions.erase(it);
-		}
-		else
-		{
-			++it;
+			session->Close();
 		}
 	}
 }
