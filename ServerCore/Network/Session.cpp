@@ -70,8 +70,6 @@ void Session::Close()
 	// 연결 종료 이벤트 호출
 	// 컨텐츠 로직에서 구현
 	_service->OnDisconnected(shared_from_this());
-	// 지연삭제
-	SessionMgr.OnSessionClosed(shared_from_this());
 	// 자원 해제
 	CloseResource();
 }
@@ -111,6 +109,12 @@ void Session::Send(const SendBufferRef& sendBuffer)
 void Session::DetachPlayer()
 {
 	_playerClass = nullptr;
+}
+
+// 세션 close 여부
+bool Session::IsClosed()
+{
+	return _isClosed.load();
 }
 
 // 자원정리

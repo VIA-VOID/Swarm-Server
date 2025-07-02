@@ -58,6 +58,8 @@ public:
 	T* GetPlayer();
 	// 유저 클래스 포인터 참조 정리
 	void DetachPlayer();
+	// 세션 close 여부
+	bool IsClosed();
 
 private:
 	// 자원정리
