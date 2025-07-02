@@ -12,15 +12,24 @@ void ThreadManager::Init()
 	_threads.reserve(doubleThreadCount);
 }
 
-// 스레드 생성 & 일감 투척
-void ThreadManager::Launch(const std::string& threadName, uint16 count, CallbackType&& jobCallback)
+// 스레드 생성 & callback 호출
+void ThreadManager::Launch(const std::string& threadName, uint16 count, CallbackType&& callback)
 {
 	LOCK_GUARD;
 
-	LaunchThread(threadName, count, std::move(jobCallback));
+	LaunchThread(threadName, count, std::move(callback));
 }
 
-// 그룹별 스레드 생성 & 일감 투척
+// 스레드 생성 & callback 호출
+void ThreadManager::LaunchFrame(const std::string& threadName, uint16 count, 
+	CallbackType&& callback, std::chrono::milliseconds frameTime /*= FRAME_INTERVAL*/)
+{
+	LOCK_GUARD;
+
+	LaunchFrameThread(threadName, count, std::move(callback), frameTime);
+}
+
+// 그룹별 스레드 생성 & callback 호출
 void ThreadManager::LaunchGroup(JobGroupId groupId, uint16 count, CallbackType&& jobCallback)
 {
 	LOCK_GUARD;
@@ -87,7 +96,8 @@ void ThreadManager::SetThreadName(const std::string& name)
 	__except (EXCEPTION_EXECUTE_HANDLER) {}
 }
 
-void ThreadManager::LaunchThread(const std::string& threadName, uint16 threadCount, CallbackType jobCallback)
+// 스레드 실행
+void ThreadManager::LaunchThread(const std::string& threadName, uint16 threadCount, CallbackType callback)
 {
 	for (uint16 thread = 0; thread < threadCount; thread++)
 	{
@@ -96,7 +106,45 @@ void ThreadManager::LaunchThread(const std::string& threadName, uint16 threadCou
 		_threads.emplace_back([=]()
 			{
 				SetThreadName(name);
-				jobCallback();
+				callback();
+			}
+		);
+
+		LOG_INFO("Thread Created :: " + name);
+	}
+}
+
+// 프레임 시간에 맞춰 스레드 실행
+void ThreadManager::LaunchFrameThread(const std::string& threadName, uint16 threadCount, 
+	CallbackType callback, std::chrono::milliseconds frameTime/* = FRAME_INTERVAL*/)
+{
+	for (uint16 thread = 0; thread < threadCount; thread++)
+	{
+		std::string name = threadName + "-" + std::to_string(thread);
+
+		_threads.emplace_back([=]()
+			{
+				SetThreadName(name);
+
+				// 다음 프레임 시간
+				TimePoint nextFrameTime = NOW + frameTime;
+
+				while (true)
+				{
+					TimePoint startTime = NOW;
+
+					callback();
+
+					// 프레임 보정
+					TimePoint endFrameTime = NOW;
+					if (nextFrameTime > endFrameTime)
+					{
+						// 다음 프레임 시간까지 대기
+						std::this_thread::sleep_until(nextFrameTime);
+					}
+					// 다음 프레임 시간 설정
+					nextFrameTime += frameTime;
+				}
 			}
 		);
 

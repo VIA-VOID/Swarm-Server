@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Network/NetworkDefine.h"
+
 /*-------------------------------------------------------
 				ThreadManager
 
@@ -11,9 +13,12 @@ class ThreadManager : public Singleton<ThreadManager>
 public:
 	// 초기화
 	void Init() override;
-	// 스레드 생성 & 일감 투척
-	void Launch(const std::string& threadName, uint16 count, CallbackType&& jobCallback);
-	// 그룹별 스레드 생성 & 일감 투척
+	// 스레드 생성 & callback 호출
+	void Launch(const std::string& threadName, uint16 count, CallbackType&& callback);
+	// 스레드 생성 & callback 호출
+	void LaunchFrame(const std::string& threadName, uint16 count, 
+		CallbackType&& callback, std::chrono::milliseconds frameTime = FRAME_INTERVAL);
+	// 그룹별 스레드 생성 & callback 호출
 	void LaunchGroup(JobGroupId groupId, uint16 count, CallbackType&& jobCallback);
 	// TLS 데이터 제거
 	void DeleteTLSData();
@@ -26,7 +31,10 @@ private:
 	// 스레드 이름 붙이기
 	void SetThreadName(const std::string& name);
 	// 스레드 실행
-	void LaunchThread(const std::string& threadName, uint16 threadCount, CallbackType jobCallback);
+	void LaunchThread(const std::string& threadName, uint16 threadCount, CallbackType callback);
+	// 프레임 시간에 맞춰 스레드 실행
+	void LaunchFrameThread(const std::string& threadName, uint16 threadCount,
+		CallbackType callback, std::chrono::milliseconds frameTime = FRAME_INTERVAL);
 
 private:
 	USE_LOCK;
