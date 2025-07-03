@@ -1,5 +1,6 @@
 #pragma once
 #include "Object/GameObject.h"
+#include "Zone/WorldManager.h"
 
 /*-------------------------------------------------------
 				Player
@@ -15,8 +16,15 @@ public:
 	void DetachSession();
 	// 게임 입장, 스폰
 	void EnterGame(const ZoneType zoneType);
+	// 게임 떠나기, 종료
+	void LeaveGame();
 	// 세션 가져오기
 	SessionRef GetSession();
+	// 유효성 검사
+	// - session closed 여부 제외
+	bool IsWeakValid() const;
+	// 세션 closed 까지 유효성 검사
+	bool IsStrongValid() const;
 	
 private:
 	// 초기 스텟 정보 초기화
@@ -33,18 +41,28 @@ private:
 	void SendUnicast(SessionRef targetSession, const T& message, PacketID pktId);
 	// 복수대상 sendPacket
 	template <typename T>
-	void SendBroadcast(const Vector<PlayerRef>& players, const T& message, PacketID pktId);
+	void SendBroadcast(const Vector<PlayerRef>& players, const T& message, PacketID pktId, bool isSelf = false);
+	// 시야 내 플레이어들에게 패킷 전송
+	template <typename T>
+	void SendBroadcastToVisiblePlayers(const T& message, PacketID pktId, bool isSelf = false);
 
 private:
 	// 캐릭터 정보
 	SessionRef _session;
 	Protocol::PlayerType _playerType;
+
+	// flag값
+	std::atomic<bool> _isValid;
 };
 
 // 본인에게 sendPacket
 template <typename T>
 void Player::SendUnicast(const T& message, PacketID pktId)
 {
+	if (IsStrongValid() == false)
+	{
+		return;
+	}
 	PacketHandler::SendPacket(_session, message, pktId);
 }
 
@@ -52,15 +70,33 @@ void Player::SendUnicast(const T& message, PacketID pktId)
 template <typename T>
 void Player::SendUnicast(SessionRef targetSession, const T& message, PacketID pktId)
 {
+	if (targetSession == nullptr || targetSession->IsClosed())
+	{
+		return;
+	}
 	PacketHandler::SendPacket(targetSession, message, pktId);
 }
 
 // 복수대상 sendPacket
 template <typename T>
-void Player::SendBroadcast(const Vector<PlayerRef>& players, const T& message, PacketID pktId)
+void Player::SendBroadcast(const Vector<PlayerRef>& players, const T& message, PacketID pktId, bool isSelf/* = false*/)
 {
 	for (const auto& player : players)
 	{
+		if (isSelf == false && player->GetObjectId() == GetObjectId())
+		{
+			continue;
+		}
 		SendUnicast(player->GetSession(), message, pktId);
 	}
+}
+
+// 시야 내 플레이어들에게 패킷 전송
+template <typename T>
+void Player::SendBroadcastToVisiblePlayers(const T& message, PacketID pktId, bool isSelf/* = false*/)
+{
+	Vector<PlayerRef> players;
+	WorldMgr.GetVisiblePlayersInZones(GetWorldPosition(), players);
+
+	SendBroadcast(players, message, pktId, isSelf);
 }

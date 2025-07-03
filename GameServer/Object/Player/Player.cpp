@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "Player.h"
 #include "Object/Stat/StatManager.h"
-#include "Zone/WorldManager.h"
 #include "Zone/TownZone.h"
 
 /*----------------------------
@@ -13,10 +12,15 @@ Player::Player(SessionRef session, const Protocol::PlayerType& playerType, const
 {
 	_objectType = Protocol::OBJECT_TYPE_PLAYER;
 	_name = name;
+	_isValid.store(true, std::memory_order::memory_order_relaxed);
 }
 
 Player::~Player()
 {
+	if (_session != nullptr)
+	{
+		_session.reset();
+	}
 }
 
 // 초기 스텟 정보 초기화
@@ -28,6 +32,7 @@ void Player::InitStatInfo()
 // 세션 참조 해제
 void Player::DetachSession()
 {
+	_isValid.store(false);
 	_session.reset();
 	_session = nullptr;
 }
@@ -70,10 +75,41 @@ void Player::EnterGame(const ZoneType zoneType)
 	}
 }
 
+// 게임 떠나기, 종료
+void Player::LeaveGame()
+{
+	if (IsWeakValid() == false)
+	{
+		return;
+	}
+	// 디스폰 패킷 생성
+	Protocol::SC_PLAYER_DESPAWN despawnPkt;
+	despawnPkt.set_objectid(GetObjectId().GetId());
+
+	// 본인포함 시야 내 근처 플레이어에게 전송
+	SendBroadcastToVisiblePlayers(despawnPkt, PacketID::SC_PLAYER_DESPAWN, true);
+
+	// 그리드에서 제거
+	WorldMgr.RemoveObjectToZone(_objectId, _zoneType, _gridIndex);
+}
+
 // 세션 가져오기
 SessionRef Player::GetSession()
 {
 	return _session;
+}
+
+// 유효성 검사
+// - session closed 여부 제외
+bool Player::IsWeakValid() const
+{
+	return _isValid.load() && _session;
+}
+
+// 세션 closed 까지 유효성 검사
+bool Player::IsStrongValid() const
+{
+	return IsWeakValid() && _session->IsClosed() == false;
 }
 
 // 게임 입장 패킷 전송
@@ -81,7 +117,7 @@ void Player::SendEnterGamePkt(const ZoneType zoneType, Protocol::ObjectInfo& out
 {
 	TownZone* townZone = static_cast<TownZone*>(WorldMgr.FindZone(zoneType));
 
-	// 플레이어 입장 패킷 전송
+	// 플레이어 입장 패킷 생성
 	Protocol::SC_PLAYER_ENTER_GAME enterGamePkt;
 
 	// 위치 업데이트
@@ -107,6 +143,9 @@ void Player::SendEnterGamePkt(const ZoneType zoneType, Protocol::ObjectInfo& out
 	ZonePos worldPos = townZone->GetWorldPosition();
 	GridIndex gridIndex = spawnVector.MakeGridIndex(worldPos);
 	WorldMgr.AddObjectToZone(shared_from_this(), zoneType, gridIndex);
+
+	// 플레이어 zone, grid 업데이트
+	SetZoneGridIndex(zoneType, gridIndex);
 }
 
 // playerType(직업) 정보 가져오기
