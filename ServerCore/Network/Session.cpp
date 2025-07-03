@@ -13,18 +13,18 @@ Session::Session()
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
 
+	_isClosing.store(false, std::memory_order_relaxed);
 	_isClosed.store(false, std::memory_order_relaxed);
 	_sending.store(false, std::memory_order_relaxed);
 }
 
 Session::~Session()
 {
-	if (_isClosed.load())
+	if (_isClosed.load() == false)
 	{
-		return;
+		// 자원 해제
+		CloseResource();
 	}
-	// 자원 해제
-	CloseResource();
 }
 
 // 초기화
@@ -60,17 +60,23 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 // 세션 종료
 void Session::Close()
 {
-	if (_isClosed.load())
+	if (_isClosing.exchange(true))
 	{
 		return;
 	}
-	// flag 변경
-	_isClosed.store(true);
-	_sending.store(false);
+	
+	std::weak_ptr<Session> weakSelf = weak_from_this();
+	SessionRef self = weakSelf.lock();
+	
 	// 연결 종료 이벤트 호출
-	// 컨텐츠 로직에서 구현
-	_service->OnDisconnected(shared_from_this());
-	// 자원 해제
+	if (_service != nullptr && self != nullptr)
+	{
+		_service->OnDisconnected(self);
+	}
+
+	_sending.store(false);
+	_isClosed.store(true);
+
 	CloseResource();
 }
 
@@ -103,12 +109,6 @@ void Session::Send(const SendBufferRef& sendBuffer)
 			ProcessSend();
 		}
 	}
-}
-
-// 유저 클래스 포인터 참조 정리
-void Session::DetachPlayer()
-{
-	_playerClass = nullptr;
 }
 
 // 세션 close 여부
