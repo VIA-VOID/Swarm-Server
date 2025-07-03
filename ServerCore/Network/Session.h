@@ -57,8 +57,7 @@ public:
 	template <typename T>
 	T* GetPlayer();
 	// 유저 클래스 포인터 참조 정리
-	template <typename T>
-	void DetachPlayer(T* player);
+	void DetachPlayer();
 	// 세션 close 여부
 	bool IsClosed();
 
@@ -117,12 +116,4 @@ inline T* Session::GetPlayer()
 		return nullptr;
 	}
 	return static_cast<T*>(_playerClass);
-}
-
-// 유저 클래스 포인터 참조 정리
-template <typename T>
-void Session::DetachPlayer(T* player)
-{
-	ObjectPool<T>::Release(player);
-	_playerClass = nullptr;
 }

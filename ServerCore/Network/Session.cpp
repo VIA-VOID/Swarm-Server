@@ -103,12 +103,18 @@ void Session::Send(const SendBufferRef& sendBuffer)
 		_sendDequeue.push_back(sendBuffer);
 
 		// WSASend 실행
-		if (_sending.load() == false)
+		if (_sending.exchange(true) == false)
 		{
 			_sending.store(true);
 			ProcessSend();
 		}
 	}
+}
+
+// 유저 클래스 포인터 참조 정리
+void Session::DetachPlayer()
+{
+	_playerClass = nullptr;
 }
 
 // 세션 close 여부
