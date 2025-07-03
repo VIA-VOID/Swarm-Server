@@ -511,6 +511,10 @@ bool IocpCore::IsExpectedDisConnect(int32 errorCode)
 // 세션 타임아웃 체크 & Job 재등록
 void IocpCore::CheckTickTimeout()
 {
+	if (_running.load() == false)
+	{
+		return;
+	}
 	// 세션 타임아웃 체크
 	SessionMgr.Tick();
 	// 다시 10초 후에 실행
