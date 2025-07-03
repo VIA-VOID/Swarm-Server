@@ -12,6 +12,7 @@ void PlayerPacketHandler::Handle_CS_PLAYER_ENTER_GAME(SessionRef session, const 
 	session->SetPlayer(player.get());
 
 	// 입장
+	// - AddObjectToZone 함수로 Ref 카운트 증가시킴
 	player->EnterGame(ZoneType::Town);
 }
 
