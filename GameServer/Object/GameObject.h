@@ -21,10 +21,19 @@ public:
 	// 위치 업데이트
 	void SetWorldPosition(const Protocol::PosInfo& posInfo);
 	void SetWorldPosition(const Vector3d& vectorPos);
+	// zoneType & GridIndex 업데이트
+	void SetZoneGridIndex(const ZoneType zoneType, const GridIndex& gridIndex);
+	// 모든 위치정보 업데이트
+	void SetAllPosition();
 	// Player인지 확인
 	bool IsPlayer() const;
 	// Monster인지 확인
 	bool IsMonster() const;
+
+	// Getter-
+	ZoneType GetCurrentZone() const;
+	GridIndex GetCurrentGrid() const;
+
 
 protected:
 	// Object 공용 정보(Protocol::ObjectInfo) 만들기
@@ -42,8 +51,9 @@ protected:
 	// 위치 및 방향 정보
 	Protocol::PosInfo _pos;
 	Vector3d _vectorPos;
-	// Object 상태
-	Protocol::ObjectState _objectState;
+	GridIndex _gridIndex;
+	// Zone 위치정보
+	ZoneType _zoneType;
 	// 스탯 정보
 	Protocol::StatInfo _statInfo;
 	// 이름
