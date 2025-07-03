@@ -15,15 +15,23 @@ class WorldManager : public Singleton<WorldManager>
 public:
 	void Init() override;
 	void Shutdown() override;
-	
+
+	// ZoneGrid 주기적 업데이트
+	void ZoneGridUpdateWorkerThread();
 	// Zone별 오브젝트 추가
-	bool AddObjectToZone(GameObjectRef obj, ZoneType zoneType, const GridIndex& gridIndex);
+	void AddObjectToZone(GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex);
+	// 오브젝트 제거
+	void RemoveObjectToZone(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 시야 내의 플레이어 목록 가져오기
 	// 여러 Zone 검색
 	void GetVisiblePlayersInZones(const Vector3d& position, Vector<PlayerRef>& outPlayers);
 
 	// zone 가져오기
 	BaseZone* FindZone(const ZoneType zoneType);
+	// 월드 좌표로 Zone 타입 찾기
+	ZoneType GetZoneByPosition(const Vector3d& position) const;
+	// zoneGrid 가져오기
+	ZoneGrid* FindZoneGrid(const ZoneType zoneType);
 
 private:
 	// Zone 초기화
@@ -39,11 +47,6 @@ private:
 	void GetVisibleZones(const Vector3d& position, Vector<ZoneType>& outZoneTypes);
 	// 시야 범위에 Zone이 속하는지 여부
 	bool IsInRange(const Vector3d& position, const ZonePos& worldPos, int32 gridSize);
-
-	// 월드 좌표로 Zone 타입 찾기
-	ZoneType GetZoneByPosition(const Vector3d& position) const;
-	// zoneGrid 가져오기
-	ZoneGrid* FindZoneGrid(const ZoneType zoneType);
 
 private:
 	USE_LOCK;

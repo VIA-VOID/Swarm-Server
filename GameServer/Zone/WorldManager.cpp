@@ -24,6 +24,8 @@ void WorldManager::Init()
 	InitZones();
 	// Zone별 Grid 초기화
 	InitZoneGrids();
+	// ZoneGrid 업데이트 스레드 생성
+	ThreadMgr.LaunchFrame("ZoneGrid", 1, [this]() { ZoneGridUpdateWorkerThread(); });
 }
 
 void WorldManager::Shutdown()
@@ -34,18 +36,24 @@ void WorldManager::Shutdown()
 	_zones.clear();
 }
 
+// ZoneGrid 주기적 업데이트
+void WorldManager::ZoneGridUpdateWorkerThread()
+{
+	// todo
+}
+
 // Zone별 오브젝트 추가
-bool WorldManager::AddObjectToZone(GameObjectRef obj, ZoneType zoneType, const GridIndex& gridIndex)
+void WorldManager::AddObjectToZone(GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex)
 {
 	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
 	if (zoneGrid == nullptr)
 	{
-		return false;
+		return;
 	}
 	// 그리드 범위 유효성 검사
 	if (zoneGrid->IsValidGridIndex(gridIndex) == false)
 	{
-		return false;
+		return;
 	}
 	{
 		GROUP_LOCK_GUARD(*zoneGrid);
@@ -55,8 +63,34 @@ bool WorldManager::AddObjectToZone(GameObjectRef obj, ZoneType zoneType, const G
 		cell.objects.insert({ obj->GetObjectId(), obj });
 		cell.isUpdate = true;
 	}
+}
 
-	return true;
+// 오브젝트 제거
+void WorldManager::RemoveObjectToZone(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex)
+{
+	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
+	if (zoneGrid == nullptr)
+	{
+		return;
+	}
+	// 그리드 범위 유효성 검사
+	if (zoneGrid->IsValidGridIndex(gridIndex) == false)
+	{
+		return;
+	}
+	{
+		GROUP_LOCK_GUARD(*zoneGrid);
+		
+		// 셀에 오브젝트 제거
+		GridCell& cell = zoneGrid->grid[gridIndex.y][gridIndex.x];
+		auto it = cell.objects.find(objId);
+		if (it != cell.objects.end())
+		{
+			cell.objects.erase(it);
+			cell.isUpdate = true;
+			return;
+		}
+	}
 }
 
 // Zone 초기화
@@ -107,10 +141,6 @@ void WorldManager::GetVisiblePlayersInZone(ZoneType zoneType, const Vector3d& po
 		
 		// 시야범위
 		GridIndex gridIndex = position.MakeGridIndex(zoneGrid->worldPos);
-
-		LOG_ERROR("position: x -> " + std::to_string(position.GetWorldX()) + " y -> " + std::to_string(position.GetWorldY()));
-		LOG_ERROR("gridIndex: x -> " + std::to_string(gridIndex.x) + " y -> " + std::to_string(gridIndex.y));
-
 		int32 startX = max(0, gridIndex.x - playerVisibleRange);
 		int32 startY = max(0, gridIndex.y - playerVisibleRange);
 		int32 endX = min(static_cast<int32>(zoneGrid->grid[0].size()) - 1, gridIndex.x + playerVisibleRange);
@@ -123,17 +153,21 @@ void WorldManager::GetVisiblePlayersInZone(ZoneType zoneType, const Vector3d& po
 		{
 			for (int32 x = startX; x <= endX; x++) 
 			{
-				const GridCell& cell = zoneGrid->grid[y][x];
+				GridCell& cell = zoneGrid->grid[y][x];
 				if (cell.objects.empty()) 
 				{
 					continue;
 				}
-				for (const auto& it : cell.objects) 
+				for (auto it = cell.objects.begin(); it != cell.objects.end(); ++it)
 				{
-					if (it.second->IsPlayer()) 
+					const GameObjectRef& gameObject = it->second;
+					if (gameObject->IsPlayer())
 					{
-						const PlayerRef& player = std::static_pointer_cast<Player>(it.second);
-						outPlayers.push_back(player);
+						const PlayerRef& player = std::static_pointer_cast<Player>(gameObject);
+						if (player->IsWeakValid())
+						{
+							outPlayers.push_back(player);
+						}
 					}
 				}
 			}
