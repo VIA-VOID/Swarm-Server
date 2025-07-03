@@ -34,19 +34,19 @@ void GameServer::OnConnected(SessionRef session)
 
 void GameServer::OnDisconnected(SessionRef session)
 {
-	// 상호참조 해제
-	if (session)
-	{
-		LOG_INFO("Client OnDisconnected!! session: " + std::to_string(session->GetSessionID().GetID()));
+	LOG_INFO("Client OnDisconnected!! session: " + std::to_string(session->GetSessionID().GetID()));
 
-		Player* player = session->GetPlayer<Player>();
-		if (player)
-		{
-			player->DetachSession();
-			ObjectPool<Player>::Release(player);
-			session->DetachPlayer();
-		}
+	Player* player = session->GetPlayer<Player>();
+	if (player == nullptr)
+	{
+		return;
 	}
+
+	// 상호 참조 해제 전 despawn 패킷 전송
+	player->LeaveGame();
+	// 상호 참조 해제
+	player->DetachSession();
+	session->DetachPlayer();
 }
 
 void GameServer::OnRecv(SessionRef session, BYTE* buffer, int32 len)
