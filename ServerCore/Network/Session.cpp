@@ -105,7 +105,6 @@ void Session::Send(const SendBufferRef& sendBuffer)
 		// WSASend 실행
 		if (_sending.exchange(true) == false)
 		{
-			_sending.store(true);
 			ProcessSend();
 		}
 	}
