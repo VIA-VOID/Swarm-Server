@@ -58,5 +58,5 @@
 #else
 #define USE_LOCK						std::mutex _mutex
 #define LOCK_GUARD						std::lock_guard<std::mutex> lockGuard(_mutex)
-#define GROUP_LOCK_GUARD(group)			std::lock_guard<std::mutex> lockGuard(group._mutex)
+#define GROUP_LOCK_GUARD(group)			std::lock_guard<std::mutex> lockGuard((group)._mutex)
 #endif
