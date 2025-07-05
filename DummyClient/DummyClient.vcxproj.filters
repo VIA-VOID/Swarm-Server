@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="DummyClient.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="Protocol\Enum.pb.cc">
       <Filter>Protocol</Filter>
@@ -24,7 +23,11 @@
     <ClCompile Include="Packet\PlayerPacketHandler.cpp">
       <Filter>Packet</Filter>
     </ClCompile>
-    <ClCompile Include="Job\JobGroup.cpp" />
+    <ClCompile Include="Job\JobGroup.cpp">
+      <Filter>Job</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="GameClient.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -49,7 +52,10 @@
     <ClInclude Include="Packet\PlayerPacketHandler.h">
       <Filter>Packet</Filter>
     </ClInclude>
-    <ClInclude Include="Job\JobGroup.h" />
+    <ClInclude Include="Job\JobGroup.h">
+      <Filter>Job</Filter>
+    </ClInclude>
+    <ClInclude Include="GameClient.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
