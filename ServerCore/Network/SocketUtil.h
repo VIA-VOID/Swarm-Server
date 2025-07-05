@@ -20,5 +20,8 @@ public:
 
 private:
 	// 소켓 옵션 설정
-	static bool SetSockOpt(SOCKET socket);
+	static bool SetServerSockOpt(SOCKET socket);
+	static bool SetClientSockOpt(SOCKET socket);
+	// send & recv 버퍼 사이즈 설정
+	static bool SetSendRecvBuffSize(SOCKET socket, int32 buffSize);
 };
