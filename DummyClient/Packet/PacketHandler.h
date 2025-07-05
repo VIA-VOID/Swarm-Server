@@ -80,16 +80,16 @@ inline void PacketHandler::SendPacket(SessionRef session, const T& packet, Packe
 	const uint16 totalSize = sizeof(PacketHeader) + payloadSize;
 
 	// sendBuffer 헤더 세팅
-	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(totalSize + 1);
+	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(totalSize);
 	PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->GetWritePtr());
 	header->size = totalSize;
-	header->id = packetId;
+	header->id = static_cast<uint16>(packetId);
 
 	// 데이터 세팅
 	BYTE* payload = sendBuffer->GetWritePtr() + sizeof(PacketHeader);
 	packet.SerializeToArray(payload, payloadSize);
+	sendBuffer->MoveWritePos(totalSize);
 
 	// 데이터 전송
-	sendBuffer->MoveWritePos(totalSize);
-	session->Send(sendBuffer->GetReadPtr(), totalSize);
+	session->Send(sendBuffer);
 }

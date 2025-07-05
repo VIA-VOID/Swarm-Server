@@ -3,8 +3,8 @@
 
 // 자동생성
 // 도메인별 핸들러 include
-#include "ChatPacketHandler.h"
 #include "PlayerPacketHandler.h"
+#include "ChatPacketHandler.h"
 
 PacketFunc PacketHandler::_handlers[UINT16_MAX];
 PacketClass PacketHandler::_domainHandlerClasses;
@@ -13,8 +13,8 @@ PacketClass PacketHandler::_domainHandlerClasses;
 // 자동생성 코드
 void PacketHandler::Init()
 {
-	_domainHandlerClasses.emplace_back(std::make_unique<ChatPacketHandler>());
-	_domainHandlerClasses.emplace_back(std::make_unique<PlayerPacketHandler>());
+	_domainHandlerClasses.emplace_back(ObjectPool<PlayerPacketHandler>::MakeUnique());
+	_domainHandlerClasses.emplace_back(ObjectPool<ChatPacketHandler>::MakeUnique());
 
 	// 도메인별로 함수 테이블 등록
 	for (const auto& handler : _domainHandlerClasses)
