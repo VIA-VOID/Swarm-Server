@@ -127,7 +127,7 @@ void IocpCore::StartWorkerThreads(uint16 maxWorkerThreadNum)
 {
 	_running.store(true);
 	// IO 워커 스레드 시작
-	ThreadMgr.Launch("Network", maxWorkerThreadNum, [this]() { IOWorkerThread(); });
+	ThreadMgr.Launch("IOWorker", maxWorkerThreadNum, [this]() { IOWorkerThread(); });
 }
 
 // 소켓 생성 및 Bind
