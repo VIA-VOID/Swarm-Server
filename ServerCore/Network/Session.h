@@ -43,13 +43,13 @@ public:
 	// Send 완료 & 남은 데이터 있을시 이어서 전송
 	void OnSendCompleted(int32 bytesTransferred);
 	// 타임아웃 체크
-	bool IsTimeout(std::chrono::seconds timeout = TIMEOUT_SECONDS);
+	bool IsTimeout(std::chrono::seconds timeout = TIMEOUT_SECONDS) const;
 
 	// getter -
 	// 세션 ID 얻기
-	SessionID GetSessionID();
+	SessionID GetSessionID() const;
 	// 소켓 가져오기
-	SOCKET GetSocket();
+	SOCKET GetSocket() const;
 	// 유저 클래스 설정
 	template <typename T>
 	void SetPlayer(T* player);
@@ -81,7 +81,6 @@ private:
 	TimePoint _lastRecvTime;
 	TimePoint _lastSendTime;
 	TimePoint _connectedTime;
-	std::atomic<bool> _isClosing;
 	std::atomic<bool> _isClosed;
 
 	// I/O 작업 관련

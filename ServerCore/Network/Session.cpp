@@ -13,7 +13,6 @@ Session::Session()
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
 
-	_isClosing.store(false, std::memory_order_relaxed);
 	_isClosed.store(false, std::memory_order_relaxed);
 	_sending.store(false, std::memory_order_relaxed);
 }
@@ -60,10 +59,11 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 // 세션 종료
 void Session::Close()
 {
-	if (_isClosing.exchange(true))
+	if (_isClosed.exchange(true))
 	{
 		return;
 	}
+	_sending.store(false);
 	
 	std::weak_ptr<Session> weakSelf = weak_from_this();
 	SessionRef self = weakSelf.lock();
@@ -73,9 +73,6 @@ void Session::Close()
 	{
 		_service->OnDisconnected(self);
 	}
-
-	_sending.store(false);
-	_isClosed.store(true);
 
 	CloseResource();
 }
@@ -97,16 +94,23 @@ void Session::Send(const SendBufferRef& sendBuffer)
 	{
 		return;
 	}
-	// 비동기 송신 시작
+
+	// 송신 데이터 삽입
+	bool processSend = false;
 	{
 		LOCK_GUARD;
 		_sendDequeue.push_back(sendBuffer);
 
-		// WSASend 실행
 		if (_sending.exchange(true) == false)
 		{
-			ProcessSend();
+			processSend = true;
 		}
+	}
+
+	// 비동기 송신 시작
+	if (processSend)
+	{
+		ProcessSend();
 	}
 }
 
@@ -134,6 +138,7 @@ void Session::CloseResource()
 	// 송신 큐 비우기
 	{
 		LOCK_GUARD;
+		_sendContext.buffers.clear();
 		_sendDequeue.clear();
 	}
 }
@@ -182,29 +187,34 @@ void Session::ProcessRecv()
 // WSASend 실행
 void Session::ProcessSend()
 {
-	ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
-	_sendContext.buffers.clear();
-	_sendContext.buffers.reserve(MAX_SEND_BUFFER_COUNT);
-
 	// 한 번에 최대 MAX_SEND_BUFFER_COUNT개의 버퍼를 보냄
+	Vector<SendBufferRef> sendBuffers;
+	sendBuffers.reserve(MAX_SEND_BUFFER_COUNT);
+	
 	WSABUF wsabufs[MAX_SEND_BUFFER_COUNT];
 	uint32 sendCount = 0;
 	
 	// 보내야할 패킷 꺼내기
-	while (_sendDequeue.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
 	{
-		SendBufferRef buffer = _sendDequeue.front();
-		_sendDequeue.pop_front();
+		LOCK_GUARD;
 
-		if (buffer == nullptr || buffer->IsCompleted())
+		ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
+		
+		while (_sendDequeue.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
 		{
-			continue;
-		}
+			SendBufferRef buffer = _sendDequeue.front();
+			_sendDequeue.pop_front();
 
-		// wsabuf 세팅
-		buffer->GetWSABUF(wsabufs[sendCount]);
-		_sendContext.buffers.push_back(buffer);
-		++sendCount;
+			if (buffer == nullptr || buffer->IsCompleted())
+			{
+				continue;
+			}
+
+			// wsabuf 세팅
+			buffer->GetWSABUF(wsabufs[sendCount]);
+			sendBuffers.push_back(buffer);
+			++sendCount;
+		}
 	}
 
 	// 보낼 데이터가 없다면 송신 종료
@@ -224,10 +234,16 @@ void Session::ProcessSend()
 			// 전송실패 - 모든 버퍼 해제
 			int32 errorCode = ::WSAGetLastError();
 			LogError("WSASend 실패, 해당 세션 종료", errorCode);
-			_sendContext.buffers.clear();
 			Close();
 			return;
 		}
+	}
+	// send 성공 시 _sendContext.buffers에 저장
+	{
+		LOCK_GUARD;
+
+		_sendContext.buffers.clear();
+		_sendContext.buffers = std::move(sendBuffers);
 	}
 }
 
@@ -293,9 +309,16 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 	{
 		int32 errorCode = ::WSAGetLastError();
 		LogError("Send Size 0: ", errorCode);
-		_sendContext.buffers.clear();
 		Close();
 		return;
+	}
+
+	// 전체 sendBuffer
+	Vector<SendBufferRef> sendBuffers;
+	{
+		LOCK_GUARD;
+
+		sendBuffers = std::move(_sendContext.buffers);
 	}
 	
 	// 남은 전송 크기
@@ -304,7 +327,7 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 	Vector<SendBufferRef> remainSendBuffer;
 	remainSendBuffer.reserve(MAX_SEND_BUFFER_COUNT);
 
-	for (SendBufferRef& buffer : _sendContext.buffers)
+	for (SendBufferRef& buffer : sendBuffers)
 	{
 		if (remainBytes <= 0)
 		{
@@ -335,7 +358,9 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 			remainSendBuffer.push_back(buffer);
 		}
 	}
+
 	// 큐에 남은 데이터가 있거나 부분 전송된 버퍼가 있으면 이어서 전송
+	bool processSend = false;
 	{
 		LOCK_GUARD;
 
@@ -344,15 +369,21 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		{
 			_sendDequeue.push_front(*it);
 		}
-		// 남아있는 데이터 send
+		// 남은데이터가 있으면 지역변수 flag 변경
 		if (_sendDequeue.empty() == false)
 		{
-			ProcessSend();
+			processSend = true;
 		}
 		else
 		{
 			_sending.store(false);
 		}
+	}
+
+	// 남아있는 데이터 send
+	if (processSend)
+	{
+		ProcessSend();
 	}
 
 	// 송신 이벤트 호출
@@ -361,19 +392,19 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 }
 
 // 타임아웃 체크
-bool Session::IsTimeout(std::chrono::seconds timeout /*= TIMEOUT_SECONDS*/)
+bool Session::IsTimeout(std::chrono::seconds timeout /*= TIMEOUT_SECONDS*/) const
 {
 	return (NOW - _lastSendTime) > timeout;
 }
 
 // 세션 ID 얻기
-SessionID Session::GetSessionID()
+SessionID Session::GetSessionID() const
 {
 	return _sessionID;
 }
 
 // 소켓 가져오기
-SOCKET Session::GetSocket()
+SOCKET Session::GetSocket() const
 {
 	return _socket;
 }
