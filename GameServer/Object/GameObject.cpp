@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "GameObject.h"
+#include "Zone/Vector3d.h"
 #include "Zone/WorldManager.h"
 
 // ObjectId 가져오기
