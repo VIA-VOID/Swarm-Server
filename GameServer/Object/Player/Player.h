@@ -16,15 +16,10 @@ public:
 	void DetachSession();
 	// 게임 입장, 스폰
 	void EnterGame(const ZoneType zoneType);
-	// 게임 떠나기, 종료
-	void LeaveGame();
 	// 세션 가져오기
 	SessionRef GetSession();
 	// 유효성 검사
-	// - session closed 여부 제외
-	bool IsWeakValid() const;
-	// 세션 closed 까지 유효성 검사
-	bool IsStrongValid() const;
+	bool IsValid() const;
 	
 private:
 	// 초기 스텟 정보 초기화
@@ -59,7 +54,7 @@ private:
 template <typename T>
 void Player::SendUnicast(const T& message, PacketID pktId)
 {
-	if (IsStrongValid() == false)
+	if (IsValid() == false)
 	{
 		return;
 	}

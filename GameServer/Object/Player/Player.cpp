@@ -75,41 +75,20 @@ void Player::EnterGame(const ZoneType zoneType)
 	}
 }
 
-// 게임 떠나기, 종료
-void Player::LeaveGame()
-{
-	if (IsWeakValid() == false)
-	{
-		return;
-	}
-	// 디스폰 패킷 생성
-	Protocol::SC_PLAYER_DESPAWN despawnPkt;
-	despawnPkt.set_objectid(GetObjectId().GetId());
-
-	// 본인포함 시야 내 근처 플레이어에게 전송
-	SendBroadcastToVisiblePlayers(despawnPkt, PacketID::SC_PLAYER_DESPAWN, true);
-
-	// 그리드에서 제거
-	WorldMgr.RemoveObjectToZone(_objectId, _zoneType, _gridIndex);
-}
-
 // 세션 가져오기
 SessionRef Player::GetSession()
 {
-	return _session;
+	if (IsValid())
+	{
+		return _session;
+	}
+	return nullptr;
 }
 
 // 유효성 검사
-// - session closed 여부 제외
-bool Player::IsWeakValid() const
+bool Player::IsValid() const
 {
-	return _isValid.load() && _session;
-}
-
-// 세션 closed 까지 유효성 검사
-bool Player::IsStrongValid() const
-{
-	return IsWeakValid() && _session->IsClosed() == false;
+	return _isValid.load() && _session && _session->IsClosed() == false;
 }
 
 // 게임 입장 패킷 전송
