@@ -25,5 +25,4 @@ private:
 	USE_LOCK;
 	// 세션 목록
 	HashMap<SessionID, SessionRef> _sessions;
-	TimePoint _lastCleanUpTime;
 };

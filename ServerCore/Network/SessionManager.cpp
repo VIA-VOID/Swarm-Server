@@ -8,7 +8,6 @@
 
 void SessionManager::Init()
 {
-	_lastCleanUpTime = NOW;
 }
 
 void SessionManager::Shutdown()
@@ -56,42 +55,55 @@ SessionRef SessionManager::Find(SessionID sessionID)
 // 타임아웃 세션 닫기
 void SessionManager::Tick()
 {
-	// 타임아웃된 세션 찾기
-	Vector<SessionRef> timeoutSessions;
+	Vector<SessionRef> sessions;
 	{
 		LOCK_GUARD;
 
-		for (auto it = _sessions.begin(); it != _sessions.end();)
+		sessions.reserve(_sessions.size());
+		
+		for (const auto& pair : _sessions)
 		{
-			auto& session = it->second;
-			
-			// 이미 닫혔으면 제거
-			if (session == nullptr || session->IsClosed())
-			{
-				it = _sessions.erase(it);
-				continue;
-			}
-
-			// 타임아웃 체크
-			if (session->IsTimeout())
-			{
-				LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
-				timeoutSessions.push_back(session);
-				it = _sessions.erase(it);
-			}
-			else
-			{
-				++it;
-			}
+			sessions.push_back(pair.second);
 		}
 	}
 
-	// 타임아웃된 세션 닫기
+	// 타임아웃 세션
+	Vector<SessionRef> timeoutSessions;
+	// 닫힌 세션
+	Vector<SessionRef> closedSessions;
+	
+	for (auto& session : sessions)
+	{
+		if (session == nullptr)
+		{
+			continue;
+		}
+		if (session->IsClosed())
+		{
+			closedSessions.push_back(session);
+			continue;
+		}
+		if (session->IsTimeout())
+		{
+			timeoutSessions.push_back(session);
+		}
+	}
+
+	// 닫힌 세션 제거
+	if (closedSessions.empty() == false)
+	{
+		LOCK_GUARD;
+
+		for (auto& session : closedSessions)
+		{
+			_sessions.erase(session->GetSessionID());
+		}
+	}
+
+	// 타임아웃 세션 닫기
 	for (auto& session : timeoutSessions)
 	{
-		if (session->IsClosed() == false)
-		{
-			session->Close();
-		}
+		LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
+		session->Close();
 	}
 }
