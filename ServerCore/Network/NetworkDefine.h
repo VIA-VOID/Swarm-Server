@@ -10,6 +10,8 @@ const uint16 CPU_THREAD_COUNT = std::thread::hardware_concurrency();
 constexpr uint32 BUFFER_SIZE = 8196;
 // 세션 타임아웃 시간 (300초)
 constexpr std::chrono::seconds TIMEOUT_SECONDS(300);
+// 하트비트 주기 (10초)
+constexpr uint64 HEART_BEAT_INTERVAL = 10000;
 // 최대 패킷 크기 (2KB)
 constexpr uint32 MAX_PACKET_SIZE = 2048;
 // Connect 버퍼 크기

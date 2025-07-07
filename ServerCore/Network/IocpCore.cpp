@@ -517,8 +517,8 @@ void IocpCore::CheckTickTimeout()
 	}
 	// 세션 타임아웃 체크
 	SessionMgr.Tick();
-	// 다시 10초 후에 실행
-	JobQ.DoAsyncAfter(10000, [this]() { CheckTickTimeout(); });
+	// 다시 HEART_BEAT_INTERVAL 후에 실행
+	JobQ.DoAsyncAfter(HEART_BEAT_INTERVAL, [this]() { CheckTickTimeout(); });
 }
 
 // HeartBeat 체크 작업등록
