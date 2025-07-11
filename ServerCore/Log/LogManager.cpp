@@ -33,7 +33,7 @@ void LogManager::Shutdown()
 // 로그 쌓기
 void LogManager::PushLog(const LogType type, const std::string& message, const char* fnName)
 {
-	LogMessage logMsg(type, message, Clock::GetFormattedTime(), fnName);
+	LogMessage logMsg(type, message, Timer::GetFormattedTime(), fnName);
 
 	JobQ.DoAsync([this, log = std::move(logMsg)]() {
 		ProcessThread(log._type, log.ToString());
@@ -51,7 +51,7 @@ void LogManager::ProcessThread(const LogType type, const std::string& message)
 #endif
 
 	// 일자 변경 확인
-	if (Clock::IsNewDay())
+	if (Timer::IsNewDay())
 	{
 		// 일자 변경시 파일 close후 새로 생성
 		CloseLogFile();
@@ -76,7 +76,7 @@ void LogManager::CreateLogFile()
 	std::string dir = Utils::SetFilePath() + "\\Logs";
 	::CreateDirectoryA(dir.c_str(), nullptr);
 
-	std::string fileName = dir + "\\Serverlog_" + Clock::GetFormattedDate('_') + ".log";
+	std::string fileName = dir + "\\Serverlog_" + Timer::GetFormattedDate('_') + ".log";
 	_file.open(fileName, std::ios::app);
 }
 

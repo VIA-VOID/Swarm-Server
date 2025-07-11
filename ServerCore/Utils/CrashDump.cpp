@@ -25,7 +25,7 @@ std::string CrashDump::MakeDumpFileName()
 	// 폴더가 없으면 생성
 	::CreateDirectoryA(dumpPath.c_str(), nullptr);
 
-	return dumpPath + "\\dump_" + Clock::GetFormattedTime('_', '_') + ".dmp";
+	return dumpPath + "\\dump_" + Timer::GetFormattedTime('_', '_') + ".dmp";
 }
 
 // dump 파일 생성
