@@ -18,8 +18,8 @@ public:
 	void Add(SessionRef session);
 	// 세션 찾기
 	SessionRef Find(SessionID sessionID);
-	// 타임아웃 세션 닫기
-	void Tick();
+	// 세션 하트비트 & 만료 세션 닫기
+	void Heartbeat(CoreService* service);
 
 private:
 	USE_LOCK;

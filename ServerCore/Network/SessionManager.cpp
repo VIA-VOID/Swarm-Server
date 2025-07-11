@@ -52,8 +52,8 @@ SessionRef SessionManager::Find(SessionID sessionID)
 	return nullptr;
 }
 
-// 타임아웃 세션 닫기
-void SessionManager::Tick()
+// 세션 하트비트 & 만료 세션 닫기
+void SessionManager::Heartbeat(CoreService* service)
 {
 	Vector<SessionRef> sessions;
 	{
@@ -67,10 +67,10 @@ void SessionManager::Tick()
 		}
 	}
 
+	// 활성화 세션
+	Vector<SessionRef> liveSessions;
 	// 타임아웃 세션
 	Vector<SessionRef> timeoutSessions;
-	// 닫힌 세션
-	Vector<SessionRef> closedSessions;
 	
 	for (auto& session : sessions)
 	{
@@ -78,32 +78,42 @@ void SessionManager::Tick()
 		{
 			continue;
 		}
-		if (session->IsClosed())
-		{
-			closedSessions.push_back(session);
-			continue;
-		}
-		if (session->IsTimeout())
+		if (session->IsClosed() || session->IsTimeout())
 		{
 			timeoutSessions.push_back(session);
+			continue;
 		}
+		liveSessions.push_back(session);
 	}
 
-	// 닫힌 세션 제거
-	if (closedSessions.empty() == false)
+	if (timeoutSessions.empty() == false)
 	{
-		LOCK_GUARD;
-
-		for (auto& session : closedSessions)
+		// 세션 닫기
+		for (auto& session : timeoutSessions)
 		{
-			_sessions.erase(session->GetSessionID());
+			if (session->IsTimeout())
+			{
+				LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
+			}
+			session->Close();
+		}
+		// 세션 제거
+		{
+			LOCK_GUARD;
+
+			for (auto& session : timeoutSessions)
+			{
+				_sessions.erase(session->GetSessionID());
+			}
 		}
 	}
 
-	// 타임아웃 세션 닫기
-	for (auto& session : timeoutSessions)
+	// 하트비트 패킷 전송
+	if (service != nullptr)
 	{
-		LOG_WARNING("세션 타임아웃: " + std::to_string(session->GetSessionID().GetID()));
-		session->Close();
+		for (auto& session : liveSessions)
+		{
+			service->OnHeartbeat(session);
+		}
 	}
 }
