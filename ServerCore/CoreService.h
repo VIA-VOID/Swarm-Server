@@ -29,6 +29,9 @@ public:
 	virtual void OnDisconnected(SessionRef session) = 0;
 	virtual void OnRecv(SessionRef session, BYTE* buffer, int32 len) = 0;
 	virtual void OnSend(SessionRef session, int32 len) = 0;
+	virtual void OnHeartbeat(SessionRef session) = 0;
+
+	bool IsServerType() const;
 
 private:
 	void DummyConnect(uint16 port, const std::string& address, uint16 connectCount);

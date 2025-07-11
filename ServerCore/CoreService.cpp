@@ -63,13 +63,18 @@ void CoreService::Stop()
 	MemoryMgr.Shutdown();
 }
 
+bool CoreService::IsServerType() const
+{
+	return _type == ServiceType::Server;
+}
+
 void CoreService::DummyConnect(uint16 port, const std::string& address, uint16 connectCount)
 {
 	LOG_SYSTEM("Dummy Client 생성 시작");
 
 	for (uint16 i = 0; i < connectCount; i++)
 	{
-		_iocpCore->Connect(address, port, MAX_WORKER_THREAD_NUM);
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		_iocpCore->Connect(address, port, 5);
+		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 	}
 }
