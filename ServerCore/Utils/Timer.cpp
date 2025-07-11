@@ -7,11 +7,11 @@
 using namespace std::chrono;
 
 /*----------------------------
-		Clock
+		Timer
 ----------------------------*/
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-std::string Clock::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= L':'*/)
+std::string Timer::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= L':'*/)
 {
 	system_clock::time_point now = system_clock::now();
 	auto ms = ::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -36,7 +36,7 @@ std::string Clock::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= L':
 }
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd)
-std::string Clock::GetFormattedDate(char dateSep /*= '/'*/)
+std::string Timer::GetFormattedDate(char dateSep /*= '/'*/)
 {
 	system_clock::time_point now = system_clock::now();
 
@@ -56,7 +56,7 @@ std::string Clock::GetFormattedDate(char dateSep /*= '/'*/)
 }
 
 // 일자 변경 여부
-bool Clock::IsNewDay()
+bool Timer::IsNewDay()
 {
 	LToday = GetFormattedDate();
 	std::string now = GetFormattedDate();
@@ -71,74 +71,13 @@ bool Clock::IsNewDay()
 }
 
 // 두 시간 사이의 차이, 밀리초 반환
-int64 Clock::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/)
+int64 Timer::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/)
 {
 	return ::duration_cast<milliseconds>(end - start).count();
 }
 
-/*----------------------------
-		Timer
-----------------------------*/
-
-Timer::Timer()
-	: _durationMs(0), _started(false)
+// 현재시간 밀리초 반환
+int64 Timer::GetNowMsTime()
 {
-}
-
-// 생성 시 지속시간 설정
-Timer::Timer(int64 durationMs)
-	: _startTime(NOW), _durationMs(durationMs), _started(true)
-{
-}
-
-// 타이머 시작, 기본생성자로 생성되었을때 사용
-void Timer::Start(int64 durationMs)
-{
-	_startTime = NOW;
-	_durationMs = durationMs;
-	_started = true;
-}
-
-// 만료 확인
-bool Timer::IsExpired()
-{
-	if (_started == false)
-	{
-		return false;
-	}
-
-	int64 elapsed = Clock::GetTimeDiff(_startTime);
-	return elapsed >= _durationMs;
-}
-
-// 타이머 리셋
-void Timer::Reset()
-{
-	if (_started)
-	{
-		_startTime = NOW;
-	}
-}
-
-// 경과 시간
-int64 Timer::Elapsed()
-{
-	if (_started == false)
-	{
-		return 0;
-	}
-
-	return Clock::GetTimeDiff(_startTime);
-}
-
-// 남은 시간
-int64 Timer::Remaining()
-{
-	if (_started == false)
-	{
-		return 0;
-	}
-
-	int64 remaining = _durationMs - Elapsed();
-	return (remaining > 0) ? remaining : 0;
+	return std::chrono::duration_cast<std::chrono::milliseconds>(NOW.time_since_epoch()).count();
 }
