@@ -31,7 +31,7 @@ public:
 	virtual ~Session();
 
 	// 초기화
-	bool Init(SOCKET socket, HANDLE iocpHandle);
+	bool Init(SOCKET socket, HANDLE iocpHandle, bool createIOCP = true);
 	// 종료
 	void Close();
 	// 세션에 소켓, 서비스 설정
@@ -74,6 +74,7 @@ private:
 
 private:
 	USE_LOCK;
+	
 	// 세션 정보
 	SessionID _sessionID;
 	SOCKET _socket;

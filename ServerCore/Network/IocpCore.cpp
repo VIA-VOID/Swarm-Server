@@ -179,9 +179,12 @@ bool IocpCore::InitIocp(SOCKET socket)
 		}
 	}
 	// 소켓과 입출력 완료 포트를 연결
-	if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket), _iocpHandle, 0, 0) == NULL)
+	if (_service && _service->IsServerType())
 	{
-		return false;
+		if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(socket), _iocpHandle, 0, 0) == NULL)
+		{
+			return false;
+		}
 	}
 	return true;
 }
@@ -211,6 +214,13 @@ void IocpCore::ProcessConnect(SessionRef session, const std::string& address, ui
 	connectContext->type = NetworkIOType::Connect;
 	connectContext->session = session;
 
+	// 소켓과 입출력 완료 포트를 연결
+	if (::CreateIoCompletionPort(reinterpret_cast<HANDLE>(session->GetSocket()), _iocpHandle, reinterpret_cast<ULONG_PTR>(session.get()), 0) == NULL)
+	{
+		LogError("소켓 IOCP 등록 실패", ::WSAGetLastError());
+		return;
+	}
+
 	SOCKADDR_IN serverAddr;
 	ZeroMemory(&serverAddr, sizeof(serverAddr));
 	serverAddr.sin_family = AF_INET;
@@ -222,7 +232,7 @@ void IocpCore::ProcessConnect(SessionRef session, const std::string& address, ui
 	if (_connectEx(session->GetSocket(), (SOCKADDR*)&serverAddr, sizeof(serverAddr), 
 		nullptr, 0, &bytesSent, (LPOVERLAPPED)connectContext) == FALSE)
 	{
-		int32 errorCode = WSAGetLastError();
+		int32 errorCode = ::WSAGetLastError();
 		if (errorCode != ERROR_IO_PENDING)
 		{
 			LogError("ConnectEx 실패", errorCode);
@@ -255,7 +265,7 @@ bool IocpCore::OnConnectCompleted(OverlappedEx* overlappedEx)
 	}
 
 	// 세션 초기화
-	if (session->Init(clientSocket, _iocpHandle) == false)
+	if (session->Init(clientSocket, _iocpHandle, false) == false)
 	{
 		ObjectPool<ConnectContext>::Release(connectContext);
 		return false;
@@ -340,7 +350,7 @@ void IocpCore::ProcessAccept(SessionRef session)
 		0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16,
 		&bytesReceived, reinterpret_cast<LPOVERLAPPED>(&acceptContext->overlapped)) == FALSE)
 	{
-		int32 errorCode = WSAGetLastError();
+		int32 errorCode = ::WSAGetLastError();
 		if (errorCode != ERROR_IO_PENDING)
 		{
 			LogError("AcceptEx 실패", errorCode);
@@ -455,6 +465,7 @@ void IocpCore::IOWorkerThread()
 			Session* session = reinterpret_cast<Session*>(completionKey);
 			if (session == nullptr)
 			{
+				std::cout << "sessionnull\n";
 				continue;
 			}
 
@@ -508,23 +519,17 @@ bool IocpCore::IsExpectedDisConnect(int32 errorCode)
 	}
 }
 
-// 세션 타임아웃 체크 & Job 재등록
-void IocpCore::CheckTickTimeout()
+// HeartBeat 체크 작업등록
+void IocpCore::StartHeartbeatTask()
 {
 	if (_running.load() == false)
 	{
 		return;
 	}
-	// 세션 타임아웃 체크
-	SessionMgr.Tick();
+	// 세션 하트비트
+	SessionMgr.Heartbeat(_service);
 	// 다시 HEART_BEAT_INTERVAL 후에 실행
-	JobQ.DoAsyncAfter(HEART_BEAT_INTERVAL, [this]() { CheckTickTimeout(); });
-}
-
-// HeartBeat 체크 작업등록
-void IocpCore::StartHeartbeatTask()
-{
-	JobQ.DoAsync([this]() { CheckTickTimeout(); });
+	JobQ.DoAsyncAfter(HEART_BEAT_INTERVAL, [this]() { StartHeartbeatTask(); });
 }
 
 // 로그 찍기

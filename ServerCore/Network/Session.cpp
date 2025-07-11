@@ -27,7 +27,7 @@ Session::~Session()
 }
 
 // 초기화
-bool Session::Init(SOCKET socket, HANDLE iocpHandle)
+bool Session::Init(SOCKET socket, HANDLE iocpHandle, bool createIOCP /*= true*/)
 {
 	_socket = socket;
 	_lastRecvTime = NOW;
@@ -36,7 +36,10 @@ bool Session::Init(SOCKET socket, HANDLE iocpHandle)
 	_iocpHandle = iocpHandle;
 
 	// IOCP에 등록
-	::CreateIoCompletionPort(reinterpret_cast<HANDLE>(_socket), _iocpHandle, reinterpret_cast<ULONG_PTR>(this), 0);
+	if (createIOCP)
+	{
+		::CreateIoCompletionPort(reinterpret_cast<HANDLE>(_socket), _iocpHandle, reinterpret_cast<ULONG_PTR>(this), 0);
+	}
 
 	// 클라이언트 주소 정보 저장
 	socklen_t addrLen = sizeof(_clientAddress);
