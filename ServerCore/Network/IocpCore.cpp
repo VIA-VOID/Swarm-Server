@@ -465,7 +465,6 @@ void IocpCore::IOWorkerThread()
 			Session* session = reinterpret_cast<Session*>(completionKey);
 			if (session == nullptr)
 			{
-				std::cout << "sessionnull\n";
 				continue;
 			}
 
