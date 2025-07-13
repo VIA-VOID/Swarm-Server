@@ -55,9 +55,6 @@
     <ClCompile Include="Zone\TownZone.cpp">
       <Filter>Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\Vector3d.cpp">
-      <Filter>Zone</Filter>
-    </ClCompile>
     <ClCompile Include="Zone\WorldManager.cpp">
       <Filter>Zone</Filter>
     </ClCompile>
@@ -68,6 +65,12 @@
       <Filter>Object\Stat</Filter>
     </ClCompile>
     <ClCompile Include="Zone\ZoneGrid.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\SystemPacketHandler.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\Vector3d.cpp">
       <Filter>Zone</Filter>
     </ClCompile>
   </ItemGroup>
@@ -130,9 +133,6 @@
     <ClInclude Include="Zone\TownZone.h">
       <Filter>Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\Vector3d.h">
-      <Filter>Zone</Filter>
-    </ClInclude>
     <ClInclude Include="Zone\WorldManager.h">
       <Filter>Zone</Filter>
     </ClInclude>
@@ -146,6 +146,12 @@
       <Filter>Object\Stat</Filter>
     </ClInclude>
     <ClInclude Include="Zone\ZoneGrid.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\SystemPacketHandler.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\Vector3d.h">
       <Filter>Zone</Filter>
     </ClInclude>
   </ItemGroup>

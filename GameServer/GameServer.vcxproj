@@ -193,10 +193,11 @@
     <ClCompile Include="Object\Stat\BaseStatLoader.cpp" />
     <ClCompile Include="Object\Stat\BaseStat.cpp" />
     <ClCompile Include="Object\Stat\PlayerStatLoader.cpp" />
+    <ClCompile Include="Packet\SystemPacketHandler.cpp" />
     <ClCompile Include="Protocol\ProtoOperator.cpp" />
     <ClCompile Include="Object\Stat\StatManager.cpp" />
-    <ClCompile Include="Zone\ZoneGrid.cpp" />
     <ClCompile Include="Zone\Vector3d.cpp" />
+    <ClCompile Include="Zone\ZoneGrid.cpp" />
     <ClCompile Include="Zone\TownZone.cpp" />
     <ClCompile Include="Zone\BaseZone.cpp" />
     <ClCompile Include="Object\GameObject.cpp" />
@@ -237,10 +238,11 @@
     <ClInclude Include="Object\Stat\BaseStatLoader.h" />
     <ClInclude Include="Object\Stat\BaseStat.h" />
     <ClInclude Include="Object\Stat\PlayerStatLoader.h" />
+    <ClInclude Include="Packet\SystemPacketHandler.h" />
     <ClInclude Include="Protocol\ProtoOperator.h" />
     <ClInclude Include="Object\Stat\StatManager.h" />
-    <ClInclude Include="Zone\ZoneGrid.h" />
     <ClInclude Include="Zone\Vector3d.h" />
+    <ClInclude Include="Zone\ZoneGrid.h" />
     <ClInclude Include="Zone\TownZone.h" />
     <ClInclude Include="Zone\BaseZone.h" />
     <ClInclude Include="Object\ObjectDefine.h" />
