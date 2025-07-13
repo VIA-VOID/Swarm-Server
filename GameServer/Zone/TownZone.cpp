@@ -26,9 +26,9 @@ Vector3d TownZone::GetRandomSpawnPosition()
 	// todo: 맵 디자인 완료 후 스폰 zone 별도 생성, 현재는 맵 내 랜덤좌표
 	ZonePos zonePos = _zoneInfo.worldPos;
 
-	int32 randomX = Utils::GetRandom<int32>(zonePos.minX, zonePos.maxX);
-	int32 randomY = Utils::GetRandom<int32>(zonePos.minY, zonePos.maxY);
-	int32 worldZ = 180 * POS_REVISE_NUM;
-	int32 randomYaw = Utils::GetRandom<int32>(POS_REVISE_NUM, 180 * POS_REVISE_NUM);
+	float randomX = static_cast<float>(Utils::GetRandom<int32>(zonePos.minX, zonePos.maxX));
+	float randomY = static_cast<float>(Utils::GetRandom<int32>(zonePos.minY, zonePos.maxY));
+	float worldZ = 180.f;
+	float randomYaw = Utils::GetRandom<float>(-179.f, 179.f);
 	return Vector3d(randomX, randomY, worldZ, randomYaw, _zoneInfo.gridSize);
 }

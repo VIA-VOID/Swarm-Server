@@ -8,8 +8,8 @@ ZoneGrid::ZoneGrid(const ZoneInfo& zoneInfo)
 	int32 zoneY = worldPos.maxY - worldPos.minY;
 
 	// 최대 그리드 크기
-	int32 gridX = zoneX / (zoneInfo.gridSize * POS_REVISE_NUM) + 1;
-	int32 gridY = zoneY / (zoneInfo.gridSize * POS_REVISE_NUM) + 1;
+	int32 gridX = zoneX / zoneInfo.gridSize + 1;
+	int32 gridY = zoneY / zoneInfo.gridSize + 1;
 
 	// GridCell 크기에 맞게 리사이징
 	grid.resize(gridY);

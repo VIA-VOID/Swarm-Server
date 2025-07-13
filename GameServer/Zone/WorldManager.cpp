@@ -3,7 +3,6 @@
 #include "MapDataLoader.h"
 #include "TownZone.h"
 #include "Object/GameObject.h"
-#include "Object/Player/Player.h"
 #include "Utils/Utils.h"
 
 // 캐릭터 시야범위
@@ -40,6 +39,8 @@ void WorldManager::Shutdown()
 void WorldManager::ZoneGridUpdateWorkerThread()
 {
 	// todo
+
+
 }
 
 // Zone별 오브젝트 추가
@@ -164,7 +165,7 @@ void WorldManager::GetVisiblePlayersInZone(ZoneType zoneType, const Vector3d& po
 					if (gameObject->IsPlayer())
 					{
 						const PlayerRef& player = std::static_pointer_cast<Player>(gameObject);
-						if (player->IsWeakValid())
+						if (player->IsValid())
 						{
 							outPlayers.push_back(player);
 						}
@@ -210,11 +211,11 @@ void WorldManager::GetVisibleZones(const Vector3d& position, Vector<ZoneType>& o
 // 시야 범위에 Zone이 속하는지 여부
 bool WorldManager::IsInRange(const Vector3d& position, const ZonePos& worldPos, int32 gridSize)
 {
-	int32 playerWorldRange = playerVisibleRange * gridSize * POS_REVISE_NUM;
-	int32 playerMinX = position.GetWorldX() - playerWorldRange;
-	int32 playerMaxX = position.GetWorldX() + playerWorldRange;
-	int32 playerMinY = position.GetWorldY() - playerWorldRange;
-	int32 playerMaxY = position.GetWorldY() + playerWorldRange;
+	int32 playerWorldRange = playerVisibleRange * gridSize;
+	float playerMinX = position.GetWorldX() - playerWorldRange;
+	float playerMaxX = position.GetWorldX() + playerWorldRange;
+	float playerMinY = position.GetWorldY() - playerWorldRange;
+	float playerMaxY = position.GetWorldY() + playerWorldRange;
 
 	// 모든 축에서 겹치는지 확인
 	bool xOverlap = (playerMinX < worldPos.maxX) && (playerMaxX > worldPos.minX);

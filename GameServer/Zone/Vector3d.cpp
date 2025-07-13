@@ -2,17 +2,18 @@
 #include "Vector3d.h"
 
 Vector3d::Vector3d(const ZoneInfo& zoneInfo)
-	: _worldX(zoneInfo.worldPos.minX), _worldY(zoneInfo.worldPos.minY),
-	_worldZ(0), _worldYaw(0), _gridSize(zoneInfo.gridSize)
+	: _worldZ(0), _worldYaw(0), _gridSize(zoneInfo.gridSize)
 {
+	_worldX = static_cast<float>(zoneInfo.worldPos.minX);
+	_worldY = static_cast<float>(zoneInfo.worldPos.minY);
 }
 
-Vector3d::Vector3d(int32 worldX, int32 worldY, int32 gridSize)
+Vector3d::Vector3d(float worldX, float worldY, int32 gridSize)
 	: _worldX(worldX), _worldY(worldY), _worldZ(0), _worldYaw(0), _gridSize(gridSize)
 {
 }
 
-Vector3d::Vector3d(int32 worldX, int32 worldY, int32 worldZ, int32 worldYaw, int32 gridSize)
+Vector3d::Vector3d(float worldX, float worldY, float worldZ, float worldYaw, int32 gridSize)
 	: _worldX(worldX), _worldY(worldY), _worldZ(worldZ), _worldYaw(worldYaw), _gridSize(gridSize)
 {
 }
@@ -21,18 +22,9 @@ Vector3d::Vector3d(int32 worldX, int32 worldY, int32 worldZ, int32 worldYaw, int
 GridIndex Vector3d::MakeGridIndex(const ZonePos& zonePos) const
 {
 	GridIndex gridIndex;
-	gridIndex.x = (_worldX - zonePos.minX) / (_gridSize * POS_REVISE_NUM);
-	gridIndex.y = (_worldY - zonePos.minY) / (_gridSize * POS_REVISE_NUM);
+	gridIndex.x = static_cast<int32>((_worldX - zonePos.minX) / _gridSize);
+	gridIndex.y = static_cast<int32>((_worldY - zonePos.minY) / _gridSize);
 	return gridIndex;
-}
-
-void Vector3d::operator=(const Vector3d& other)
-{
-	_worldX = other._worldX;
-	_worldY = other._worldY;
-	_worldZ = other._worldZ;
-	_worldYaw = other._worldYaw;
-	_gridSize = other._gridSize;
 }
 
 Vector3d Vector3d::operator+(const Vector3d& other) const
@@ -79,22 +71,22 @@ Vector3d& Vector3d::operator/=(const Vector3d& other)
 	return *this;
 }
 
-int32 Vector3d::GetWorldX() const
+float Vector3d::GetWorldX() const
 {
 	return _worldX;
 }
 
-int32 Vector3d::GetWorldY() const
+float Vector3d::GetWorldY() const
 {
 	return _worldY;
 }
 
-int32 Vector3d::GetWorldZ() const
+float Vector3d::GetWorldZ() const
 {
 	return _worldZ;
 }
 
-int32 Vector3d::GetWorldYaw() const
+float Vector3d::GetWorldYaw() const
 {
 	return _worldYaw;
 }
