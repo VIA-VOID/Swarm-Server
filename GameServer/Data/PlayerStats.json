@@ -12,7 +12,7 @@
         "maxMp": 30,
         "attack": 18,
         "defense": 15,
-        "moveSpeed": 450,
+        "moveSpeed": 500,
         "attackSpeed": 90
       },
       "growth": {
@@ -35,7 +35,7 @@
         "maxMp": 30,
         "attack": 18,
         "defense": 15,
-        "moveSpeed": 450,
+        "moveSpeed": 500,
         "attackSpeed": 90
       },
       "growth": {
@@ -58,7 +58,7 @@
         "maxMp": 30,
         "attack": 18,
         "defense": 15,
-        "moveSpeed": 450,
+        "moveSpeed": 500,
         "attackSpeed": 90
       },
       "growth": {
