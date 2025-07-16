@@ -3,6 +3,7 @@
 
 // 자동생성
 // 도메인별 핸들러 include
+#include "SystemPacketHandler.h"
 #include "PlayerPacketHandler.h"
 #include "ChatPacketHandler.h"
 
@@ -13,6 +14,7 @@ PacketClass PacketHandler::_domainHandlerClasses;
 // 자동생성 코드
 void PacketHandler::Init()
 {
+	_domainHandlerClasses.emplace_back(ObjectPool<SystemPacketHandler>::MakeUnique());
 	_domainHandlerClasses.emplace_back(ObjectPool<PlayerPacketHandler>::MakeUnique());
 	_domainHandlerClasses.emplace_back(ObjectPool<ChatPacketHandler>::MakeUnique());
 
