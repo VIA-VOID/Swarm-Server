@@ -67,10 +67,3 @@ struct GridIndex
 		return !(*this == other);
 	}
 };
-
-// Zone 분할 단위
-struct GridCell
-{
-	HashMap<ObjectId, GameObjectRef> objects;
-	bool isUpdate;
-};
