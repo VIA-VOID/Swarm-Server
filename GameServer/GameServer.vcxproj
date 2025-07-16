@@ -197,7 +197,7 @@
     <ClCompile Include="Protocol\ProtoOperator.cpp" />
     <ClCompile Include="Object\Stat\StatManager.cpp" />
     <ClCompile Include="Zone\Vector3d.cpp" />
-    <ClCompile Include="Zone\ZoneGrid.cpp" />
+    <ClCompile Include="Zone\Sector.cpp" />
     <ClCompile Include="Zone\TownZone.cpp" />
     <ClCompile Include="Zone\BaseZone.cpp" />
     <ClCompile Include="Object\GameObject.cpp" />
@@ -242,7 +242,7 @@
     <ClInclude Include="Protocol\ProtoOperator.h" />
     <ClInclude Include="Object\Stat\StatManager.h" />
     <ClInclude Include="Zone\Vector3d.h" />
-    <ClInclude Include="Zone\ZoneGrid.h" />
+    <ClInclude Include="Zone\Sector.h" />
     <ClInclude Include="Zone\TownZone.h" />
     <ClInclude Include="Zone\BaseZone.h" />
     <ClInclude Include="Object\ObjectDefine.h" />

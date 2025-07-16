@@ -64,7 +64,7 @@
     <ClCompile Include="Object\Stat\StatManager.cpp">
       <Filter>Object\Stat</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\ZoneGrid.cpp">
+    <ClCompile Include="Zone\Sector.cpp">
       <Filter>Zone</Filter>
     </ClCompile>
     <ClCompile Include="Packet\SystemPacketHandler.cpp">
@@ -145,7 +145,7 @@
     <ClInclude Include="Object\Stat\StatManager.h">
       <Filter>Object\Stat</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\ZoneGrid.h">
+    <ClInclude Include="Zone\Sector.h">
       <Filter>Zone</Filter>
     </ClInclude>
     <ClInclude Include="Packet\SystemPacketHandler.h">
