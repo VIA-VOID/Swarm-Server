@@ -21,75 +21,88 @@ void WorldManager::Init()
 	}
 	// zone 초기화
 	InitZones();
-	// Zone별 Grid 초기화
-	InitZoneGrids();
+	// Sector 초기화
+	InitSectors();
 	// ZoneGrid 업데이트 스레드 생성
-	ThreadMgr.LaunchFrame("ZoneGrid", 1, [this]() { ZoneGridUpdateWorkerThread(); });
+	ThreadMgr.LaunchFrame("ZoneGrid", 1, [this]() { SectorUpdateWorkerThread(); });
 }
 
 void WorldManager::Shutdown()
 {
 	LOCK_GUARD;
-	
-	_zoneGrids.clear();
+
+	_zoneSectors.clear();
 	_zones.clear();
 }
 
 // ZoneGrid 주기적 업데이트
-void WorldManager::ZoneGridUpdateWorkerThread()
+void WorldManager::SectorUpdateWorkerThread()
 {
-	// todo
+	// 빈 sector 정리
+	ClearAllEmptySector();
 
 
 }
 
-// Zone별 오브젝트 추가
-void WorldManager::AddObjectToZone(GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex)
+// 시야내 GameObject 목록 업데이트
+void WorldManager::UpdateVisible()
 {
-	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
-	if (zoneGrid == nullptr)
+
+}
+
+// Sector별 오브젝트 추가
+void WorldManager::AddObjectToSector(GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex)
+{
+	Sector* sector = FindSector(zoneType);
+	if (sector == nullptr)
 	{
 		return;
 	}
 	// 그리드 범위 유효성 검사
-	if (zoneGrid->IsValidGridIndex(gridIndex) == false)
+	if (sector->IsValidGridIndex(gridIndex) == false)
 	{
 		return;
 	}
 	{
-		GROUP_LOCK_GUARD(*zoneGrid);
-		
-		// 셀에 오브젝트 추가
-		GridCell& cell = zoneGrid->grid[gridIndex.y][gridIndex.x];
-		cell.objects.insert({ obj->GetObjectId(), obj });
-		cell.isUpdate = true;
+		GROUP_LOCK_GUARD(*sector);
+
+		// Sector에 오브젝트 추가
+		SectorId sectorId(gridIndex);
+		auto& objectSector = sector->sectors[sectorId];
+		objectSector.insert({ obj->GetObjectId(), obj });
 	}
 }
 
 // 오브젝트 제거
-void WorldManager::RemoveObjectToZone(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex)
+void WorldManager::RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex)
 {
-	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
-	if (zoneGrid == nullptr)
+	Sector* sector = FindSector(zoneType);
+	if (sector == nullptr)
 	{
 		return;
 	}
 	// 그리드 범위 유효성 검사
-	if (zoneGrid->IsValidGridIndex(gridIndex) == false)
+	if (sector->IsValidGridIndex(gridIndex) == false)
 	{
 		return;
 	}
 	{
-		GROUP_LOCK_GUARD(*zoneGrid);
-		
+		GROUP_LOCK_GUARD(*sector);
+
 		// 셀에 오브젝트 제거
-		GridCell& cell = zoneGrid->grid[gridIndex.y][gridIndex.x];
-		auto it = cell.objects.find(objId);
-		if (it != cell.objects.end())
+		SectorId sectorId(gridIndex);
+
+		auto sectorIt = sector->sectors.find(sectorId);
+		if (sectorIt != sector->sectors.end())
 		{
-			cell.objects.erase(it);
-			cell.isUpdate = true;
-			return;
+			auto& objectSector = sectorIt->second;
+			objectSector.erase(objId);
+
+			// 빈 sector 제거
+			if (objectSector.empty())
+			{
+				sector->sectors.erase(sectorIt);
+			}
 		}
 	}
 }
@@ -110,11 +123,11 @@ void WorldManager::InitZones()
 }
 
 // Zone별 Grid 초기화
-void WorldManager::InitZoneGrids()
+void WorldManager::InitSectors()
 {
-	for (const ZoneInfo& zoneInfo : _mapData.zones) 
+	for (const ZoneInfo& zoneInfo : _mapData.zones)
 	{
-		_zoneGrids[zoneInfo.zoneType] = ObjectPool<ZoneGrid>::MakeUnique(zoneInfo);
+		_zoneSectors[zoneInfo.zoneType] = ObjectPool<Sector>::MakeUnique(zoneInfo);
 	}
 }
 
@@ -128,47 +141,56 @@ bool WorldManager::IsVaildGridIndex(const GridIndex& gridIndex) const
 	return true;
 }
 
-// 시야 내의 플레이어의 Id 목록 가져오기
+// 시야 내의 GameObject 목록 가져오기
 // 단일 Zone 검색
-void WorldManager::GetVisiblePlayersInZone(ZoneType zoneType, const Vector3d& position, Vector<PlayerRef>& outPlayers)
+void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer /*= true*/)
 {
-	ZoneGrid* zoneGrid = FindZoneGrid(zoneType);
-	if (zoneGrid == nullptr)
+	Sector* sector = FindSector(zoneType);
+	if (sector == nullptr)
 	{
 		return;
 	}
 	{
-		GROUP_LOCK_GUARD(*zoneGrid);
-		
-		// 시야범위
-		GridIndex gridIndex = position.MakeGridIndex(zoneGrid->worldPos);
-		int32 startX = max(0, gridIndex.x - playerVisibleRange);
-		int32 startY = max(0, gridIndex.y - playerVisibleRange);
-		int32 endX = min(static_cast<int32>(zoneGrid->grid[0].size()) - 1, gridIndex.x + playerVisibleRange);
-		int32 endY = min(static_cast<int32>(zoneGrid->grid.size()) - 1, gridIndex.y + playerVisibleRange);
+		GROUP_LOCK_GUARD(*sector);
 
-		outPlayers.reserve(playerVisibleRange);
+		GridIndex gridIndex = position.MakeGridIndex(sector->zoneInfo.worldPos);
+		Vector<SectorId> sectorIds;
+		GetVisibleSectorIds(gridIndex, sectorIds);
 
-		// 플레이어 id 삽입
-		for (int32 y = startY; y <= endY; y++) 
+		// 시야범위 내 오브젝트 가져오기
+		for (const SectorId& sectorId : sectorIds)
 		{
-			for (int32 x = startX; x <= endX; x++) 
+			auto sectorIt = sector->sectors.find(sectorId);
+			if (sectorIt == sector->sectors.end())
 			{
-				GridCell& cell = zoneGrid->grid[y][x];
-				if (cell.objects.empty()) 
+				continue;
+			}
+
+			const auto& objSectors = sectorIt->second;
+			for (const auto& objSector : objSectors)
+			{
+				const GameObjectRef obj = objSector.second;
+				GridIndex objGrid = obj->GetCurrentGrid();
+
+				// 그리드 범위 체크
+				if (IsInGridRange(gridIndex, objGrid) == false)
 				{
 					continue;
 				}
-				for (auto it = cell.objects.begin(); it != cell.objects.end(); ++it)
+
+				if (obj->IsPlayer())
 				{
-					const GameObjectRef& gameObject = it->second;
-					if (gameObject->IsPlayer())
+					const PlayerRef& player = std::static_pointer_cast<Player>(obj);
+					if (player->IsValid())
 					{
-						const PlayerRef& player = std::static_pointer_cast<Player>(gameObject);
-						if (player->IsValid())
-						{
-							outPlayers.push_back(player);
-						}
+						outObjects.push_back(player);
+					}
+				}
+				else
+				{
+					if (onlyPlayer == false)
+					{
+						outObjects.push_back(obj);
 					}
 				}
 			}
@@ -177,9 +199,9 @@ void WorldManager::GetVisiblePlayersInZone(ZoneType zoneType, const Vector3d& po
 	}
 }
 
-// 시야 내 플레이어 검색
+// 시야 내 GameObject 검색
 // 여러 Zone 검색
-void WorldManager::GetVisiblePlayersInZones(const Vector3d& position, Vector<PlayerRef>& outPlayers)
+void WorldManager::GetVisibleObjectsInSectors(const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer /*= true*/)
 {
 	Vector<ZoneType> zoneTypes;
 	GetVisibleZones(position, zoneTypes);
@@ -187,8 +209,37 @@ void WorldManager::GetVisiblePlayersInZones(const Vector3d& position, Vector<Pla
 	// 각 zoneType별 시야내에 속하는 objectId 가져오기
 	for (ZoneType zoneType : zoneTypes)
 	{
-		GetVisiblePlayersInZone(zoneType, position, outPlayers);
+		GetVisibleObjectsInSector(zoneType, position, outObjects, onlyPlayer);
 	}
+}
+
+// 월드좌표가 유효한지 판별
+bool WorldManager::IsValidWorldPosition(const Protocol::PosInfo& posInfo) const
+{
+	if ((_mapData.worldMinX > posInfo.x() && _mapData.worldMaxX < posInfo.x()) ||
+		_mapData.worldMinY > posInfo.y() && _mapData.worldMaxY < posInfo.y())
+	{
+		return false;
+	}
+	return true;
+}
+
+// 이동가능한 지점인지 판별
+// - 월드좌표로 인자를 받고, 내부에서 그리드 좌표로 변환해서 판별
+bool WorldManager::CanGo(float worldX, float worldY)
+{
+	Vector3d worldVector(worldX, worldY, _mapData.gridSize);
+	ZoneType currentZone = GetZoneByPosition(worldVector);
+	ZonePos zonePos = GetZonePositionByType(currentZone);
+	
+	// 유효성 검사
+	GridIndex gridIndex = worldVector.MakeGridIndex(zonePos);
+	if (IsVaildGridIndex(gridIndex) == false)
+	{
+		return false;
+	}
+	// 이동가능여부
+	return _mapData.mapGrid[gridIndex.y][gridIndex.x];
 }
 
 // 시야 범위에 포함되는 Zone 목록 가져오기
@@ -199,11 +250,34 @@ void WorldManager::GetVisibleZones(const Vector3d& position, Vector<ZoneType>& o
 	outZoneTypes.push_back(currentZone);
 
 	// 시야 범위내에 다른 zone이 있다면 삽입
-	for (const ZoneInfo& zoneInfo : _mapData.zones) 
+	for (const ZoneInfo& zoneInfo : _mapData.zones)
 	{
 		if (zoneInfo.zoneType != currentZone && IsInRange(position, zoneInfo.worldPos, _mapData.gridSize))
 		{
 			outZoneTypes.push_back(zoneInfo.zoneType);
+		}
+	}
+}
+
+// 시야내의 SectorId 가져오기
+void WorldManager::GetVisibleSectorIds(const GridIndex& gridIndex, Vector<SectorId>& outSectorIds)
+{
+	int32 minGridX = max(0, gridIndex.x - playerVisibleRange);
+	int32 maxGridX = min(_mapData.gridX, gridIndex.x + playerVisibleRange);
+	int32 minGridY = max(0, gridIndex.y - playerVisibleRange);
+	int32 maxGridY = min(_mapData.gridY, gridIndex.y + playerVisibleRange);
+
+	// 그리드 좌표를 섹터 좌표로 변환
+	int32 startSectorX = minGridX / SECTOR_SIZE;
+	int32 endSectorX = maxGridX / SECTOR_SIZE;
+	int32 startSectorY = minGridY / SECTOR_SIZE;
+	int32 endSectorY = maxGridY / SECTOR_SIZE;
+
+	for (int32 sectorY = startSectorY; sectorY <= endSectorY; sectorY++)
+	{
+		for (int32 sectorX = startSectorX; sectorX <= endSectorX; sectorX++)
+		{
+			outSectorIds.emplace_back(sectorX, sectorY);
 		}
 	}
 }
@@ -224,21 +298,36 @@ bool WorldManager::IsInRange(const Vector3d& position, const ZonePos& worldPos, 
 	return xOverlap && yOverlap;
 }
 
+// 그리드 범위 체크
+bool WorldManager::IsInGridRange(const GridIndex& gridIndex, const GridIndex& target)
+{
+	int32 dx = abs(gridIndex.x - target.x);
+	int32 dy = abs(gridIndex.y - target.y);
+	return (dx <= playerVisibleRange && dy <= playerVisibleRange);
+}
+
 // 월드 좌표로 Zone 타입 찾기
 ZoneType WorldManager::GetZoneByPosition(const Vector3d& position) const
 {
-	for (const ZoneInfo& zoneInfo : _mapData.zones) 
+	for (const ZoneInfo& zoneInfo : _mapData.zones)
 	{
 		const ZonePos& zonePos = zoneInfo.worldPos;
 
 		if (position.GetWorldX() >= zonePos.minX && position.GetWorldX() < zonePos.maxX
-			&& position.GetWorldY() >= zonePos.minY && position.GetWorldY() < zonePos.maxY) 
+			&& position.GetWorldY() >= zonePos.minY && position.GetWorldY() < zonePos.maxY)
 		{
 			return zoneInfo.zoneType;
 		}
 	}
 	// 기본값
 	return ZoneType::Town;
+}
+
+// ZonePos 가져오기
+ZonePos WorldManager::GetZonePosByType(const ZoneType zoneType)
+{
+	BaseZone* baseZone = FindZone(zoneType);
+	return baseZone->GetWorldPosition();
 }
 
 // zone 가져오기
@@ -253,14 +342,42 @@ BaseZone* WorldManager::FindZone(const ZoneType zoneType)
 	return nullptr;
 }
 
-// zoneGrid 가져오기
-ZoneGrid* WorldManager::FindZoneGrid(const ZoneType zoneType)
+// Sector 가져오기
+Sector* WorldManager::FindSector(const ZoneType zoneType)
 {
-	auto findit = _zoneGrids.find(zoneType);
-	if (findit != _zoneGrids.end())
+	auto findit = _zoneSectors.find(zoneType);
+	if (findit != _zoneSectors.end())
 	{
 		return findit->second.get();
 	}
-	CRASH("NOT INIT GRID!!");
+	CRASH("NOT INIT SECTOR!!");
 	return nullptr;
+}
+
+// ZoneType으로 해당 Zone의 좌표범위 가져오기
+ZonePos WorldManager::GetZonePositionByType(const ZoneType zoneType)
+{
+	return _mapData.zones[static_cast<uint8>(zoneType)].worldPos;
+}
+
+// empty sector 정리
+void WorldManager::ClearAllEmptySector()
+{
+	for (auto& sector : _zoneSectors)
+	{
+		Sector* getSector = sector.second.get();
+		GROUP_LOCK_GUARD(*getSector);
+
+		for (auto it = getSector->sectors.begin(); it != getSector->sectors.end();)
+		{
+			if (it->second.empty())
+			{
+				it = getSector->sectors.erase(it);
+			}
+			else
+			{
+				++it;
+			}
+		}
+	}
 }
