@@ -44,6 +44,8 @@ public:
 	void OnSendCompleted(int32 bytesTransferred);
 	// 타임아웃 체크
 	bool IsTimeout(std::chrono::seconds timeout = TIMEOUT_SECONDS) const;
+	// RTT 업데이트
+	void updateRoundTripTime(int32 roundTripTime);
 
 	// getter -
 	// 세션 ID 얻기
@@ -60,6 +62,8 @@ public:
 	void DetachPlayer();
 	// 세션 close 여부
 	bool IsClosed();
+	// RTT 평균값 가져오기
+	int32 GetRttAvg() const;
 
 private:
 	// 자원정리
@@ -90,8 +94,12 @@ private:
 	SendContext _sendContext;
 
 	// 버퍼 관련
-	Deque<SendBufferRef> _sendDequeue;
+	Deque<SendBufferRef> _sendDeque;
 	std::atomic<bool> _sending;
+
+	// RTT
+	int32 _avgRoundTripTime;
+	Deque<int32> _rttDeque;
 
 	// 서비스
 	CoreService* _service;

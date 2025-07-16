@@ -27,6 +27,9 @@ constexpr uint32 MAX_SEND_BUFFER_COUNT = 10;
 const uint16 MAX_WORKER_THREAD_NUM = static_cast<uint16>(CPU_THREAD_COUNT * 1.5);
 // 업데이트 주기(프레임)
 constexpr std::chrono::milliseconds FRAME_INTERVAL = std::chrono::milliseconds(50);
+// RTT 평균 측정 개수
+constexpr uint16 AVG_RTT_COUNT = 10;
+
 // 네트워크 I/O 타입
 enum class NetworkIOType : uint16
 {

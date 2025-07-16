@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Session.h"
 #include "SessionManager.h"
+#include <numeric>
 
 /*----------------------------
 		Session
@@ -8,7 +9,8 @@
 
 Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
-	_clientAddress({}), _lastRecvTime(NOW), _lastSendTime(NOW), _connectedTime(NOW), _service(nullptr), _playerClass(nullptr)
+	_clientAddress({}), _lastRecvTime(NOW), _lastSendTime(NOW), _connectedTime(NOW), _service(nullptr), _playerClass(nullptr),
+	_avgRoundTripTime(0)
 {
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
@@ -102,7 +104,7 @@ void Session::Send(const SendBufferRef& sendBuffer)
 	bool processSend = false;
 	{
 		LOCK_GUARD;
-		_sendDequeue.push_back(sendBuffer);
+		_sendDeque.push_back(sendBuffer);
 
 		if (_sending.exchange(true) == false)
 		{
@@ -129,6 +131,12 @@ bool Session::IsClosed()
 	return _isClosed.load();
 }
 
+// RTT 평균값 가져오기
+int32 Session::GetRttAvg() const
+{
+	return _avgRoundTripTime <= 0 ? 1 : _avgRoundTripTime;
+}
+
 // 자원정리
 void Session::CloseResource()
 {
@@ -142,7 +150,7 @@ void Session::CloseResource()
 	{
 		LOCK_GUARD;
 		_sendContext.buffers.clear();
-		_sendDequeue.clear();
+		_sendDeque.clear();
 	}
 }
 
@@ -203,10 +211,10 @@ void Session::ProcessSend()
 
 		ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
 		
-		while (_sendDequeue.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
+		while (_sendDeque.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
 		{
-			SendBufferRef buffer = _sendDequeue.front();
-			_sendDequeue.pop_front();
+			SendBufferRef buffer = _sendDeque.front();
+			_sendDeque.pop_front();
 
 			if (buffer == nullptr || buffer->IsCompleted())
 			{
@@ -370,10 +378,10 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		// 부분 전송된 버퍼가 있다면, 다음에 전송하기 위해 _sendDequeue 앞쪽에 삽입함
 		for (auto it = remainSendBuffer.rbegin(); it != remainSendBuffer.rend(); ++it)
 		{
-			_sendDequeue.push_front(*it);
+			_sendDeque.push_front(*it);
 		}
 		// 남은데이터가 있으면 지역변수 flag 변경
-		if (_sendDequeue.empty() == false)
+		if (_sendDeque.empty() == false)
 		{
 			processSend = true;
 		}
@@ -398,6 +406,23 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 bool Session::IsTimeout(std::chrono::seconds timeout /*= TIMEOUT_SECONDS*/) const
 {
 	return (NOW - _lastSendTime) > timeout;
+}
+
+// RTT 업데이트
+void Session::updateRoundTripTime(int32 roundTripTime)
+{
+	if (_rttDeque.size() >= AVG_RTT_COUNT)
+	{
+		_rttDeque.pop_front();
+	}
+
+	_rttDeque.push_back(roundTripTime);
+
+	if (_rttDeque.empty() == false)
+	{
+		int32 sum = std::accumulate(_rttDeque.begin(), _rttDeque.end(), 0);
+		_avgRoundTripTime = sum / static_cast<int32>(_rttDeque.size());
+	}
 }
 
 // 세션 ID 얻기
