@@ -12,6 +12,9 @@ constexpr uint32 BUFFER_SIZE = 8196;
 constexpr std::chrono::seconds TIMEOUT_SECONDS(300);
 // 하트비트 주기 (10초)
 constexpr uint64 HEART_BEAT_INTERVAL = 10000;
+// PING - PONG 개수차 (하트비트 주기 * 수 = 시간)
+// 초과시 세션 닫음
+constexpr uint64 PING_PONG_DIFF = 6;
 // 최대 패킷 크기 (2KB)
 constexpr uint32 MAX_PACKET_SIZE = 2048;
 // Connect 버퍼 크기

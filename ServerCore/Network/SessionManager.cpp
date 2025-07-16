@@ -113,7 +113,15 @@ void SessionManager::Heartbeat(CoreService* service)
 	{
 		for (auto& session : liveSessions)
 		{
-			service->OnHeartbeat(session);
+			// 클라이언트가 일정 수만큼 응답이 없을 경우 세션 닫음
+			if (session->GetPingCount() - session->GetPongCount() >= PING_PONG_DIFF)
+			{
+				session->Close();
+			}
+			else
+			{
+				service->OnHeartbeat(session);
+			}
 		}
 	}
 }

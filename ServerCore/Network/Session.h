@@ -46,6 +46,10 @@ public:
 	bool IsTimeout(std::chrono::seconds timeout = TIMEOUT_SECONDS) const;
 	// RTT 업데이트
 	void updateRoundTripTime(int32 roundTripTime);
+	// PingCount 증가
+	void IncreasePingCount();
+	// PongCount 증가
+	void IncreasePongCount();
 
 	// getter -
 	// 세션 ID 얻기
@@ -64,6 +68,10 @@ public:
 	bool IsClosed();
 	// RTT 평균값 가져오기
 	int32 GetRttAvg() const;
+	// PingCount 가져오기
+	uint64 GetPingCount() const;
+	// PongCount 가져오기
+	uint64 GetPongCount() const;
 
 private:
 	// 자원정리
@@ -100,6 +108,10 @@ private:
 	// RTT
 	int32 _avgRoundTripTime;
 	Deque<int32> _rttDeque;
+
+	// PING & PONG (HeartBeat)
+	uint64 _pingCount;
+	uint64 _pongCount;
 
 	// 서비스
 	CoreService* _service;

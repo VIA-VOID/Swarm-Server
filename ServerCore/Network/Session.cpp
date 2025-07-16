@@ -10,7 +10,7 @@
 Session::Session()
 	: _socket(INVALID_SOCKET), _iocpHandle(INVALID_HANDLE_VALUE), _sessionID(SessionID::Generate()),
 	_clientAddress({}), _lastRecvTime(NOW), _lastSendTime(NOW), _connectedTime(NOW), _service(nullptr), _playerClass(nullptr),
-	_avgRoundTripTime(0)
+	_avgRoundTripTime(0), _pingCount(0), _pongCount(0)
 {
 	_recvContext.type = NetworkIOType::Recv;
 	_sendContext.type = NetworkIOType::Send;
@@ -116,145 +116,6 @@ void Session::Send(const SendBufferRef& sendBuffer)
 	if (processSend)
 	{
 		ProcessSend();
-	}
-}
-
-// 유저 클래스 포인터 참조 정리
-void Session::DetachPlayer()
-{
-	_playerClass = nullptr;
-}
-
-// 세션 close 여부
-bool Session::IsClosed()
-{
-	return _isClosed.load();
-}
-
-// RTT 평균값 가져오기
-int32 Session::GetRttAvg() const
-{
-	return _avgRoundTripTime <= 0 ? 1 : _avgRoundTripTime;
-}
-
-// 자원정리
-void Session::CloseResource()
-{
-	// 소켓 닫기
-	if (_socket != INVALID_SOCKET)
-	{
-		::closesocket(_socket);
-		_socket = INVALID_SOCKET;
-	}
-	// 송신 큐 비우기
-	{
-		LOCK_GUARD;
-		_sendContext.buffers.clear();
-		_sendDeque.clear();
-	}
-}
-
-// WSARecv 실행
-void Session::ProcessRecv()
-{
-	// 초기화
-	ZeroMemory(&_recvContext.overlapped, sizeof(_recvContext.overlapped));
-
-	// wsabuf 세팅
-	WSABUF wsabuf;
-	_recvContext.recvBuffer.GetWSABUF(wsabuf);
-
-	// 수신 가능한 공간이 없으면 버퍼 정리
-	if (wsabuf.len == 0)
-	{
-		// 정리 시도 후 다시 wsabuf 세팅
-		_recvContext.recvBuffer.Compact();
-		_recvContext.recvBuffer.GetWSABUF(wsabuf);
-		
-		// 그래도 없으면 세션종료
-		if (wsabuf.len == 0)
-		{
-			LOG_ERROR("RecvBuffer 공간 부족");
-			Close();
-			return;
-		}
-	}
-
-	DWORD recvBytes = 0;
-	DWORD flags = 0;
-	if (::WSARecv(_socket, &wsabuf, 1, &recvBytes, &flags, reinterpret_cast<OVERLAPPED*>(&_recvContext), NULL) == SOCKET_ERROR)
-	{
-		int32 errorCode = ::WSAGetLastError();
-		if (errorCode != WSA_IO_PENDING)
-		{
-			// 세션종료
-			int32 errorCode = ::WSAGetLastError();
-			LogError("WSARecv 실패, 해당 세션 종료", errorCode);
-			Close();
-		}
-	}
-}
-
-// WSASend 실행
-void Session::ProcessSend()
-{
-	// 한 번에 최대 MAX_SEND_BUFFER_COUNT개의 버퍼를 보냄
-	Vector<SendBufferRef> sendBuffers;
-	sendBuffers.reserve(MAX_SEND_BUFFER_COUNT);
-	
-	WSABUF wsabufs[MAX_SEND_BUFFER_COUNT];
-	uint32 sendCount = 0;
-	
-	// 보내야할 패킷 꺼내기
-	{
-		LOCK_GUARD;
-
-		ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
-		
-		while (_sendDeque.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
-		{
-			SendBufferRef buffer = _sendDeque.front();
-			_sendDeque.pop_front();
-
-			if (buffer == nullptr || buffer->IsCompleted())
-			{
-				continue;
-			}
-
-			// wsabuf 세팅
-			buffer->GetWSABUF(wsabufs[sendCount]);
-			sendBuffers.push_back(buffer);
-			++sendCount;
-		}
-	}
-
-	// 보낼 데이터가 없다면 송신 종료
-	if (sendCount == 0)
-	{
-		_sending.store(false);
-		return;
-	}
-
-	// 비동기 송신 요청
-	DWORD sendBytes = 0;
-	if (::WSASend(_socket, wsabufs, sendCount, &sendBytes, 0, reinterpret_cast<OVERLAPPED*>(&_sendContext), NULL) == SOCKET_ERROR)
-	{
-		int32 errorCode = ::WSAGetLastError();
-		if (errorCode != WSA_IO_PENDING)
-		{
-			// 전송실패 - 모든 버퍼 해제
-			int32 errorCode = ::WSAGetLastError();
-			LogError("WSASend 실패, 해당 세션 종료", errorCode);
-			Close();
-			return;
-		}
-	}
-	// send 성공 시 _sendContext.buffers에 저장
-	{
-		LOCK_GUARD;
-
-		_sendContext.buffers.clear();
-		_sendContext.buffers = std::move(sendBuffers);
 	}
 }
 
@@ -425,6 +286,18 @@ void Session::updateRoundTripTime(int32 roundTripTime)
 	}
 }
 
+// PingCount 증가
+void Session::IncreasePingCount()
+{
+	++_pingCount;
+}
+
+// PongCount 증가
+void Session::IncreasePongCount()
+{
+	++_pongCount;
+}
+
 // 세션 ID 얻기
 SessionID Session::GetSessionID() const
 {
@@ -435,6 +308,157 @@ SessionID Session::GetSessionID() const
 SOCKET Session::GetSocket() const
 {
 	return _socket;
+}
+
+// 유저 클래스 포인터 참조 정리
+void Session::DetachPlayer()
+{
+	_playerClass = nullptr;
+}
+
+// 세션 close 여부
+bool Session::IsClosed()
+{
+	return _isClosed.load();
+}
+
+// RTT 평균값 가져오기
+int32 Session::GetRttAvg() const
+{
+	return _avgRoundTripTime <= 0 ? 1 : _avgRoundTripTime;
+}
+
+// PingCount 가져오기
+uint64 Session::GetPingCount() const
+{
+	return _pingCount;
+}
+
+// PongCount 가져오기
+uint64 Session::GetPongCount() const
+{
+	return _pongCount;
+}
+
+// 자원정리
+void Session::CloseResource()
+{
+	// 소켓 닫기
+	if (_socket != INVALID_SOCKET)
+	{
+		::closesocket(_socket);
+		_socket = INVALID_SOCKET;
+	}
+	// 송신 큐 비우기
+	{
+		LOCK_GUARD;
+		_sendContext.buffers.clear();
+		_sendDeque.clear();
+	}
+}
+
+// WSARecv 실행
+void Session::ProcessRecv()
+{
+	// 초기화
+	ZeroMemory(&_recvContext.overlapped, sizeof(_recvContext.overlapped));
+
+	// wsabuf 세팅
+	WSABUF wsabuf;
+	_recvContext.recvBuffer.GetWSABUF(wsabuf);
+
+	// 수신 가능한 공간이 없으면 버퍼 정리
+	if (wsabuf.len == 0)
+	{
+		// 정리 시도 후 다시 wsabuf 세팅
+		_recvContext.recvBuffer.Compact();
+		_recvContext.recvBuffer.GetWSABUF(wsabuf);
+		
+		// 그래도 없으면 세션종료
+		if (wsabuf.len == 0)
+		{
+			LOG_ERROR("RecvBuffer 공간 부족");
+			Close();
+			return;
+		}
+	}
+
+	DWORD recvBytes = 0;
+	DWORD flags = 0;
+	if (::WSARecv(_socket, &wsabuf, 1, &recvBytes, &flags, reinterpret_cast<OVERLAPPED*>(&_recvContext), NULL) == SOCKET_ERROR)
+	{
+		int32 errorCode = ::WSAGetLastError();
+		if (errorCode != WSA_IO_PENDING)
+		{
+			// 세션종료
+			int32 errorCode = ::WSAGetLastError();
+			LogError("WSARecv 실패, 해당 세션 종료", errorCode);
+			Close();
+		}
+	}
+}
+
+// WSASend 실행
+void Session::ProcessSend()
+{
+	// 한 번에 최대 MAX_SEND_BUFFER_COUNT개의 버퍼를 보냄
+	Vector<SendBufferRef> sendBuffers;
+	sendBuffers.reserve(MAX_SEND_BUFFER_COUNT);
+	
+	WSABUF wsabufs[MAX_SEND_BUFFER_COUNT];
+	uint32 sendCount = 0;
+	
+	// 보내야할 패킷 꺼내기
+	{
+		LOCK_GUARD;
+
+		ZeroMemory(&_sendContext.overlapped, sizeof(_sendContext.overlapped));
+		
+		while (_sendDeque.empty() == false && MAX_SEND_BUFFER_COUNT > sendCount)
+		{
+			SendBufferRef buffer = _sendDeque.front();
+			_sendDeque.pop_front();
+
+			if (buffer == nullptr || buffer->IsCompleted())
+			{
+				continue;
+			}
+
+			// wsabuf 세팅
+			buffer->GetWSABUF(wsabufs[sendCount]);
+			sendBuffers.push_back(buffer);
+			++sendCount;
+		}
+	}
+
+	// 보낼 데이터가 없다면 송신 종료
+	if (sendCount == 0)
+	{
+		_sending.store(false);
+		return;
+	}
+
+	// 비동기 송신 요청
+	DWORD sendBytes = 0;
+	if (::WSASend(_socket, wsabufs, sendCount, &sendBytes, 0, reinterpret_cast<OVERLAPPED*>(&_sendContext), NULL) == SOCKET_ERROR)
+	{
+		int32 errorCode = ::WSAGetLastError();
+		if (errorCode != WSA_IO_PENDING)
+		{
+			// 전송실패 - 모든 버퍼 해제
+			int32 errorCode = ::WSAGetLastError();
+			LogError("WSASend 실패, 해당 세션 종료", errorCode);
+			Close();
+			return;
+		}
+	}
+	// send 성공 시 _sendContext.buffers에 저장
+	{
+		LOCK_GUARD;
+
+		_sendContext.buffers.clear();
+		_sendContext.buffers = std::move(sendBuffers);
+	}
 }
 
 // 로그 찍기
