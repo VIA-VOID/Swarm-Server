@@ -34,7 +34,6 @@ public:
 	ZoneType GetCurrentZone() const;
 	GridIndex GetCurrentGrid() const;
 
-
 protected:
 	// Object 공용 정보(Protocol::ObjectInfo) 만들기
 	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType);

@@ -14,6 +14,7 @@ GameObject::~GameObject()
 {
 }
 
+// ObjectId 가져오기
 ObjectId GameObject::GetObjectId() const
 {
 	return _objectId;
@@ -36,6 +37,8 @@ void GameObject::SetWorldPosition(const Protocol::PosInfo& posInfo)
 {
 	_pos.CopyFrom(posInfo);
 	_vectorPos.UpdatePosition(posInfo);
+	_zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
+	_gridIndex = _vectorPos.MakeGridIndex(WorldMgr.GetZonePosByType(_zoneType));
 }
 
 // 위치 업데이트
@@ -46,6 +49,8 @@ void GameObject::SetWorldPosition(const Vector3d& vectorPos)
 	_pos.set_y(vectorPos.GetWorldY());
 	_pos.set_z(vectorPos.GetWorldZ());
 	_pos.set_yaw(vectorPos.GetWorldYaw());
+	_zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
+	_gridIndex = _vectorPos.MakeGridIndex(WorldMgr.GetZonePosByType(_zoneType));
 }
 
 // zoneType & GridIndex 업데이트
@@ -80,7 +85,7 @@ ZoneType GameObject::GetCurrentZone() const
 
 GridIndex GameObject::GetCurrentGrid() const
 {
-	return GridIndex();
+	return _gridIndex;
 }
 
 // Object 공용 정보(Protocol::ObjectInfo) 만들기
