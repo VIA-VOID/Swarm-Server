@@ -39,6 +39,22 @@ void SessionManager::Add(SessionRef session)
 	}
 }
 
+// 모든 활성 세션 가져오기
+void SessionManager::GetActiveSessions(Vector<SessionRef>& outSessions)
+{
+	LOCK_GUARD;
+
+	for (const auto& pair : _sessions)
+	{
+		SessionRef session = pair.second;
+		if (session->IsClosed() || session->IsTimeout())
+		{
+			continue;
+		}
+		outSessions.push_back(pair.second);
+	}
+}
+
 // 세션 찾기
 SessionRef SessionManager::Find(SessionID sessionID)
 {
@@ -116,6 +132,7 @@ void SessionManager::Heartbeat(CoreService* service)
 			// 클라이언트가 일정 수만큼 응답이 없을 경우 세션 닫음
 			if (session->GetPingCount() - session->GetPongCount() >= PING_PONG_DIFF)
 			{
+				LOG_WARNING("하트비트 미응답, 세션 종료: " + std::to_string(session->GetSessionID().GetID()));
 				session->Close();
 			}
 			else

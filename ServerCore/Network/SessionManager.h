@@ -16,6 +16,8 @@ public:
 	SessionRef Create();
 	// 세션 추가
 	void Add(SessionRef session);
+	// 모든 활성 세션 가져오기
+	void GetActiveSessions(Vector<SessionRef>& outSessions);
 	// 세션 찾기
 	SessionRef Find(SessionID sessionID);
 	// 세션 하트비트 & 만료 세션 닫기
