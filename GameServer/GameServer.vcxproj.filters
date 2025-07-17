@@ -73,6 +73,15 @@
     <ClCompile Include="Zone\Vector3d.cpp">
       <Filter>Zone</Filter>
     </ClCompile>
+    <ClCompile Include="Zone\BossZone.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\PveZone.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="Zone\PvpZone.cpp">
+      <Filter>Zone</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -152,6 +161,15 @@
       <Filter>Packet</Filter>
     </ClInclude>
     <ClInclude Include="Zone\Vector3d.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\BossZone.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\PveZone.h">
+      <Filter>Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="Zone\PvpZone.h">
       <Filter>Zone</Filter>
     </ClInclude>
   </ItemGroup>

@@ -189,6 +189,8 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Zone\PvpZone.cpp" />
+    <ClCompile Include="Zone\BossZone.cpp" />
     <ClCompile Include="Data\BaseJsonLoader.cpp" />
     <ClCompile Include="Object\Stat\BaseStatLoader.cpp" />
     <ClCompile Include="Object\Stat\BaseStat.cpp" />
@@ -196,6 +198,7 @@
     <ClCompile Include="Packet\SystemPacketHandler.cpp" />
     <ClCompile Include="Protocol\ProtoOperator.cpp" />
     <ClCompile Include="Object\Stat\StatManager.cpp" />
+    <ClCompile Include="Zone\PveZone.cpp" />
     <ClCompile Include="Zone\Vector3d.cpp" />
     <ClCompile Include="Zone\Sector.cpp" />
     <ClCompile Include="Zone\TownZone.cpp" />
@@ -234,6 +237,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Zone\PvpZone.h" />
+    <ClInclude Include="Zone\BossZone.h" />
     <ClInclude Include="Data\BaseJsonLoader.h" />
     <ClInclude Include="Object\Stat\BaseStatLoader.h" />
     <ClInclude Include="Object\Stat\BaseStat.h" />
@@ -241,6 +246,7 @@
     <ClInclude Include="Packet\SystemPacketHandler.h" />
     <ClInclude Include="Protocol\ProtoOperator.h" />
     <ClInclude Include="Object\Stat\StatManager.h" />
+    <ClInclude Include="Zone\PveZone.h" />
     <ClInclude Include="Zone\Vector3d.h" />
     <ClInclude Include="Zone\Sector.h" />
     <ClInclude Include="Zone\TownZone.h" />
