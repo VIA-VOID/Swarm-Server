@@ -34,7 +34,7 @@ void GameServer::OnDisconnected(SessionRef session)
 	LOG_INFO("Client OnDisconnected!! session: " + std::to_string(session->GetSessionID().GetID()));
 
 	Player* player = session->GetPlayer<Player>();
-	if (player == nullptr || player->IsValid() == false)
+	if (player == nullptr)
 	{
 		return;
 	}
@@ -79,7 +79,7 @@ void GameServer::LeaveGame(const ObjectId objectId, const ZoneType zoneType, con
 	WorldMgr.RemoveObjectToSector(objectId, zoneType, gridIndex);
 
 	// 디스폰 패킷 생성
-	Protocol::SC_PLAYER_DESPAWN despawnPkt;
+	Protocol::SC_OBJECT_DESPAWN despawnPkt;
 	despawnPkt.set_objectid(objectId.GetId());
 
 	// 시야 내 근처 플레이어에게 전송
@@ -92,7 +92,7 @@ void GameServer::LeaveGame(const ObjectId objectId, const ZoneType zoneType, con
 		SessionRef playerSession = player->GetSession();
 		if (playerSession)
 		{
-			PacketHandler::SendPacket(playerSession, despawnPkt, PacketID::SC_PLAYER_DESPAWN);
+			PacketHandler::SendPacket(playerSession, despawnPkt, PacketID::SC_OBJECT_DESPAWN);
 		}
 	}
 }
