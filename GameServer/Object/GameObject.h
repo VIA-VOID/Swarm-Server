@@ -29,18 +29,14 @@ public:
 	bool IsPlayer() const;
 	// Monster인지 확인
 	bool IsMonster() const;
+	// Object 공용 정보(Protocol::ObjectInfo) 만들기
+	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo);
+	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType);
+	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::MonsterType monsterType);
 
 	// Getter-
 	ZoneType GetCurrentZone() const;
 	GridIndex GetCurrentGrid() const;
-
-protected:
-	// Object 공용 정보(Protocol::ObjectInfo) 만들기
-	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType);
-	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::MonsterType monsterType);
-
-private:
-	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo);
 
 protected:
 	// 고유 ID
