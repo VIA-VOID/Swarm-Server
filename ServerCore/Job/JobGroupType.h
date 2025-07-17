@@ -6,7 +6,6 @@ namespace JobGroups
 {
 	constexpr JobGroupId Invalid = UINT16_MAX;
 	constexpr JobGroupId System = 0;
-	constexpr JobGroupId Network = 1;
 	constexpr JobGroupId NextStart = 10;
 }
 
