@@ -15,6 +15,7 @@ Player::Player(SessionRef session, const Protocol::PlayerType& playerType, const
 	_objectType = Protocol::OBJECT_TYPE_PLAYER;
 	_name = name;
 	_isValid.store(true, std::memory_order::memory_order_relaxed);
+	_isEntered.store(false, std::memory_order::memory_order_relaxed);
 }
 
 Player::~Player()
@@ -64,42 +65,100 @@ void Player::EnterGame(const ZoneType zoneType)
 	Protocol::ObjectInfo objInfo;
 	SendEnterGamePkt(zoneType, objInfo);
 	
-	// 시야 안에 있는 플레이어 목록
+	// 시야 안에 있는 Object 목록
 	Vector<GameObjectRef> objs;
-	WorldMgr.GetVisibleObjectsInSectors(GetWorldPosition(), objs);
+	WorldMgr.GetVisibleObjectsInSectors(GetWorldPosition(), objs, false);
 
 	// 시야 안에 있는 타 플레이어들에게 입장 알림
 	{
-		Protocol::SC_PLAYER_SPAWN spawnPkt;
+		Protocol::SC_OBJECT_SPAWN spawnPkt;
 
 		// 오브젝트 정보 만들기
 		MakeObjectInfo(objInfo, _playerType);
 		spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
 
 		// 타 플레이어에게 현재 캐릭터 스폰 알림
-		WorldMgr.SendBroadcast(objs, spawnPkt, PacketID::SC_PLAYER_SPAWN);
+		WorldMgr.SendBroadcast(objs, spawnPkt, PacketID::SC_OBJECT_SPAWN);
 	}
 
 	// 현재 접속한 플레이어에게 시야 안에 있는 타 플레이어 목록 알림
 	for (const auto& obj : objs)
 	{
-		const PlayerRef& player = std::static_pointer_cast<Player>(obj);
-
-		if (player->GetObjectId() == _objectId)
+		if (obj->GetObjectId() == _objectId)
 		{
 			continue;
 		}
 
-		Protocol::SC_PLAYER_SPAWN spawnPkt;
-		Protocol::ObjectInfo otherObjInfo;
+		// 시야목록 Object 추가
+		_visibleObjects.insert(obj->GetObjectId());
 
-		// 타 오브젝트 정보 만들기
-		player->MakeObjectInfo(otherObjInfo, player->GetPlayerType());
-		spawnPkt.mutable_objectinfo()->CopyFrom(otherObjInfo);
+		// 패킷전송
+		if (obj->IsPlayer())
+		{
+			const PlayerRef& player = std::static_pointer_cast<Player>(obj);
 
-		// 현재 캐릭터에게 타 플레이어 존재 알림
-		WorldMgr.SendUnicast(_session, spawnPkt, PacketID::SC_PLAYER_SPAWN);
+			Protocol::SC_OBJECT_SPAWN spawnPkt;
+			Protocol::ObjectInfo otherObjInfo;
+
+			// 타 오브젝트 정보 만들기
+			player->MakeObjectInfo(otherObjInfo, player->GetPlayerType());
+			spawnPkt.mutable_objectinfo()->CopyFrom(otherObjInfo);
+
+			// 현재 캐릭터에게 타 플레이어 존재 알림
+			PacketHandler::SendPacket(_session, spawnPkt, PacketID::SC_OBJECT_SPAWN);
+		}
 	}
+	_isEntered.store(true);
+}
+
+// 시야내의 ObjectId 업데이트
+void Player::UpdateVision(Vector<GameObjectRef>& currentVisible)
+{
+	if (_isEntered.load() == false)
+	{
+		return;
+	}
+
+	HashSet<ObjectId> newVisible;
+
+	// 시야 내 새로 들어온 Object 스폰
+	for (const GameObjectRef& obj : currentVisible)
+	{
+		const ObjectId objectId = obj->GetObjectId();
+		if (objectId == _objectId)
+		{
+			continue;
+		}
+
+		newVisible.insert(objectId);
+
+		if (_visibleObjects.find(objectId) == _visibleObjects.end())
+		{
+			// 스폰 패킷 전송
+			Protocol::SC_OBJECT_SPAWN spawnPkt;
+			Protocol::ObjectInfo objInfo;
+			obj->MakeObjectInfo(objInfo);
+			spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
+
+			PacketHandler::SendPacket(_session, spawnPkt, PacketID::SC_OBJECT_SPAWN);
+		}
+	}
+
+	// 시야 내 제거된 Object 디스폰
+	for (const ObjectId& objId : _visibleObjects)
+	{
+		if (newVisible.find(objId) == newVisible.end())
+		{
+			// 디스폰 패킷 전송
+			Protocol::SC_OBJECT_DESPAWN despawnPkt;
+			despawnPkt.set_objectid(objId.GetId());
+
+			PacketHandler::SendPacket(_session, despawnPkt, PacketID::SC_OBJECT_DESPAWN);
+		}
+	}
+
+	// 시야 업데이트
+	_visibleObjects = std::move(newVisible);
 }
 
 // 세션 가져오기

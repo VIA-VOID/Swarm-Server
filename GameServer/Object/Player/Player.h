@@ -17,6 +17,8 @@ public:
 	void DetachSession();
 	// 게임 입장, 스폰
 	void EnterGame(const ZoneType zoneType);
+	// 시야내의 ObjectId 업데이트
+	void UpdateVision(Vector<GameObjectRef>& currentVisible);
 	// 세션 가져오기
 	SessionRef GetSession();
 	// 유효성 검사
@@ -36,7 +38,11 @@ private:
 
 private:
 	SessionRef _session;
+	HashSet<ObjectId> _visibleObjects;
+
 	Protocol::PlayerType _playerType;
+	
 	TimePoint _lastMoveTime;
 	std::atomic<bool> _isValid;
+	std::atomic<bool> _isEntered;
 };

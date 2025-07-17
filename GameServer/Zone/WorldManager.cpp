@@ -2,8 +2,12 @@
 #include "WorldManager.h"
 #include "MapDataLoader.h"
 #include "TownZone.h"
+#include "PveZone.h"
+#include "PvpZone.h"
+#include "BossZone.h"
 #include "Object/GameObject.h"
 #include "Utils/Utils.h"
+#include "Network/SessionManager.h"
 
 // 캐릭터 시야범위
 // ex) 캐릭터 좌표가 (50, 50)이면 (0,0) ~ (100, 100)이 보여야함
@@ -24,7 +28,7 @@ void WorldManager::Init()
 	// Sector 초기화
 	InitSectors();
 	// ZoneGrid 업데이트 스레드 생성
-	ThreadMgr.LaunchFrame("ZoneGrid", 1, [this]() { SectorUpdateWorkerThread(); });
+	ThreadMgr.LaunchFrame("WorldZone", 1, [this]() { SectorUpdateWorkerThread(); });
 }
 
 void WorldManager::Shutdown()
@@ -40,18 +44,13 @@ void WorldManager::SectorUpdateWorkerThread()
 {
 	// 빈 sector 정리
 	ClearAllEmptySector();
-
-
-}
-
-// 시야내 GameObject 목록 업데이트
-void WorldManager::UpdateVisible()
-{
-
+	
+	// 모든 플레이어 시야 업데이트
+	UpdatePlayerVisible();
 }
 
 // Sector별 오브젝트 추가
-void WorldManager::AddObjectToSector(GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex)
+void WorldManager::AddObjectToSector(const GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex)
 {
 	Sector* sector = FindSector(zoneType);
 	if (sector == nullptr)
@@ -118,6 +117,18 @@ void WorldManager::InitZones()
 		case ZoneType::Town:
 			_zones[zoneType] = ObjectPool<TownZone>::MakeUnique(zoneInfo);
 			break;
+
+		case ZoneType::Pvp:
+			_zones[zoneType] = ObjectPool<PvpZone>::MakeUnique(zoneInfo);
+			break;
+		
+		case ZoneType::Pve:
+			_zones[zoneType] = ObjectPool<PveZone>::MakeUnique(zoneInfo);
+			break;
+		
+		case ZoneType::Boss:
+			_zones[zoneType] = ObjectPool<BossZone>::MakeUnique(zoneInfo);
+			break;
 		}
 	}
 }
@@ -150,12 +161,13 @@ void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& 
 	{
 		return;
 	}
+	
+	GridIndex gridIndex = position.MakeGridIndex(sector->zoneInfo.worldPos);
+	Vector<SectorId> sectorIds;
+	GetVisibleSectorIds(gridIndex, sectorIds);
+	
 	{
 		GROUP_LOCK_GUARD(*sector);
-
-		GridIndex gridIndex = position.MakeGridIndex(sector->zoneInfo.worldPos);
-		Vector<SectorId> sectorIds;
-		GetVisibleSectorIds(gridIndex, sectorIds);
 
 		// 시야범위 내 오브젝트 가져오기
 		for (const SectorId& sectorId : sectorIds)
@@ -199,14 +211,14 @@ void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& 
 	}
 }
 
-// 시야 내 GameObject 검색
-// 여러 Zone 검색
+// 시야 내의 GameObject 목록 가져오기
+// 여러 Zone, Sector 검색
 void WorldManager::GetVisibleObjectsInSectors(const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer /*= true*/)
 {
 	Vector<ZoneType> zoneTypes;
 	GetVisibleZones(position, zoneTypes);
 
-	// 각 zoneType별 시야내에 속하는 objectId 가져오기
+	// 각 zoneType별 시야내에 속하는 object 가져오기
 	for (ZoneType zoneType : zoneTypes)
 	{
 		GetVisibleObjectsInSector(zoneType, position, outObjects, onlyPlayer);
@@ -360,7 +372,7 @@ ZonePos WorldManager::GetZonePositionByType(const ZoneType zoneType)
 	return _mapData.zones[static_cast<uint8>(zoneType)].worldPos;
 }
 
-// empty sector 정리
+// 빈 sector 정리
 void WorldManager::ClearAllEmptySector()
 {
 	for (auto& sector : _zoneSectors)
@@ -379,5 +391,29 @@ void WorldManager::ClearAllEmptySector()
 				++it;
 			}
 		}
+	}
+}
+
+// 모든 플레이어 시야 업데이트
+void WorldManager::UpdatePlayerVisible()
+{
+	// 모든 활성 세션 가져오기
+	Vector<SessionRef> sessions;
+	SessionMgr.GetActiveSessions(sessions);
+
+	for (SessionRef& session : sessions)
+	{
+		Player* player = session->GetPlayer<Player>();
+		if (player == nullptr || player->IsValid() == false)
+		{
+			continue;
+		}
+
+		// 캐릭터의 시야내 오브젝트 가져오기
+		Vector<GameObjectRef> currentVisible;
+		GetVisibleObjectsInSectors(player->GetWorldPosition(), currentVisible, false);
+
+		// 시야 업데이트
+		player->UpdateVision(currentVisible);
 	}
 }

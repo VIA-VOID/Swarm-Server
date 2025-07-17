@@ -18,10 +18,8 @@ public:
 
 	// Sector 주기적 업데이트
 	void SectorUpdateWorkerThread();
-	// 시야내 GameObject 목록 업데이트
-	void UpdateVisible();
 	// Sector별 오브젝트 추가
-	void AddObjectToSector(GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex);
+	void AddObjectToSector(const GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 오브젝트 제거
 	void RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 시야 내의 GameObject 목록 가져오기
@@ -71,8 +69,10 @@ private:
 	bool IsInGridRange(const GridIndex& gridIndex, const GridIndex& target);
 	// ZoneType으로 해당 Zone의 좌표범위 가져오기
 	ZonePos GetZonePositionByType(const ZoneType zoneType);
-	// empty sector 정리
+	// 빈 sector 정리
 	void ClearAllEmptySector();
+	// 모든 플레이어 시야 업데이트
+	void UpdatePlayerVisible();
 
 private:
 	USE_LOCK;
@@ -101,6 +101,10 @@ inline void WorldManager::SendBroadcast(const Vector<GameObjectRef>& objects, co
 {
 	for (const auto& obj : objects)
 	{
+		if (obj->IsPlayer() == false)
+		{
+			continue;
+		}
 		const PlayerRef& player = std::static_pointer_cast<Player>(obj);
 		if (player->GetObjectId() == exceptId)
 		{
