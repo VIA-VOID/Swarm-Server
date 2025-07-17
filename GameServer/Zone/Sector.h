@@ -41,21 +41,20 @@ struct std::hash<SectorId>
 /*--------------------------------------------------------
 					Sector
 
-- WorldManager에서 HashMap으로 ZoneType과 매핑하여 사용
+- WorldManager에서 ZoneType과 매핑하여 사용
 - sector별 공간, Lock 분리
 --------------------------------------------------------*/
+using ObjectSector = HashMap<ObjectId, GameObjectRef>;
+
 class Sector
 {
 public:
 	Sector(const ZoneInfo& zoneInfo);
-	
-	// 그리드 좌표 유효성 검사
+	// Sector 좌표 유효성 검사
 	bool IsValidGridIndex(const GridIndex& inGridIndex) const;
 
 public:
 	USE_LOCK;
-
-	using ObjectSector = HashMap<ObjectId, GameObjectRef>;
 
 	ZoneInfo zoneInfo;
 	HashMap<SectorId, ObjectSector> sectors;
