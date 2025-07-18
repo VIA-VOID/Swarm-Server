@@ -23,6 +23,9 @@ public:
 	SessionRef GetSession();
 	// 유효성 검사
 	bool IsValid() const;
+	// 패킷전송
+	template <typename T>
+	void SendUnicast(const T& message, const PacketID pktId);
 	
 private:
 	// 이동 시뮬레이션
@@ -46,3 +49,14 @@ private:
 	std::atomic<bool> _isValid;
 	std::atomic<bool> _isEntered;
 };
+
+// 패킷전송
+template <typename T>
+void Player::SendUnicast(const T& message, const PacketID pktId)
+{
+	if (_session == nullptr || _session->IsClosed())
+	{
+		return;
+	}
+	PacketHandler::SendPacket(_session, message, pktId);
+}

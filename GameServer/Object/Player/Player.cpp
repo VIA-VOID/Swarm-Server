@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "Player.h"
 #include "Object/Stat/StatManager.h"
-#include "Zone/WorldManager.h"
-#include "Zone/TownZone.h"
+#include "World/WorldManager.h"
+#include "World/Zone/TownZone.h"
 #include "Utils/Timer.h"
 
 /*----------------------------
@@ -39,6 +39,22 @@ void Player::Move(const Protocol::CS_PLAYER_MOVE& packet)
 			"SessionID: " + std::to_string(_session->GetSessionID().GetID()));
 
 		_session->Close();
+	}
+	// 이동 가능한 지점인지 확인
+	if (WorldMgr.CanGo(posInfo.x(), posInfo.y()) == false)
+	{
+		// 이동불가시 과거 좌표로 강제이동
+		LOG_WARNING("이동불가 지점 진입, x: " + std::to_string(posInfo.x()) +
+			", y: " + std::to_string(posInfo.y()) +
+			" SessionId: " + std::to_string(_session->GetSessionID().GetID()));
+
+		// 이전의 좌표(서버좌표)로 전송시킨다
+		Protocol::SC_PLAYER_MOVE movePkt;
+		movePkt.set_objectid(_objectId.GetId());
+		movePkt.mutable_posinfo()->CopyFrom(_pos);
+		SendUnicast(movePkt, PacketID::SC_PLAYER_MOVE);
+		
+		return;
 	}
 	// 이동 시뮬레이션, 패킷 전송
 	MoveSimulate(packet);
@@ -105,7 +121,7 @@ void Player::EnterGame(const ZoneType zoneType)
 			spawnPkt.mutable_objectinfo()->CopyFrom(otherObjInfo);
 
 			// 현재 캐릭터에게 타 플레이어 존재 알림
-			PacketHandler::SendPacket(_session, spawnPkt, PacketID::SC_OBJECT_SPAWN);
+			SendUnicast(spawnPkt, PacketID::SC_OBJECT_SPAWN);
 		}
 	}
 	_isEntered.store(true);
@@ -118,7 +134,11 @@ void Player::UpdateVision(Vector<GameObjectRef>& currentVisible)
 	{
 		return;
 	}
-
+	if (currentVisible.empty() && _visibleObjects.empty())
+	{
+		return;
+	}
+	
 	HashSet<ObjectId> newVisible;
 
 	// 시야 내 새로 들어온 Object 스폰
@@ -140,7 +160,7 @@ void Player::UpdateVision(Vector<GameObjectRef>& currentVisible)
 			obj->MakeObjectInfo(objInfo);
 			spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
 
-			PacketHandler::SendPacket(_session, spawnPkt, PacketID::SC_OBJECT_SPAWN);
+			SendUnicast(spawnPkt, PacketID::SC_OBJECT_SPAWN);
 		}
 	}
 
@@ -153,7 +173,7 @@ void Player::UpdateVision(Vector<GameObjectRef>& currentVisible)
 			Protocol::SC_OBJECT_DESPAWN despawnPkt;
 			despawnPkt.set_objectid(objId.GetId());
 
-			PacketHandler::SendPacket(_session, despawnPkt, PacketID::SC_OBJECT_DESPAWN);
+			SendUnicast(despawnPkt, PacketID::SC_OBJECT_DESPAWN);
 		}
 	}
 
@@ -205,8 +225,7 @@ void Player::SendEnterGamePkt(const ZoneType zoneType, Protocol::ObjectInfo& out
 	PacketHandler::SendPacket(_session, enterGamePkt, PacketID::SC_PLAYER_ENTER_GAME);
 
 	// zone 업데이트
-	ZonePos worldPos = townZone->GetWorldPosition();
-	GridIndex gridIndex = spawnVector.MakeGridIndex(worldPos);
+	GridIndex gridIndex = WorldMgr.MakeGridIndex(spawnVector);
 	WorldMgr.AddObjectToSector(shared_from_this(), zoneType, gridIndex);
 
 	// 플레이어 zone, grid 업데이트
@@ -238,14 +257,14 @@ void Player::MoveSimulate(const Protocol::CS_PLAYER_MOVE& packet)
 	float allowedDistance = moveSpeed * elapsedTime;
 	if (distance > allowedDistance * MOVE_ALLOW_RANGE)
 	{
-		LOG_ERROR("캐릭터 이동 오차범위 초과, Distance: " + std::to_string(distance) + 
+		LOG_WARNING("캐릭터 이동 오차범위 초과, Distance: " + std::to_string(distance) + 
 			" SessionId: " + std::to_string(_session->GetSessionID().GetID()));
 		
 		// 이전의 좌표(서버좌표)로 전송시킨다
 		Protocol::SC_PLAYER_MOVE movePkt;
 		movePkt.set_objectid(_objectId.GetId());
 		movePkt.mutable_posinfo()->CopyFrom(_pos);
-		WorldMgr.SendUnicast(_session, movePkt, PacketID::SC_PLAYER_MOVE);
+		SendUnicast(movePkt, PacketID::SC_PLAYER_MOVE);
 		
 		return;
 	}
