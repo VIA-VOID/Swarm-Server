@@ -16,8 +16,11 @@ public:
 	virtual void ZoneUpdate() = 0;
 	// Zone World 좌표 가져오기
 	ZonePos GetWorldPosition() const;
+	// spawnOffset 설정
+	void SetSpawnOffset(int32 offset);
 
 protected:
+	int32 _spawnOffset;
 	ZoneInfo _zoneInfo;
 	uint64 _updateTime;
 };

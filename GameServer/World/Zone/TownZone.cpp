@@ -23,12 +23,11 @@ void TownZone::ZoneUpdate()
 Vector3d TownZone::GetRandomSpawnPosition()
 {
 	// 스폰 좌표 설정
-	// todo: 맵 디자인 완료 후 스폰 zone 별도 생성, 현재는 맵 내 랜덤좌표
 	ZonePos zonePos = _zoneInfo.worldPos;
 
-	float randomX = static_cast<float>(Utils::GetRandom<int32>(zonePos.minX, zonePos.maxX));
-	float randomY = static_cast<float>(Utils::GetRandom<int32>(zonePos.minY, zonePos.maxY));
+	float randomX = static_cast<float>(Utils::GetRandom<int32>(zonePos.minX + _spawnOffset, zonePos.maxX - _spawnOffset));
+	float randomY = static_cast<float>(Utils::GetRandom<int32>(zonePos.minY + _spawnOffset, zonePos.maxY - _spawnOffset));
 	float worldZ = 180.f;
 	float randomYaw = Utils::GetRandom<float>(-179.f, 179.f);
-	return Vector3d(randomX, randomY, worldZ, randomYaw, _zoneInfo.gridSize);
+	return Vector3d(randomX, randomY, worldZ, randomYaw);
 }

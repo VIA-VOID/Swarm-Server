@@ -50,8 +50,6 @@ class Sector
 {
 public:
 	Sector(const ZoneInfo& zoneInfo);
-	// Sector 좌표 유효성 검사
-	bool IsValidGridIndex(const GridIndex& inGridIndex) const;
 
 public:
 	USE_LOCK;

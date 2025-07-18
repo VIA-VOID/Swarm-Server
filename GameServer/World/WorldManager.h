@@ -1,7 +1,7 @@
 #pragma once
-#include "ZoneDefine.h"
-#include "BaseZone.h"
-#include "Sector.h"
+#include "Zone/ZoneDefine.h"
+#include "Zone/BaseZone.h"
+#include "Zone/Sector.h"
 #include "Object/Player/Player.h"
 
 /*--------------------------------------------------------
@@ -22,6 +22,9 @@ public:
 	void AddObjectToSector(const GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 오브젝트 제거
 	void RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex);
+	// 월드 좌표로 그리드 좌표 변환
+	GridIndex MakeGridIndex(const Vector3d& position) const;
+	GridIndex MakeGridIndex(const float worldX, const float worldY) const;
 	// 시야 내의 GameObject 목록 가져오기
 	// 여러 Zone, Sector 검색
 	void GetVisibleObjectsInSectors(const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer = true);
@@ -34,14 +37,9 @@ public:
 	BaseZone* FindZone(const ZoneType zoneType);
 	// 월드 좌표로 Zone 타입 찾기
 	ZoneType GetZoneByPosition(const Vector3d& position) const;
-	// ZonePos 가져오기
-	ZonePos GetZonePosByType(const ZoneType zoneType);
 	// Sector 가져오기
 	Sector* FindSector(const ZoneType zoneType);
 
-	// 단일대상 sendPacket
-	template <typename T>
-	void SendUnicast(SessionRef targetSession, const T& message, const PacketID pktId);
 	// 복수대상 sendPacket
 	template <typename T>
 	void SendBroadcast(const Vector<GameObjectRef>& objects, const T& message, const PacketID pktId, const ObjectId exceptId = ObjectId(-1));
@@ -55,7 +53,7 @@ private:
 	// Sector 초기화
 	void InitSectors();
 	// 그리드좌표 유효성 검사
-	bool IsVaildGridIndex(const GridIndex& gridIndex) const;
+	bool IsValidGridIndex(const GridIndex& gridIndex) const;
 	// 시야 내의 GameObject 목록 가져오기
 	// 단일 Zone 검색
 	void GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer = true);
@@ -67,8 +65,6 @@ private:
 	bool IsInRange(const Vector3d& position, const ZonePos& worldPos, int32 gridSize);
 	// 그리드 범위 체크
 	bool IsInGridRange(const GridIndex& gridIndex, const GridIndex& target);
-	// ZoneType으로 해당 Zone의 좌표범위 가져오기
-	ZonePos GetZonePositionByType(const ZoneType zoneType);
 	// 빈 sector 정리
 	void ClearAllEmptySector();
 	// 모든 플레이어 시야 업데이트
@@ -83,17 +79,6 @@ private:
 	// Zone 관리
 	HashMap<ZoneType, BaseZoneURef> _zones;
 };
-
-// 단일대상 sendPacket
-template <typename T>
-inline void WorldManager::SendUnicast(SessionRef targetSession, const T& message, const PacketID pktId)
-{
-	if (targetSession == nullptr || targetSession->IsClosed())
-	{
-		return;
-	}
-	PacketHandler::SendPacket(targetSession, message, pktId);
-}
 
 // 복수대상 sendPacket
 template <typename T>
@@ -110,7 +95,7 @@ inline void WorldManager::SendBroadcast(const Vector<GameObjectRef>& objects, co
 		{
 			continue;
 		}
-		SendUnicast(player->GetSession(), message, pktId);
+		player->SendUnicast(message, pktId);
 	}
 }
 

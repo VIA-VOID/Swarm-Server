@@ -2,7 +2,7 @@
 #include "BaseZone.h"
 
 BaseZone::BaseZone(const ZoneInfo& zoneInfo, uint64 updateTime/* = MAP_TICK_INTERVAL.count()*/)
-	: _zoneInfo(zoneInfo), _updateTime(updateTime)
+	: _spawnOffset(0), _zoneInfo(zoneInfo), _updateTime(updateTime)
 {
 }
 
@@ -14,4 +14,10 @@ BaseZone::~BaseZone()
 ZonePos BaseZone::GetWorldPosition() const
 {
 	return _zoneInfo.worldPos;
+}
+
+// spawnOffset 설정
+void BaseZone::SetSpawnOffset(int32 offset)
+{
+	_spawnOffset = offset;
 }

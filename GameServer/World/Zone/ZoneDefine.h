@@ -37,6 +37,7 @@ struct MapData
 	int32 gridSize;
 	int32 gridX;
 	int32 gridY;
+	int32 spawnOffset;
 	int32 worldMinX;
 	int32 worldMinY;
 	int32 worldMaxX;

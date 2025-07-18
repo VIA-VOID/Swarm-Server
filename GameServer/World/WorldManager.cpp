@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "WorldManager.h"
 #include "MapDataLoader.h"
-#include "TownZone.h"
-#include "PveZone.h"
-#include "PvpZone.h"
-#include "BossZone.h"
+#include "Zone/TownZone.h"
+#include "Zone/PveZone.h"
+#include "Zone/PvpZone.h"
+#include "Zone/BossZone.h"
 #include "Object/GameObject.h"
 #include "Utils/Utils.h"
 #include "Network/SessionManager.h"
@@ -58,7 +58,7 @@ void WorldManager::AddObjectToSector(const GameObjectRef obj, const ZoneType zon
 		return;
 	}
 	// 그리드 범위 유효성 검사
-	if (sector->IsValidGridIndex(gridIndex) == false)
+	if (IsValidGridIndex(gridIndex) == false)
 	{
 		return;
 	}
@@ -81,7 +81,7 @@ void WorldManager::RemoveObjectToSector(const ObjectId objId, const ZoneType zon
 		return;
 	}
 	// 그리드 범위 유효성 검사
-	if (sector->IsValidGridIndex(gridIndex) == false)
+	if (IsValidGridIndex(gridIndex) == false)
 	{
 		return;
 	}
@@ -106,6 +106,21 @@ void WorldManager::RemoveObjectToSector(const ObjectId objId, const ZoneType zon
 	}
 }
 
+// 월드 좌표로 그리드 좌표 변환
+GridIndex WorldManager::MakeGridIndex(const float worldX, const float worldY) const
+{
+	const float gridX = (worldX - _mapData.worldMinX) / _mapData.gridSize;
+	const float gridY = (worldY - _mapData.worldMinY) / _mapData.gridSize;
+	return GridIndex(static_cast<int32>(gridX), static_cast<int32>(gridY));
+}
+
+GridIndex WorldManager::MakeGridIndex(const Vector3d& position) const
+{
+	const float gridX = (position.x - _mapData.worldMinX) / _mapData.gridSize;
+	const float gridY = (position.y - _mapData.worldMinY) / _mapData.gridSize;
+	return GridIndex(static_cast<int32>(gridX), static_cast<int32>(gridY));
+}
+
 // Zone 초기화
 void WorldManager::InitZones()
 {
@@ -116,6 +131,7 @@ void WorldManager::InitZones()
 		{
 		case ZoneType::Town:
 			_zones[zoneType] = ObjectPool<TownZone>::MakeUnique(zoneInfo);
+			_zones[zoneType]->SetSpawnOffset(_mapData.spawnOffset);
 			break;
 
 		case ZoneType::Pvp:
@@ -143,9 +159,9 @@ void WorldManager::InitSectors()
 }
 
 // 그리드좌표 유효성 검사
-bool WorldManager::IsVaildGridIndex(const GridIndex& gridIndex) const
+bool WorldManager::IsValidGridIndex(const GridIndex& gridIndex) const
 {
-	if (gridIndex.x < 0 || gridIndex.x > _mapData.gridX || gridIndex.y < 0 || gridIndex.y > _mapData.gridY)
+	if (gridIndex.x < 0 || gridIndex.x >= _mapData.gridX || gridIndex.y < 0 || gridIndex.y >= _mapData.gridY)
 	{
 		return false;
 	}
@@ -162,7 +178,7 @@ void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& 
 		return;
 	}
 	
-	GridIndex gridIndex = position.MakeGridIndex(sector->zoneInfo.worldPos);
+	GridIndex gridIndex = MakeGridIndex(position);
 	Vector<SectorId> sectorIds;
 	GetVisibleSectorIds(gridIndex, sectorIds);
 	
@@ -240,13 +256,11 @@ bool WorldManager::IsValidWorldPosition(const Protocol::PosInfo& posInfo) const
 // - 월드좌표로 인자를 받고, 내부에서 그리드 좌표로 변환해서 판별
 bool WorldManager::CanGo(float worldX, float worldY)
 {
-	Vector3d worldVector(worldX, worldY, _mapData.gridSize);
-	ZoneType currentZone = GetZoneByPosition(worldVector);
-	ZonePos zonePos = GetZonePositionByType(currentZone);
+	Vector3d worldVector(worldX, worldY);
 	
 	// 유효성 검사
-	GridIndex gridIndex = worldVector.MakeGridIndex(zonePos);
-	if (IsVaildGridIndex(gridIndex) == false)
+	GridIndex gridIndex = MakeGridIndex(worldVector);
+	if (IsValidGridIndex(gridIndex) == false)
 	{
 		return false;
 	}
@@ -298,10 +312,10 @@ void WorldManager::GetVisibleSectorIds(const GridIndex& gridIndex, Vector<Sector
 bool WorldManager::IsInRange(const Vector3d& position, const ZonePos& worldPos, int32 gridSize)
 {
 	int32 playerWorldRange = playerVisibleRange * gridSize;
-	float playerMinX = position.GetWorldX() - playerWorldRange;
-	float playerMaxX = position.GetWorldX() + playerWorldRange;
-	float playerMinY = position.GetWorldY() - playerWorldRange;
-	float playerMaxY = position.GetWorldY() + playerWorldRange;
+	float playerMinX = position.x - playerWorldRange;
+	float playerMaxX = position.x + playerWorldRange;
+	float playerMinY = position.y - playerWorldRange;
+	float playerMaxY = position.y + playerWorldRange;
 
 	// 모든 축에서 겹치는지 확인
 	bool xOverlap = (playerMinX < worldPos.maxX) && (playerMaxX > worldPos.minX);
@@ -325,21 +339,14 @@ ZoneType WorldManager::GetZoneByPosition(const Vector3d& position) const
 	{
 		const ZonePos& zonePos = zoneInfo.worldPos;
 
-		if (position.GetWorldX() >= zonePos.minX && position.GetWorldX() < zonePos.maxX
-			&& position.GetWorldY() >= zonePos.minY && position.GetWorldY() < zonePos.maxY)
+		if (position.x >= zonePos.minX && position.x < zonePos.maxX
+			&& position.y >= zonePos.minY && position.y < zonePos.maxY)
 		{
 			return zoneInfo.zoneType;
 		}
 	}
 	// 기본값
 	return ZoneType::Town;
-}
-
-// ZonePos 가져오기
-ZonePos WorldManager::GetZonePosByType(const ZoneType zoneType)
-{
-	BaseZone* baseZone = FindZone(zoneType);
-	return baseZone->GetWorldPosition();
 }
 
 // zone 가져오기
@@ -364,12 +371,6 @@ Sector* WorldManager::FindSector(const ZoneType zoneType)
 	}
 	CRASH("NOT INIT SECTOR!!");
 	return nullptr;
-}
-
-// ZoneType으로 해당 Zone의 좌표범위 가져오기
-ZonePos WorldManager::GetZonePositionByType(const ZoneType zoneType)
-{
-	return _mapData.zones[static_cast<uint8>(zoneType)].worldPos;
 }
 
 // 빈 sector 정리

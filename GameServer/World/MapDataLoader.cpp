@@ -43,6 +43,7 @@ void MapDataLoader::ParseMapData(const rapidjson::Document& document, MapData& o
 		{ "gridSize",	[&outData](int32 value) { outData.gridSize = value; } },
 		{ "gridX",		[&outData](int32 value) { outData.gridX = value; } },
 		{ "gridY",		[&outData](int32 value) { outData.gridY = value; } },
+		{ "spawnOffset",[&outData](int32 value) { outData.spawnOffset = value; } },
 		{ "worldMinX",	[&outData](int32 value) { outData.worldMinX = value; } },
 		{ "worldMinY",	[&outData](int32 value) { outData.worldMinY = value; } },
 		{ "worldMaxX",	[&outData](int32 value) { outData.worldMaxX = value; } },
