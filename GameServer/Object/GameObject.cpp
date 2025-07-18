@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "GameObject.h"
-#include "Zone/Vector3d.h"
-#include "Zone/WorldManager.h"
+#include "World/Zone/Vector3d.h"
+#include "World/WorldManager.h"
 
 // ObjectId 가져오기
 GameObject::GameObject()
 	: _objectId(ObjectId::Generate()), _objectType(Protocol::ObjectType::OBJECT_TYPE_NONE),
-	 _vectorPos(0, 0, 0), _gridIndex(0, 0), _zoneType(ZoneType::Town)
+	 _vectorPos(0, 0), _gridIndex(0, 0), _zoneType(ZoneType::Town)
 {
 }
 
@@ -38,19 +38,16 @@ void GameObject::SetWorldPosition(const Protocol::PosInfo& posInfo)
 	_pos.CopyFrom(posInfo);
 	_vectorPos.UpdatePosition(posInfo);
 	_zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
-	_gridIndex = _vectorPos.MakeGridIndex(WorldMgr.GetZonePosByType(_zoneType));
+	_gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
 }
 
 // 위치 업데이트
 void GameObject::SetWorldPosition(const Vector3d& vectorPos)
 {
 	_vectorPos = vectorPos;
-	_pos.set_x(vectorPos.GetWorldX());
-	_pos.set_y(vectorPos.GetWorldY());
-	_pos.set_z(vectorPos.GetWorldZ());
-	_pos.set_yaw(vectorPos.GetWorldYaw());
+	_pos = vectorPos.MakePosInfo();
 	_zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
-	_gridIndex = _vectorPos.MakeGridIndex(WorldMgr.GetZonePosByType(_zoneType));
+	_gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
 }
 
 // zoneType & GridIndex 업데이트
