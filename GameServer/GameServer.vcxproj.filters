@@ -46,17 +46,17 @@
     <ClCompile Include="Object\Stat\PlayerStatLoader.cpp">
       <Filter>Object\Stat</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\BaseZone.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\BaseZone.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\MapDataLoader.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\MapDataLoader.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\TownZone.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\TownZone.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\WorldManager.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\WorldManager.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
     <ClCompile Include="Protocol\ProtoOperator.cpp">
       <Filter>Protocol</Filter>
@@ -64,23 +64,23 @@
     <ClCompile Include="Object\Stat\StatManager.cpp">
       <Filter>Object\Stat</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\Sector.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\Sector.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
     <ClCompile Include="Packet\SystemPacketHandler.cpp">
       <Filter>Packet</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\Vector3d.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\Vector3d.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\BossZone.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\BossZone.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\PveZone.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\PveZone.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="Zone\PvpZone.cpp">
-      <Filter>Zone</Filter>
+    <ClCompile Include="World\Zone\PvpZone.cpp">
+      <Filter>World\Zone</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,20 +133,20 @@
     <ClInclude Include="Object\Stat\PlayerStatLoader.h">
       <Filter>Object\Stat</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\BaseZone.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\BaseZone.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\MapDataLoader.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\MapDataLoader.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\TownZone.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\TownZone.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\WorldManager.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\WorldManager.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\ZoneDefine.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\ZoneDefine.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
     <ClInclude Include="Protocol\ProtoOperator.h">
       <Filter>Protocol</Filter>
@@ -154,23 +154,23 @@
     <ClInclude Include="Object\Stat\StatManager.h">
       <Filter>Object\Stat</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\Sector.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\Sector.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
     <ClInclude Include="Packet\SystemPacketHandler.h">
       <Filter>Packet</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\Vector3d.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\Vector3d.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\BossZone.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\BossZone.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\PveZone.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\PveZone.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="Zone\PvpZone.h">
-      <Filter>Zone</Filter>
+    <ClInclude Include="World\Zone\PvpZone.h">
+      <Filter>World\Zone</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -195,7 +195,10 @@
     <Filter Include="Object\Stat">
       <UniqueIdentifier>{adbc8e16-a1a1-428e-90b7-92db460caa6d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Zone">
+    <Filter Include="World">
+      <UniqueIdentifier>{9bb1e390-70de-412d-b42d-2ade6b79e57e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World\Zone">
       <UniqueIdentifier>{824e7936-e4b3-43f5-86f6-af8403028dc4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>

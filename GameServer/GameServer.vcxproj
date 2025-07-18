@@ -189,8 +189,8 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Zone\PvpZone.cpp" />
-    <ClCompile Include="Zone\BossZone.cpp" />
+    <ClCompile Include="World\Zone\PvpZone.cpp" />
+    <ClCompile Include="World\Zone\BossZone.cpp" />
     <ClCompile Include="Data\BaseJsonLoader.cpp" />
     <ClCompile Include="Object\Stat\BaseStatLoader.cpp" />
     <ClCompile Include="Object\Stat\BaseStat.cpp" />
@@ -198,14 +198,14 @@
     <ClCompile Include="Packet\SystemPacketHandler.cpp" />
     <ClCompile Include="Protocol\ProtoOperator.cpp" />
     <ClCompile Include="Object\Stat\StatManager.cpp" />
-    <ClCompile Include="Zone\PveZone.cpp" />
-    <ClCompile Include="Zone\Vector3d.cpp" />
-    <ClCompile Include="Zone\Sector.cpp" />
-    <ClCompile Include="Zone\TownZone.cpp" />
-    <ClCompile Include="Zone\BaseZone.cpp" />
+    <ClCompile Include="World\Zone\PveZone.cpp" />
+    <ClCompile Include="World\Zone\Vector3d.cpp" />
+    <ClCompile Include="World\Zone\Sector.cpp" />
+    <ClCompile Include="World\Zone\TownZone.cpp" />
+    <ClCompile Include="World\Zone\BaseZone.cpp" />
     <ClCompile Include="Object\GameObject.cpp" />
-    <ClCompile Include="Zone\MapDataLoader.cpp" />
-    <ClCompile Include="Zone\WorldManager.cpp" />
+    <ClCompile Include="World\MapDataLoader.cpp" />
+    <ClCompile Include="World\WorldManager.cpp" />
     <ClCompile Include="Job\JobGroup.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="main.cpp" />
@@ -237,8 +237,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Zone\PvpZone.h" />
-    <ClInclude Include="Zone\BossZone.h" />
+    <ClInclude Include="World\Zone\PvpZone.h" />
+    <ClInclude Include="World\Zone\BossZone.h" />
     <ClInclude Include="Data\BaseJsonLoader.h" />
     <ClInclude Include="Object\Stat\BaseStatLoader.h" />
     <ClInclude Include="Object\Stat\BaseStat.h" />
@@ -246,17 +246,17 @@
     <ClInclude Include="Packet\SystemPacketHandler.h" />
     <ClInclude Include="Protocol\ProtoOperator.h" />
     <ClInclude Include="Object\Stat\StatManager.h" />
-    <ClInclude Include="Zone\PveZone.h" />
-    <ClInclude Include="Zone\Vector3d.h" />
-    <ClInclude Include="Zone\Sector.h" />
-    <ClInclude Include="Zone\TownZone.h" />
-    <ClInclude Include="Zone\BaseZone.h" />
+    <ClInclude Include="World\Zone\PveZone.h" />
+    <ClInclude Include="World\Zone\Vector3d.h" />
+    <ClInclude Include="World\Zone\Sector.h" />
+    <ClInclude Include="World\Zone\TownZone.h" />
+    <ClInclude Include="World\Zone\BaseZone.h" />
     <ClInclude Include="Object\ObjectDefine.h" />
     <ClInclude Include="GameDefine.h" />
     <ClInclude Include="GameMacro.h" />
     <ClInclude Include="Object\GameObject.h" />
-    <ClInclude Include="Zone\MapDataLoader.h" />
-    <ClInclude Include="Zone\WorldManager.h" />
+    <ClInclude Include="World\MapDataLoader.h" />
+    <ClInclude Include="World\WorldManager.h" />
     <ClInclude Include="GameServer.h" />
     <ClInclude Include="Job\JobGroup.h" />
     <ClInclude Include="Packet\ChatPacketHandler.h" />
@@ -268,7 +268,7 @@
     <ClInclude Include="Protocol\Enum.pb.h" />
     <ClInclude Include="Protocol\Protocol.pb.h" />
     <ClInclude Include="Protocol\Struct.pb.h" />
-    <ClInclude Include="Zone\ZoneDefine.h" />
+    <ClInclude Include="World\Zone\ZoneDefine.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Data\MapData.json" />
