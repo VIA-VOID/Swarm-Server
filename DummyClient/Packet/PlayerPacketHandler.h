@@ -21,6 +21,6 @@ public:
 
 private:
 	// 자동생성
-	static void Handle_SC_PLAYER_ENTER_GAME(SessionRef session, Protocol::SC_PLAYER_ENTER_GAME& packet);
-	static void Handle_SC_PLAYER_MOVE(SessionRef session, Protocol::SC_PLAYER_MOVE& packet);
+	static void Handle_SC_PLAYER_ENTER_GAME(SessionRef session, const Protocol::SC_PLAYER_ENTER_GAME& packet);
+	static void Handle_SC_PLAYER_MOVE(SessionRef session, const Protocol::SC_PLAYER_MOVE& packet);
 };
