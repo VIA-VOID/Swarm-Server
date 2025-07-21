@@ -44,8 +44,8 @@ void DummyMove::DummyRandomMovement(SessionRef session, Protocol::PosInfo posInf
 	_targetYaw = CalculateYaw(_targetDirX, _targetDirY);
 
 	int32 startDelay = Utils::GetRandom<int32>(0, 1000);
-	JobQ.DoAsyncAfter(startDelay, [this, session]() {
-		MoveJob(session);
+	JobQ.DoAsyncAfter(startDelay, [self = shared_from_this(), session]() {
+		self->MoveJob(session);
 	}, JobGroup::Timer);
 }
 
@@ -98,8 +98,9 @@ void DummyMove::MoveJob(SessionRef session)
 	movePkt.mutable_movevector()->CopyFrom(moveVector);
 	PacketHandler::SendPacket(session, movePkt, PacketID::CS_PLAYER_MOVE);
 
-	JobQ.DoAsyncAfter(_intervalTime, [this, session]() {
-		MoveJob(session);
+	int32 startDelay = Utils::GetRandom<int32>(0, 1000);
+	JobQ.DoAsyncAfter(startDelay, [self = shared_from_this(), session]() {
+		self->MoveJob(session);
 	}, JobGroup::Timer);
 }
 
@@ -112,8 +113,9 @@ void DummyMove::NewMove(SessionRef session)
 	targetPos.set_z(180.f);
 	targetPos.set_yaw(_currentYaw);
 
-	JobQ.DoAsyncAfter(_intervalTime * 10, [this, session, targetPos]() {
-		DummyRandomMovement(session, targetPos);
+	int32 delayTime = Utils::GetRandom<int32>(_intervalTime * 8, _intervalTime * 10);
+	JobQ.DoAsyncAfter(delayTime, [self = shared_from_this(), session, targetPos]() {
+		self->DummyRandomMovement(session, targetPos);
 	}, JobGroup::Timer);
 }
 

@@ -5,7 +5,7 @@
 
 - Dummy 캐릭터 무작위 이동
 --------------------------------------------------------*/
-class DummyMove
+class DummyMove : public std::enable_shared_from_this<DummyMove>
 {
 public:
 	DummyMove();
