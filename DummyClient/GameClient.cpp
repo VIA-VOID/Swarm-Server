@@ -39,5 +39,8 @@ void GameClient::OnRecv(SessionRef session, BYTE* buffer, int32 len)
 
 void GameClient::OnSend(SessionRef session, int32 len)
 {
+}
 
+void GameClient::OnHeartbeat(SessionRef session)
+{
 }
