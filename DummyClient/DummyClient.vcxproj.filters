@@ -28,6 +28,15 @@
     </ClCompile>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="GameClient.cpp" />
+    <ClCompile Include="Dummy\DummyMove.cpp">
+      <Filter>Dummy</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\SystemPacketHandler.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet\ObjectPacketHandler.cpp">
+      <Filter>Packet</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -56,6 +65,16 @@
       <Filter>Job</Filter>
     </ClInclude>
     <ClInclude Include="GameClient.h" />
+    <ClInclude Include="Dummy\DummyMove.h">
+      <Filter>Dummy</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\SystemPacketHandler.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet\ObjectPacketHandler.h">
+      <Filter>Packet</Filter>
+    </ClInclude>
+    <ClInclude Include="DummyMacro.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
@@ -66,6 +85,9 @@
     </Filter>
     <Filter Include="Protocol">
       <UniqueIdentifier>{99fde6a4-b586-4c99-b0aa-8e7142d81cd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Dummy">
+      <UniqueIdentifier>{e4e719c2-5850-4861-8e8f-04506f9f3938}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>

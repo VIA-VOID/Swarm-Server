@@ -85,7 +85,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)..\Build\$(Platform)$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)..\Output\$(Platform)$(Configuration)\$(ProjectName)\</IntDir>
-    <IncludePath>$(ProjectDir);$(ProjectDir)\..\ServerCore\</IncludePath>
+    <IncludePath>$(ProjectDir);$(SolutionDir)ServerCore\</IncludePath>
     <LibraryPath>$(SolutionDir)Libraries\Libs\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -175,13 +175,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Dummy\DummyMove.cpp" />
     <ClCompile Include="GameClient.cpp" />
     <ClCompile Include="Job\JobGroup.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Packet\ChatPacketHandler.cpp" />
+    <ClCompile Include="Packet\ObjectPacketHandler.cpp" />
     <ClCompile Include="Packet\PacketHandler.cpp" />
     <ClCompile Include="Packet\PacketId.cpp" />
     <ClCompile Include="Packet\PlayerPacketHandler.cpp" />
+    <ClCompile Include="Packet\SystemPacketHandler.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -208,12 +211,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DummyMacro.h" />
+    <ClInclude Include="Dummy\DummyMove.h" />
     <ClInclude Include="GameClient.h" />
     <ClInclude Include="Job\JobGroup.h" />
     <ClInclude Include="Packet\ChatPacketHandler.h" />
+    <ClInclude Include="Packet\ObjectPacketHandler.h" />
     <ClInclude Include="Packet\PacketHandler.h" />
     <ClInclude Include="Packet\PacketId.h" />
     <ClInclude Include="Packet\PlayerPacketHandler.h" />
+    <ClInclude Include="Packet\SystemPacketHandler.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Protocol\Enum.pb.h" />
     <ClInclude Include="Protocol\Protocol.pb.h" />
