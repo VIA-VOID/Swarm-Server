@@ -16,3 +16,6 @@
 #include "Protocol/Struct.pb.h"
 #include "Network/Session.h"
 #include "Job/JobGroup.h"
+
+#include "DummyMacro.h"
+#include "Packet/PacketHandler.h"
