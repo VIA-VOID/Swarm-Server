@@ -14,8 +14,8 @@ Player::Player(SessionRef session, const Protocol::PlayerType& playerType, const
 {
 	_objectType = Protocol::OBJECT_TYPE_PLAYER;
 	_name = name;
-	_isValid.store(true, std::memory_order::memory_order_relaxed);
 	_isEntered.store(false, std::memory_order::memory_order_relaxed);
+	_visibleObjects.clear();
 }
 
 Player::~Player()
@@ -140,43 +140,21 @@ void Player::UpdateVision(Vector<GameObjectRef>& currentVisible)
 	}
 	
 	HashSet<ObjectId> newVisible;
-
-	// 시야 내 새로 들어온 Object 스폰
+	
 	for (const GameObjectRef& obj : currentVisible)
 	{
+		// 본인제외
 		const ObjectId objectId = obj->GetObjectId();
-		if (objectId == _objectId)
+		if (objectId != _objectId)
 		{
-			continue;
-		}
-
-		newVisible.insert(objectId);
-
-		if (_visibleObjects.find(objectId) == _visibleObjects.end())
-		{
-			// 스폰 패킷 전송
-			Protocol::SC_OBJECT_SPAWN spawnPkt;
-			Protocol::ObjectInfo objInfo;
-			obj->MakeObjectInfo(objInfo);
-			spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
-
-			SendUnicast(spawnPkt, PacketID::SC_OBJECT_SPAWN);
+			newVisible.insert(objectId);
 		}
 	}
 
+	// 시야 내 새로 들어온 Object 스폰
+	SendSpawnPacket(currentVisible, newVisible);
 	// 시야 내 제거된 Object 디스폰
-	for (const ObjectId& objId : _visibleObjects)
-	{
-		if (newVisible.find(objId) == newVisible.end())
-		{
-			// 디스폰 패킷 전송
-			Protocol::SC_OBJECT_DESPAWN despawnPkt;
-			despawnPkt.set_objectid(objId.GetId());
-
-			SendUnicast(despawnPkt, PacketID::SC_OBJECT_DESPAWN);
-		}
-	}
-
+	SendDespawnPacket(newVisible);
 	// 시야 업데이트
 	_visibleObjects = std::move(newVisible);
 }
@@ -224,12 +202,46 @@ void Player::SendEnterGamePkt(const ZoneType zoneType, Protocol::ObjectInfo& out
 	// 입장 패킷 전송
 	PacketHandler::SendPacket(_session, enterGamePkt, PacketID::SC_PLAYER_ENTER_GAME);
 
-	// zone 업데이트
-	GridIndex gridIndex = WorldMgr.MakeGridIndex(spawnVector);
-	WorldMgr.AddObjectToSector(shared_from_this(), zoneType, gridIndex);
+	// sector 업데이트
+	WorldMgr.RequestSectorUpdate(shared_from_this());
+}
 
-	// 플레이어 zone, grid 업데이트
-	SetZoneGridIndex(zoneType, gridIndex);
+// 시야 내 새로 들어온 Object 스폰
+void Player::SendSpawnPacket(const Vector<GameObjectRef>& currentVisible, const HashSet<ObjectId>& newVisible)
+{
+	for (const GameObjectRef& obj : currentVisible)
+	{
+		const ObjectId objectId = obj->GetObjectId();
+
+		// 본인제외 or 이미 보이는 오브젝트 제외
+		if (objectId == _objectId || _visibleObjects.count(objectId) > 0)
+		{
+			continue;
+		}
+		
+		// 스폰 패킷 전송
+		Protocol::SC_OBJECT_SPAWN spawnPkt;
+		Protocol::ObjectInfo objInfo;
+		obj->MakeObjectInfo(objInfo);
+		spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
+
+		SendUnicast(spawnPkt, PacketID::SC_OBJECT_SPAWN);
+	}
+}
+
+// 시야 내 제거된 Object 디스폰
+void Player::SendDespawnPacket(const HashSet<ObjectId>& newVisible)
+{
+	for (const ObjectId& objId : _visibleObjects)
+	{
+		if (newVisible.count(objId) == 0)
+		{
+			Protocol::SC_OBJECT_DESPAWN despawnPkt;
+			despawnPkt.set_objectid(objId.GetId());
+
+			SendUnicast(despawnPkt, PacketID::SC_OBJECT_DESPAWN);
+		}
+	}
 }
 
 // 이동 시뮬레이션
@@ -268,7 +280,7 @@ void Player::MoveSimulate(const Protocol::CS_PLAYER_MOVE& packet)
 		
 		return;
 	}
-	// 위치 업데이트
+	// 위치 업데이트 & 섹터 업데이트 요청
 	SetWorldPosition(packet.posinfo());
 	// RTT 시간 이후의 예상좌표로 패킷 전송
 	PredicateMove(packet, halfRttSec);

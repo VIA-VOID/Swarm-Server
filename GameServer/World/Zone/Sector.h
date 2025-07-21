@@ -1,5 +1,6 @@
 #pragma once
 
+// Sector 고유 ID
 class SectorId
 {
 public:
@@ -36,6 +37,13 @@ struct std::hash<SectorId>
 	{
 		return sectorId.GetId();
 	}
+};
+
+struct ForceDeleteObject
+{
+	ObjectId objectId;
+	ZoneType zoneType;
+	GridIndex gridIndex;
 };
 
 /*--------------------------------------------------------

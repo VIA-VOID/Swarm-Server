@@ -35,6 +35,8 @@ void WorldManager::Shutdown()
 {
 	LOCK_GUARD;
 
+	_forceDeleteObjs.clear();
+	_sectorUpdateSet.clear();
 	_zoneSectors.clear();
 	_zones.clear();
 }
@@ -42,6 +44,12 @@ void WorldManager::Shutdown()
 // ZoneGrid 주기적 업데이트
 void WorldManager::SectorUpdateWorkerThread()
 {
+	// 섹터에서 오브젝트 삭제
+	DeleteObjSector();
+
+	// 섹터 업데이트
+	UpdateSector();
+
 	// 빈 sector 정리
 	ClearAllEmptySector();
 	
@@ -71,6 +79,15 @@ void WorldManager::AddObjectToSector(const GameObjectRef obj, const ZoneType zon
 		objectSector.insert({ obj->GetObjectId(), obj });
 	}
 }
+
+// 섹터에서 오브젝트 삭제 요청
+void WorldManager::RequestSectorDelete(const ObjectId objectId, const ZoneType zoneType, const GridIndex& gridIndex)
+{
+	LOCK_GUARD;
+
+	_forceDeleteObjs.push_back({ objectId , zoneType, gridIndex });
+}
+
 
 // 오브젝트 제거
 void WorldManager::RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex)
@@ -104,6 +121,14 @@ void WorldManager::RemoveObjectToSector(const ObjectId objId, const ZoneType zon
 			}
 		}
 	}
+}
+
+// 업데이트할 섹터 insert
+void WorldManager::RequestSectorUpdate(const GameObjectRef obj)
+{
+	LOCK_GUARD;
+
+	_sectorUpdateSet.insert(obj);
 }
 
 // 월드 좌표로 그리드 좌표 변환
@@ -330,6 +355,60 @@ bool WorldManager::IsInGridRange(const GridIndex& gridIndex, const GridIndex& ta
 	int32 dx = abs(gridIndex.x - target.x);
 	int32 dy = abs(gridIndex.y - target.y);
 	return (dx <= playerVisibleRange && dy <= playerVisibleRange);
+}
+
+// 섹터에서 오브젝트 삭제
+void WorldManager::DeleteObjSector()
+{
+	Vector<ForceDeleteObject> _deleteObjs;
+	{
+		LOCK_GUARD;
+
+		_deleteObjs = std::move(_forceDeleteObjs);
+	}
+
+	for (ForceDeleteObject& obj : _deleteObjs)
+	{
+		RemoveObjectToSector(obj.objectId, obj.zoneType, obj.gridIndex);
+	}
+}
+
+// 큐에 쌓인 섹터 업데이트
+void WorldManager::UpdateSector()
+{
+	LOCK_GUARD;
+
+	Vector<GameObjectRef> updateObjs;
+	updateObjs.reserve(_sectorUpdateSet.size());
+
+	for (auto it = _sectorUpdateSet.begin(); it != _sectorUpdateSet.end();)
+	{
+		GameObjectRef obj = *it;
+		if (obj == nullptr)
+		{
+			it = _sectorUpdateSet.erase(it);
+			continue;
+		}
+		// 이전 섹터와 현재 섹터가 같다면 섹터 이동 x
+		if (obj->GetPrevGrid() == obj->GetCurrentGrid() && 
+			obj->GetPrevZone() == obj->GetCurrentZone())
+		{
+			it = _sectorUpdateSet.erase(it);
+			continue;
+		}
+	
+		updateObjs.push_back(obj);
+		it = _sectorUpdateSet.erase(it);
+	}
+	
+	// 섹터 업데이트
+	for (GameObjectRef& obj : updateObjs)
+	{
+		// 이전 섹터에서 제거
+		RemoveObjectToSector(obj->GetObjectId(), obj->GetPrevZone(), obj->GetPrevGrid());
+		// 새로운 섹터에 추가
+		AddObjectToSector(obj, obj->GetCurrentZone(), obj->GetCurrentGrid());
+	}
 }
 
 // 월드 좌표로 Zone 타입 찾기

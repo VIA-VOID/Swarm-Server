@@ -18,10 +18,10 @@ public:
 
 	// Sector 주기적 업데이트
 	void SectorUpdateWorkerThread();
-	// Sector별 오브젝트 추가
-	void AddObjectToSector(const GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex);
-	// 오브젝트 제거
-	void RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex);
+	// 업데이트할 섹터 insert
+	void RequestSectorUpdate(const GameObjectRef obj);
+	// 섹터에서 오브젝트 삭제 요청
+	void RequestSectorDelete(const ObjectId objectId, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 월드 좌표로 그리드 좌표 변환
 	GridIndex MakeGridIndex(const Vector3d& position) const;
 	GridIndex MakeGridIndex(const float worldX, const float worldY) const;
@@ -39,7 +39,6 @@ public:
 	ZoneType GetZoneByPosition(const Vector3d& position) const;
 	// Sector 가져오기
 	Sector* FindSector(const ZoneType zoneType);
-
 	// 복수대상 sendPacket
 	template <typename T>
 	void SendBroadcast(const Vector<GameObjectRef>& objects, const T& message, const PacketID pktId, const ObjectId exceptId = ObjectId(-1));
@@ -54,6 +53,10 @@ private:
 	void InitSectors();
 	// 그리드좌표 유효성 검사
 	bool IsValidGridIndex(const GridIndex& gridIndex) const;
+	// Sector별 오브젝트 추가
+	void AddObjectToSector(const GameObjectRef obj, const ZoneType zoneType, const GridIndex& gridIndex);
+	// 오브젝트 제거
+	void RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 시야 내의 GameObject 목록 가져오기
 	// 단일 Zone 검색
 	void GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer = true);
@@ -65,6 +68,10 @@ private:
 	bool IsInRange(const Vector3d& position, const ZonePos& worldPos, int32 gridSize);
 	// 그리드 범위 체크
 	bool IsInGridRange(const GridIndex& gridIndex, const GridIndex& target);
+	// 섹터에서 오브젝트 삭제
+	void DeleteObjSector();
+	// 섹터 업데이트
+	void UpdateSector();
 	// 빈 sector 정리
 	void ClearAllEmptySector();
 	// 모든 플레이어 시야 업데이트
@@ -76,6 +83,10 @@ private:
 	MapData _mapData;
 	// Zone별 Sector
 	HashMap<ZoneType, SectorURef> _zoneSectors;
+	// 업데이트할 섹터 목록
+	HashSet<GameObjectRef> _sectorUpdateSet;
+	// 삭제할 오브젝트 목록
+	Vector<ForceDeleteObject> _forceDeleteObjs;
 	// Zone 관리
 	HashMap<ZoneType, BaseZoneURef> _zones;
 };

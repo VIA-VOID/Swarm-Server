@@ -13,6 +13,8 @@ public:
 	GameObject();
 	virtual ~GameObject();
 
+	// 유효한지 여부 확인
+	virtual bool IsValid() const;
 	// ObjectId 가져오기
 	ObjectId GetObjectId() const;
 	// 위치 가져오기
@@ -36,7 +38,9 @@ public:
 
 	// Getter-
 	ZoneType GetCurrentZone() const;
+	ZoneType GetPrevZone() const;
 	GridIndex GetCurrentGrid() const;
+	GridIndex GetPrevGrid() const;
 
 protected:
 	// 고유 ID
@@ -53,4 +57,9 @@ protected:
 	Protocol::StatInfo _statInfo;
 	// 이름
 	std::string _name;
+	// 유효한지 여부
+	std::atomic<bool> _isValid;
+	// 이전 정보
+	GridIndex _prevGridIndex;
+	ZoneType _prevZoneType;
 };

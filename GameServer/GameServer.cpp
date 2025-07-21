@@ -75,8 +75,8 @@ void GameServer::OnHeartbeat(SessionRef session)
 // 게임 종료시 주변 플레이어에게 알림
 void GameServer::LeaveGame(const ObjectId objectId, const ZoneType zoneType, const Vector3d& position, const GridIndex& gridIndex)
 {
-	// 그리드에서 제거
-	WorldMgr.RemoveObjectToSector(objectId, zoneType, gridIndex);
+	// 오브젝트 삭제 요청
+	WorldMgr.RequestSectorDelete(objectId, zoneType, gridIndex);
 
 	// 디스폰 패킷 생성
 	Protocol::SC_OBJECT_DESPAWN despawnPkt;

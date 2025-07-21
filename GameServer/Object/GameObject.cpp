@@ -6,12 +6,19 @@
 // ObjectId 가져오기
 GameObject::GameObject()
 	: _objectId(ObjectId::Generate()), _objectType(Protocol::ObjectType::OBJECT_TYPE_NONE),
-	 _vectorPos(0, 0), _gridIndex(0, 0), _zoneType(ZoneType::Town)
+	 _vectorPos(0, 0), _gridIndex(0, 0), _zoneType(ZoneType::Town), _prevGridIndex(0, 0), _prevZoneType(ZoneType::Town)
 {
+	_isValid.store(true, std::memory_order::memory_order_relaxed);
 }
 
 GameObject::~GameObject()
 {
+}
+
+// 유효한지 여부 확인
+bool GameObject::IsValid() const
+{
+	return _isValid.load();
 }
 
 // ObjectId 가져오기
@@ -37,8 +44,9 @@ void GameObject::SetWorldPosition(const Protocol::PosInfo& posInfo)
 {
 	_pos.CopyFrom(posInfo);
 	_vectorPos.UpdatePosition(posInfo);
-	_zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
-	_gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
+	ZoneType zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
+	GridIndex gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
+	SetZoneGridIndex(zoneType, gridIndex);
 }
 
 // 위치 업데이트
@@ -46,13 +54,23 @@ void GameObject::SetWorldPosition(const Vector3d& vectorPos)
 {
 	_vectorPos = vectorPos;
 	_pos = vectorPos.MakePosInfo();
-	_zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
-	_gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
+	ZoneType zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
+	GridIndex gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
+	SetZoneGridIndex(zoneType, gridIndex);
 }
 
 // zoneType & GridIndex 업데이트
 void GameObject::SetZoneGridIndex(const ZoneType zoneType, const GridIndex& gridIndex)
 {
+	_prevZoneType = _zoneType;
+	_prevGridIndex = _gridIndex;
+
+	// 섹터 변경시 섹터 업데이트 요청
+	if (_zoneType != zoneType || _gridIndex != gridIndex)
+	{
+		WorldMgr.RequestSectorUpdate(shared_from_this());
+	}
+
 	_zoneType = zoneType;
 	_gridIndex = gridIndex;
 }
@@ -80,9 +98,19 @@ ZoneType GameObject::GetCurrentZone() const
 	return _zoneType;
 }
 
+ZoneType GameObject::GetPrevZone() const
+{
+	return _prevZoneType;
+}
+
 GridIndex GameObject::GetCurrentGrid() const
 {
 	return _gridIndex;
+}
+
+GridIndex GameObject::GetPrevGrid() const
+{
+	return _prevGridIndex;
 }
 
 // Object 공용 정보(Protocol::ObjectInfo) 만들기

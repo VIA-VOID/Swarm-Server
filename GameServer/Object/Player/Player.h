@@ -22,7 +22,7 @@ public:
 	// 세션 가져오기
 	SessionRef GetSession();
 	// 유효성 검사
-	bool IsValid() const;
+	bool IsValid() const override;
 	// 패킷전송
 	template <typename T>
 	void SendUnicast(const T& message, const PacketID pktId);
@@ -36,6 +36,10 @@ private:
 	void InitStatInfo();
 	// 게임 입장 패킷 전송
 	void SendEnterGamePkt(const ZoneType zoneType, Protocol::ObjectInfo& outObjInfo);
+	// 시야 내 새로 들어온 Object 스폰
+	void SendSpawnPacket(const Vector<GameObjectRef>& currentVisible, const HashSet<ObjectId>& newVisible);
+	// 시야 내 제거된 Object 디스폰
+	void SendDespawnPacket(const HashSet<ObjectId>& newVisible);
 	// playerType(직업) 정보 가져오기
 	Protocol::PlayerType GetPlayerType() const;
 
@@ -46,7 +50,6 @@ private:
 	Protocol::PlayerType _playerType;
 	
 	TimePoint _lastMoveTime;
-	std::atomic<bool> _isValid;
 	std::atomic<bool> _isEntered;
 };
 
