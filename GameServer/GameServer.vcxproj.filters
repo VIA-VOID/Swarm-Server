@@ -49,13 +49,7 @@
     <ClCompile Include="World\Zone\BaseZone.cpp">
       <Filter>World\Zone</Filter>
     </ClCompile>
-    <ClCompile Include="World\MapDataLoader.cpp">
-      <Filter>World\Zone</Filter>
-    </ClCompile>
     <ClCompile Include="World\Zone\TownZone.cpp">
-      <Filter>World\Zone</Filter>
-    </ClCompile>
-    <ClCompile Include="World\WorldManager.cpp">
       <Filter>World\Zone</Filter>
     </ClCompile>
     <ClCompile Include="Protocol\ProtoOperator.cpp">
@@ -81,6 +75,12 @@
     </ClCompile>
     <ClCompile Include="World\Zone\PvpZone.cpp">
       <Filter>World\Zone</Filter>
+    </ClCompile>
+    <ClCompile Include="World\WorldManager.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="World\MapDataLoader.cpp">
+      <Filter>World</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -136,13 +136,7 @@
     <ClInclude Include="World\Zone\BaseZone.h">
       <Filter>World\Zone</Filter>
     </ClInclude>
-    <ClInclude Include="World\MapDataLoader.h">
-      <Filter>World\Zone</Filter>
-    </ClInclude>
     <ClInclude Include="World\Zone\TownZone.h">
-      <Filter>World\Zone</Filter>
-    </ClInclude>
-    <ClInclude Include="World\WorldManager.h">
       <Filter>World\Zone</Filter>
     </ClInclude>
     <ClInclude Include="World\Zone\ZoneDefine.h">
@@ -171,6 +165,12 @@
     </ClInclude>
     <ClInclude Include="World\Zone\PvpZone.h">
       <Filter>World\Zone</Filter>
+    </ClInclude>
+    <ClInclude Include="World\WorldManager.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="World\MapDataLoader.h">
+      <Filter>World</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
