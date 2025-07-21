@@ -43,7 +43,7 @@ private:
 
 // 멤버 함수 포인터를 이용한 생성자
 template<typename T, typename Ret, typename ...Args>
-inline Job::Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId, uint64 delayMs, Args ...args)
+inline Job::Job(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId /*= JobGroups::System*/, uint64 delayMs /*= 0*/, Args ...args)
 	: _groupId(groupId),
 	_executeTime(delayMs > 0 ? NOW + std::chrono::milliseconds(delayMs) : NOW),
 	_orderNum(GetNextOrderNum())

@@ -18,10 +18,10 @@ public:
 	void DoAsyncAfter(uint64 delayMs, CallbackType&& callback, JobGroupId groupId = JobGroups::System);
 	// 멤버 함수를 이용한 작업 등록
 	template <typename T, typename Ret, typename... Args>
-	void DoAsync(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), Args... args);
+	void DoAsync(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId = JobGroups::System, Args... args);
 	// 멤버 함수를 이용한 시간 지연 처리용 작업 등록
 	template <typename T, typename Ret, typename... Args>
-	void DoAsyncAfter(uint64 delayMs, std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), Args... args);
+	void DoAsyncAfter(uint64 delayMs, std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId = JobGroups::System, Args... args);
 	// 종료
 	void Shutdown() override;
 	// 스레드 등록
@@ -68,16 +68,16 @@ private:
 
 // 멤버 함수를 이용한 작업 등록
 template<typename T, typename Ret, typename ...Args>
-inline void JobPriorityQueue::DoAsync(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), Args ...args)
+inline void JobPriorityQueue::DoAsync(std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId /*= JobGroups::System*/, Args ...args)
 {
-	JobRef job = ObjectPool<Job>::MakeShared(owner, memFunc, 0, std::forward<Args>(args)...);
+	JobRef job = ObjectPool<Job>::MakeShared(owner, memFunc, groupId, 0, std::forward<Args>(args)...);
 	Push(job);
 }
 
 // 멤버 함수를 이용한 시간 지연 처리용 작업 등록
 template<typename T, typename Ret, typename ...Args>
-inline void JobPriorityQueue::DoAsyncAfter(uint64 delayMs, std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), Args ...args)
+inline void JobPriorityQueue::DoAsyncAfter(uint64 delayMs, std::shared_ptr<T> owner, Ret(T::* memFunc)(Args...), JobGroupId groupId /*= JobGroups::System*/, Args ...args)
 {
-	JobRef job = ObjectPool<Job>::MakeShared(owner, memFunc, delayMs, std::forward<Args>(args)...);
+	JobRef job = ObjectPool<Job>::MakeShared(owner, memFunc, groupId, delayMs, std::forward<Args>(args)...);
 	Push(job);
 }
