@@ -154,7 +154,7 @@ void Session::OnRecvCompleted(int32 bytesTransferred)
 			Close();
 			return;
 		}
-		
+
 		// 패킷 전체크기만큼 데이터를 수신했는지 확인
 		if (dataSize > _recvContext.recvBuffer.GetDataSize())
 		{
@@ -220,14 +220,9 @@ void Session::OnSendCompleted(int32 bytesTransferred)
 		}
 		else
 		{
-			// 부분 송신
-			buffer->OnSendCompleted(remainBytes);
-			remainBytes = 0;
-		}
-		// 미전송 버퍼 저장
-		if (buffer->IsCompleted() == false)
-		{
+			// 미전송 버퍼 저장
 			remainSendBuffer.push_back(buffer);
+			break;
 		}
 	}
 
