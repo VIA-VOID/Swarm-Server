@@ -18,31 +18,28 @@ public:
 	// ObjectId 가져오기
 	ObjectId GetObjectId() const;
 	// 위치 가져오기
-	Vector3d GetWorldPosition() const;
-	void GetWorldPosition(Protocol::PosInfo& outPosInfo) const;
+	Vector3d GetWorldPosition();
+	void GetWorldPosition(Protocol::PosInfo& outPosInfo);
 	// 위치 업데이트
 	void SetWorldPosition(const Protocol::PosInfo& posInfo);
-	void SetWorldPosition(const Vector3d& vectorPos);
-	// zoneType & GridIndex 업데이트
-	void SetZoneGridIndex(const ZoneType zoneType, const GridIndex& gridIndex);
-	// 모든 위치정보 업데이트
-	void SetAllPosition();
+	void SetWorldPosition(const Vector3d& vectorPos);	
 	// Player인지 확인
 	bool IsPlayer() const;
 	// Monster인지 확인
 	bool IsMonster() const;
 	// Object 공용 정보(Protocol::ObjectInfo) 만들기
 	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo);
-	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType);
-	void MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::MonsterType monsterType);
-
-	// Getter-
-	ZoneType GetCurrentZone() const;
-	ZoneType GetPrevZone() const;
-	GridIndex GetCurrentGrid() const;
-	GridIndex GetPrevGrid() const;
+	
+	// 전체 위치정보 가져오기
+	ObjectPosition GetAllObjectPosition();
+	GridIndex GetCurrentGrid();
 
 protected:
+	void SetWorldPosition(const Vector3d& vectorPos, const Protocol::PosInfo& posInfo);
+
+protected:
+	USE_LOCK;
+
 	// 고유 ID
 	ObjectId _objectId;
 	// Object 타입

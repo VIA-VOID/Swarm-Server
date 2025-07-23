@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "GameObject.h"
-#include "World/Zone/Vector3d.h"
 #include "World/WorldManager.h"
 
 // ObjectId 가져오기
@@ -28,57 +27,34 @@ ObjectId GameObject::GetObjectId() const
 }
 
 // 위치 가져오기(Vector3d)
-Vector3d GameObject::GetWorldPosition() const
+Vector3d GameObject::GetWorldPosition()
 {
+	LOCK_GUARD;
+
 	return _vectorPos;
 }
 
 // 위치 가져오기(Protocol::PosInfo)
-void GameObject::GetWorldPosition(Protocol::PosInfo& outPosInfo) const
+void GameObject::GetWorldPosition(Protocol::PosInfo& outPosInfo)
 {
+	LOCK_GUARD;
+
 	outPosInfo.CopyFrom(_pos);
 }
 
 // 위치 업데이트
 void GameObject::SetWorldPosition(const Protocol::PosInfo& posInfo)
 {
-	_pos.CopyFrom(posInfo);
-	_vectorPos.UpdatePosition(posInfo);
-	ZoneType zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
-	GridIndex gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
-	SetZoneGridIndex(zoneType, gridIndex);
+	Vector3d vectorPos(0, 0);
+	vectorPos.UpdatePosition(posInfo);
+	SetWorldPosition(vectorPos, posInfo);
 }
 
 // 위치 업데이트
 void GameObject::SetWorldPosition(const Vector3d& vectorPos)
 {
-	_vectorPos = vectorPos;
-	_pos = vectorPos.MakePosInfo();
-	ZoneType zoneType = WorldMgr.GetZoneByPosition(_vectorPos);
-	GridIndex gridIndex = WorldMgr.MakeGridIndex(_vectorPos);
-	SetZoneGridIndex(zoneType, gridIndex);
-}
-
-// zoneType & GridIndex 업데이트
-void GameObject::SetZoneGridIndex(const ZoneType zoneType, const GridIndex& gridIndex)
-{
-	_prevZoneType = _zoneType;
-	_prevGridIndex = _gridIndex;
-
-	// 섹터 변경시 섹터 업데이트 요청
-	if (_zoneType != zoneType || _gridIndex != gridIndex)
-	{
-		WorldMgr.RequestSectorUpdate(shared_from_this());
-	}
-
-	_zoneType = zoneType;
-	_gridIndex = gridIndex;
-}
-
-// 모든 위치정보 업데이트
-void GameObject::SetAllPosition()
-{
-	// todo
+	Protocol::PosInfo posInfo = vectorPos.MakePosInfo();
+	SetWorldPosition(vectorPos, posInfo);
 }
 
 // Player인지 확인
@@ -93,46 +69,58 @@ bool GameObject::IsMonster() const
 	return _objectType == Protocol::ObjectType::OBJECT_TYPE_MONSTER;
 }
 
-ZoneType GameObject::GetCurrentZone() const
+void GameObject::SetWorldPosition(const Vector3d& vectorPos, const Protocol::PosInfo& posInfo)
 {
-	return _zoneType;
-}
+	ZoneType newZoneType = WorldMgr.GetZoneByPosition(vectorPos);
+	GridIndex newGridIndex = WorldMgr.MakeGridIndex(vectorPos);
 
-ZoneType GameObject::GetPrevZone() const
-{
-	return _prevZoneType;
-}
+	bool needSectorUpdate = false;
+	{
+		LOCK_GUARD;
 
-GridIndex GameObject::GetCurrentGrid() const
-{
-	return _gridIndex;
-}
+		// 이전 정보 저장
+		_prevZoneType = _zoneType;
+		_prevGridIndex = _gridIndex;
 
-GridIndex GameObject::GetPrevGrid() const
-{
-	return _prevGridIndex;
+		// 섹터 변경 여부
+		needSectorUpdate = (_zoneType != newZoneType || _gridIndex != newGridIndex);
+
+		// 위치 업데이트
+		_vectorPos = vectorPos;
+		_pos = posInfo;
+		_zoneType = newZoneType;
+		_gridIndex = newGridIndex;
+	}
+	// 섹터 변경시 섹터 업데이트 요청
+	if (needSectorUpdate)
+	{
+		WorldMgr.RequestSectorUpdate(shared_from_this());
+	}
 }
 
 // Object 공용 정보(Protocol::ObjectInfo) 만들기
-void GameObject::MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::PlayerType playerType)
-{
-	MakeObjectInfo(outObjectInfo);
-	outObjectInfo.set_playertype(playerType);
-	outObjectInfo.set_monstertype(Protocol::MonsterType::MONSTER_TYPE_NONE);
-}
-
-void GameObject::MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo, Protocol::MonsterType monsterType)
-{
-	MakeObjectInfo(outObjectInfo);
-	outObjectInfo.set_playertype(Protocol::PlayerType::PLAYER_TYPE_NONE);
-	outObjectInfo.set_monstertype(monsterType);
-}
-
 void GameObject::MakeObjectInfo(Protocol::ObjectInfo& outObjectInfo)
 {
+	LOCK_GUARD;
+
 	outObjectInfo.set_objectid(_objectId.GetId());
 	outObjectInfo.set_type(_objectType);
 	outObjectInfo.mutable_posinfo()->CopyFrom(_pos);
 	outObjectInfo.mutable_statinfo()->CopyFrom(_statInfo);
 	outObjectInfo.set_name(_name);
+}
+
+// 전체 위치정보 가져오기
+ObjectPosition GameObject::GetAllObjectPosition()
+{
+	LOCK_GUARD;
+
+	return { _prevZoneType, _zoneType, _prevGridIndex, _gridIndex, _vectorPos };
+}
+
+GridIndex GameObject::GetCurrentGrid()
+{
+	LOCK_GUARD;
+
+	return _gridIndex;
 }

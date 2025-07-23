@@ -40,10 +40,11 @@ void GameServer::OnDisconnected(SessionRef session)
 	}
 
 	// 해제전 필요 정보 복사
+	ObjectPosition allPosition = player->GetAllObjectPosition();
 	ObjectId objectId = player->GetObjectId();
-	ZoneType zoneType = player->GetCurrentZone();
-	Vector3d position = player->GetWorldPosition();
-	GridIndex gridIndex = player->GetCurrentGrid();
+	ZoneType zoneType = allPosition.currentZone;
+	Vector3d position = allPosition.currentVector;
+	GridIndex gridIndex = allPosition.currentGrid;
 
 	// 상호 참조 해제
 	player->DetachSession();

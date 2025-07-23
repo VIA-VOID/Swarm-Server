@@ -40,8 +40,6 @@ private:
 	void SendSpawnPacket(const Vector<GameObjectRef>& currentVisible, const HashSet<ObjectId>& newVisible);
 	// 시야 내 제거된 Object 디스폰
 	void SendDespawnPacket(const HashSet<ObjectId>& newVisible);
-	// playerType(직업) 정보 가져오기
-	Protocol::PlayerType GetPlayerType() const;
 
 private:
 	SessionRef _session;

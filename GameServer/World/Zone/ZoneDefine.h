@@ -68,3 +68,18 @@ struct GridIndex
 		return !(*this == other);
 	}
 };
+
+// 전체 위치정보
+struct ObjectPosition
+{
+	ObjectPosition(ZoneType InPrevZone, ZoneType InCurrentZone, GridIndex InPrevGrid, GridIndex InCurrentGrid, Vector3d InCurrentVector)
+		: prevZone(InPrevZone), currentZone(InCurrentZone), prevGrid(InPrevGrid), currentGrid(InCurrentGrid), currentVector(InCurrentVector)
+	{
+	}
+
+	ZoneType prevZone;
+	ZoneType currentZone;
+	GridIndex prevGrid;
+	GridIndex currentGrid;
+	Vector3d currentVector;
+};

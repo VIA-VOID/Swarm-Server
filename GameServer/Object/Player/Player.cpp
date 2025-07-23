@@ -86,16 +86,14 @@ void Player::EnterGame(const ZoneType zoneType)
 	WorldMgr.GetVisibleObjectsInSectors(GetWorldPosition(), objs, false);
 
 	// 시야 안에 있는 타 플레이어들에게 입장 알림
-	{
-		Protocol::SC_OBJECT_SPAWN spawnPkt;
+	Protocol::SC_OBJECT_SPAWN spawnPkt;
 
-		// 오브젝트 정보 만들기
-		MakeObjectInfo(objInfo, _playerType);
-		spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
+	// 오브젝트 정보 만들기
+	MakeObjectInfo(objInfo);
+	spawnPkt.mutable_objectinfo()->CopyFrom(objInfo);
 
-		// 타 플레이어에게 현재 캐릭터 스폰 알림
-		WorldMgr.SendBroadcast(objs, spawnPkt, PacketID::SC_OBJECT_SPAWN);
-	}
+	// 타 플레이어에게 현재 캐릭터 스폰 알림
+	WorldMgr.SendBroadcast(objs, spawnPkt, PacketID::SC_OBJECT_SPAWN);
 
 	// 현재 접속한 플레이어에게 시야 안에 있는 타 플레이어 목록 알림
 	for (const auto& obj : objs)
@@ -117,7 +115,7 @@ void Player::EnterGame(const ZoneType zoneType)
 			Protocol::ObjectInfo otherObjInfo;
 
 			// 타 오브젝트 정보 만들기
-			player->MakeObjectInfo(otherObjInfo, player->GetPlayerType());
+			player->MakeObjectInfo(otherObjInfo);
 			spawnPkt.mutable_objectinfo()->CopyFrom(otherObjInfo);
 
 			// 현재 캐릭터에게 타 플레이어 존재 알림
@@ -192,7 +190,7 @@ void Player::SendEnterGamePkt(const ZoneType zoneType, Protocol::ObjectInfo& out
 
 	// 오브젝트 정보 만들기
 	Protocol::ObjectInfo objInfo;
-	MakeObjectInfo(objInfo, _playerType);
+	MakeObjectInfo(objInfo);
 
 	outObjInfo = objInfo;
 
@@ -269,9 +267,10 @@ void Player::MoveSimulate(const Protocol::CS_PLAYER_MOVE& packet)
 	float allowedDistance = moveSpeed * elapsedTime;
 	if (distance > allowedDistance * MOVE_ALLOW_RANGE)
 	{
+		/*
 		LOG_WARNING("캐릭터 이동 오차범위 초과, Distance: " + std::to_string(distance) + 
 			" SessionId: " + std::to_string(_session->GetSessionID().GetID()));
-		
+		*/
 		// 이전의 좌표(서버좌표)로 전송시킨다
 		Protocol::SC_PLAYER_MOVE movePkt;
 		movePkt.set_objectid(_objectId.GetId());
@@ -309,10 +308,4 @@ void Player::PredicateMove(const Protocol::CS_PLAYER_MOVE& packet, const float h
 	movePkt.set_objectid(_objectId.GetId());
 	movePkt.mutable_posinfo()->CopyFrom(predicatePos);
 	WorldMgr.SendBroadcastToVisiblePlayers(shared_from_this(), movePkt, PacketID::SC_PLAYER_MOVE);
-}
-
-// playerType(직업) 정보 가져오기
-Protocol::PlayerType Player::GetPlayerType() const
-{
-	return _playerType;
 }

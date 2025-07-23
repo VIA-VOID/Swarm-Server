@@ -1,5 +1,4 @@
 #pragma once
-#include "Zone/ZoneDefine.h"
 #include "Zone/BaseZone.h"
 #include "Zone/Sector.h"
 #include "Object/Player/Player.h"
@@ -115,7 +114,9 @@ template <typename T>
 inline void WorldManager::SendBroadcastToVisiblePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId)
 {
 	Vector<GameObjectRef> players;
-	GetVisibleObjectsInSector(targetPlayer->GetCurrentZone(), targetPlayer->GetWorldPosition(), players);
+	
+	ObjectPosition allPosition = targetPlayer->GetAllObjectPosition();
+	GetVisibleObjectsInSector(allPosition.currentZone, allPosition.currentVector, players);
 
 	SendBroadcast(players, message, pktId, targetPlayer->GetObjectId());
 }

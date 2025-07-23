@@ -207,6 +207,9 @@ void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& 
 	Vector<SectorId> sectorIds;
 	GetVisibleSectorIds(gridIndex, sectorIds);
 	
+	Vector<GameObjectRef> gameObjects;
+	gameObjects.reserve(sectorIds.size());
+	
 	{
 		GROUP_LOCK_GUARD(*sector);
 
@@ -222,33 +225,36 @@ void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& 
 			const auto& objSectors = sectorIt->second;
 			for (const auto& objSector : objSectors)
 			{
-				const GameObjectRef obj = objSector.second;
-				GridIndex objGrid = obj->GetCurrentGrid();
-
-				// 그리드 범위 체크
-				if (IsInGridRange(gridIndex, objGrid) == false)
-				{
-					continue;
-				}
-
-				if (obj->IsPlayer())
-				{
-					const PlayerRef& player = std::static_pointer_cast<Player>(obj);
-					if (player->IsValid())
-					{
-						outObjects.push_back(player);
-					}
-				}
-				else
-				{
-					if (onlyPlayer == false)
-					{
-						outObjects.push_back(obj);
-					}
-				}
+				gameObjects.push_back(objSector.second);
 			}
 		}
+	}
 
+	for (const GameObjectRef& obj : gameObjects)
+	{
+		GridIndex objGrid = obj->GetCurrentGrid();
+
+		// 그리드 범위 체크
+		if (IsInGridRange(gridIndex, objGrid) == false)
+		{
+			continue;
+		}
+
+		if (obj->IsPlayer())
+		{
+			const PlayerRef& player = std::static_pointer_cast<Player>(obj);
+			if (player->IsValid())
+			{
+				outObjects.push_back(player);
+			}
+		}
+		else
+		{
+			if (onlyPlayer == false)
+			{
+				outObjects.push_back(obj);
+			}
+		}
 	}
 }
 
@@ -376,38 +382,53 @@ void WorldManager::DeleteObjSector()
 // 큐에 쌓인 섹터 업데이트
 void WorldManager::UpdateSector()
 {
-	LOCK_GUARD;
+	Vector<GameObjectRef> gameObjects;
+	gameObjects.reserve(_sectorUpdateSet.size());
+
+	{
+		LOCK_GUARD;
+		
+		for (auto it = _sectorUpdateSet.begin(); it != _sectorUpdateSet.end();)
+		{
+			GameObjectRef obj = *it;
+			if (obj == nullptr)
+			{
+				it = _sectorUpdateSet.erase(it);
+				continue;
+			}
+
+			gameObjects.push_back(obj);
+			it = _sectorUpdateSet.erase(it);
+		}
+	}
 
 	Vector<GameObjectRef> updateObjs;
-	updateObjs.reserve(_sectorUpdateSet.size());
+	updateObjs.reserve(gameObjects.size());
 
-	for (auto it = _sectorUpdateSet.begin(); it != _sectorUpdateSet.end();)
+	// 업데이트할 오브젝트 거르기
+	for (GameObjectRef& obj : gameObjects)
 	{
-		GameObjectRef obj = *it;
-		if (obj == nullptr)
-		{
-			it = _sectorUpdateSet.erase(it);
-			continue;
-		}
+		ObjectPosition allPosition = obj->GetAllObjectPosition();
+		
 		// 이전 섹터와 현재 섹터가 같다면 섹터 이동 x
-		if (obj->GetPrevGrid() == obj->GetCurrentGrid() && 
-			obj->GetPrevZone() == obj->GetCurrentZone())
+		if (allPosition.prevGrid == allPosition.currentGrid &&
+			allPosition.prevZone == allPosition.currentZone)
 		{
-			it = _sectorUpdateSet.erase(it);
 			continue;
 		}
-	
+
 		updateObjs.push_back(obj);
-		it = _sectorUpdateSet.erase(it);
 	}
-	
+
 	// 섹터 업데이트
 	for (GameObjectRef& obj : updateObjs)
 	{
+		ObjectPosition allPosition = obj->GetAllObjectPosition();
+
 		// 이전 섹터에서 제거
-		RemoveObjectToSector(obj->GetObjectId(), obj->GetPrevZone(), obj->GetPrevGrid());
+		RemoveObjectToSector(obj->GetObjectId(), allPosition.prevZone, allPosition.prevGrid);
 		// 새로운 섹터에 추가
-		AddObjectToSector(obj, obj->GetCurrentZone(), obj->GetCurrentGrid());
+		AddObjectToSector(obj, allPosition.currentZone, allPosition.currentGrid);
 	}
 }
 
