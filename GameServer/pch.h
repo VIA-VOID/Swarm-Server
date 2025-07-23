@@ -22,3 +22,4 @@
 #include "GameMacro.h"
 #include "Packet/PacketHandler.h"
 #include "World/Zone/Vector3d.h"
+#include "World/Zone/ZoneDefine.h"
