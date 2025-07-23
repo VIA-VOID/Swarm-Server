@@ -1,5 +1,4 @@
 #pragma once
-#include "ZoneDefine.h"
 
 /*--------------------------------------------------------
 					Vector3d

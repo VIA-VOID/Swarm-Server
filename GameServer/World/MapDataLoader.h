@@ -1,9 +1,8 @@
 #pragma once
 #include "Data/BaseJsonLoader.h"
-#include "Zone/ZoneDefine.h"
 #include <rapidjson/document.h>
 
-/*--------l-----------------------------------------------
+/*--------------------------------------------------------
 				MapDataLoader
 
 - 맵 (좌표)데이터를 읽고 파싱
