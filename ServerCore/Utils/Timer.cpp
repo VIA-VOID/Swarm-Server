@@ -79,5 +79,5 @@ int64 Timer::GetTimeDiff(const TimePoint& start, const TimePoint& end /*= NOW*/)
 // 현재시간 밀리초 반환
 int64 Timer::GetNowMsTime()
 {
-	return std::chrono::duration_cast<std::chrono::milliseconds>(NOW.time_since_epoch()).count();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
