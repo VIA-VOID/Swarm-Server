@@ -124,3 +124,10 @@ GridIndex GameObject::GetCurrentGrid()
 
 	return _gridIndex;
 }
+
+ZoneType GameObject::GetCurrentZone()
+{
+	LOCK_GUARD;
+
+	return _zoneType;
+}

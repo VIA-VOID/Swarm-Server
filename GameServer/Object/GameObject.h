@@ -33,6 +33,7 @@ public:
 	// 전체 위치정보 가져오기
 	ObjectPosition GetAllObjectPosition();
 	GridIndex GetCurrentGrid();
+	ZoneType GetCurrentZone();
 
 protected:
 	void SetWorldPosition(const Vector3d& vectorPos, const Protocol::PosInfo& posInfo);
