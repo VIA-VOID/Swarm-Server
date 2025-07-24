@@ -10,5 +10,5 @@ void SystemPacketHandler::Handle_CS_SYSTEM_PONG(SessionRef session, const Protoc
 	int32 diffTime = static_cast<int32>(serverTime - clientTime);
 
 	session->IncreasePongCount();
-	session->updateRoundTripTime(diffTime);
+	session->updateRoundTripTime(std::abs(diffTime));
 }
