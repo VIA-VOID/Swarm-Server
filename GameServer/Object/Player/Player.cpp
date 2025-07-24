@@ -157,6 +157,39 @@ void Player::UpdateVision(Vector<GameObjectRef>& currentVisible)
 	_visibleObjects = std::move(newVisible);
 }
 
+// 채팅 브로드캐스트
+void Player::ChatMessage(const Protocol::CS_CHAT_MSG& packet)
+{
+	const Protocol::MsgType type = packet.msgtype();
+	const std::string& str = packet.msg();
+	
+	switch (type)
+	{
+	case Protocol::MSG_TYPE_All:
+	case Protocol::MSG_TYPE_General:
+		// 일반채팅
+		// - 시야 내 플레이어들에게만 브로드캐스트
+		BroadcastChatAsync(packet.msg(), Protocol::MSG_TYPE_General,
+			[](const GameObjectRef& self, const Protocol::SC_CHAT_MSG& pkt) {
+				WorldMgr.SendBroadcastToVisiblePlayers(self, pkt, PacketID::SC_CHAT_MSG, true);
+			});
+		break;
+	
+	case Protocol::MSG_TYPE_Local:
+		// 지역채팅
+		// - 같은 Zone 내 플레이어들에게만 브로드캐스트
+		BroadcastChatAsync(packet.msg(), Protocol::MSG_TYPE_Local,
+			[](const GameObjectRef& self, const Protocol::SC_CHAT_MSG& pkt) {
+				WorldMgr.SendBroadcastToZonePlayers(self, pkt, PacketID::SC_CHAT_MSG, true);
+			});
+		break;
+
+	case Protocol::MSG_TYPE_System:
+		// 시스템
+		break;
+	}
+}
+
 // 세션 가져오기
 SessionRef Player::GetSession()
 {

@@ -1,5 +1,6 @@
 #pragma once
 #include "Object/GameObject.h"
+#include "Utils/Timer.h"
 
 /*-------------------------------------------------------
 				Player
@@ -19,6 +20,9 @@ public:
 	void EnterGame(const ZoneType zoneType);
 	// 시야내의 ObjectId 업데이트
 	void UpdateVision(Vector<GameObjectRef>& currentVisible);
+	// 채팅 브로드캐스트
+	void ChatMessage(const Protocol::CS_CHAT_MSG& packet);
+
 	// 세션 가져오기
 	SessionRef GetSession();
 	// 유효성 검사
@@ -40,6 +44,10 @@ private:
 	void SendSpawnPacket(const Vector<GameObjectRef>& currentVisible, const HashSet<ObjectId>& newVisible);
 	// 시야 내 제거된 Object 디스폰
 	void SendDespawnPacket(const HashSet<ObjectId>& newVisible);
+	// 채팅 브로드캐스트
+	// - Job 스레드로 넘김
+	template <typename Func>
+	void BroadcastChatAsync(const std::string& msg, Protocol::MsgType msgType, Func&& func);
 
 private:
 	SessionRef _session;
@@ -60,4 +68,18 @@ void Player::SendUnicast(const T& message, const PacketID pktId)
 		return;
 	}
 	PacketHandler::SendPacket(_session, message, pktId);
+}
+
+// 채팅 브로드캐스트
+// - Job 스레드로 넘김
+template <typename BroadcastFunc>
+void Player::BroadcastChatAsync(const std::string& msg, Protocol::MsgType msgType, BroadcastFunc&& func)
+{
+	JobQ.DoAsync([self = shared_from_this(), msg, msgType, func = std::forward<BroadcastFunc>(func)]() {
+		Protocol::SC_CHAT_MSG chatPkt;
+		chatPkt.set_timestamp(Timer::GetNowMsTime());
+		chatPkt.set_msg(msg);
+		chatPkt.set_msgtype(msgType);
+		func(self, chatPkt);
+	}, JobGroup::Social);
 }
