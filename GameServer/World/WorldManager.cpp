@@ -194,7 +194,6 @@ bool WorldManager::IsValidGridIndex(const GridIndex& gridIndex) const
 }
 
 // 시야 내의 GameObject 목록 가져오기
-// 단일 Zone 검색
 void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer /*= true*/)
 {
 	Sector* sector = FindSector(zoneType);
@@ -253,6 +252,39 @@ void WorldManager::GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& 
 			if (onlyPlayer == false)
 			{
 				outObjects.push_back(obj);
+			}
+		}
+	}
+}
+
+// Zone 내의 GameObject 목록 가져오기
+void WorldManager::GetVisibleObjectsInZone(ZoneType zoneType, Vector<GameObjectRef>& outObjects)
+{
+	Sector* findSector = FindSector(zoneType);
+	if (findSector == nullptr)
+	{
+		return;
+	}
+	{
+		GROUP_LOCK_GUARD(*findSector);
+
+		// sector에 있는 전체 GameObject 목록 가져오기
+		auto& sectors = findSector->sectors;
+		for (auto& sector : sectors)
+		{
+			ObjectSector& objSector = sector.second;
+
+			for (auto it = objSector.begin(); it != objSector.end(); ++it)
+			{
+				GameObjectRef& obj = it->second;
+				if (obj->IsPlayer())
+				{
+					const PlayerRef& player = std::static_pointer_cast<Player>(obj);
+					if (player->IsValid())
+					{
+						outObjects.push_back(obj);
+					}
+				}
 			}
 		}
 	}

@@ -43,7 +43,10 @@ public:
 	void SendBroadcast(const Vector<GameObjectRef>& objects, const T& message, const PacketID pktId, const ObjectId exceptId = ObjectId(-1));
 	// 시야 내 플레이어들에게 패킷 전송
 	template <typename T>
-	void SendBroadcastToVisiblePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId);
+	void SendBroadcastToVisiblePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId, const bool sendSelf = false);
+	// 같은 Zone 내 플레이어들에게 패킷 전송
+	template <typename T>
+	void SendBroadcastToZonePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId, const bool sendSelf = false);
 
 private:
 	// Zone 초기화
@@ -57,8 +60,9 @@ private:
 	// 오브젝트 제거
 	void RemoveObjectToSector(const ObjectId objId, const ZoneType zoneType, const GridIndex& gridIndex);
 	// 시야 내의 GameObject 목록 가져오기
-	// 단일 Zone 검색
 	void GetVisibleObjectsInSector(ZoneType zoneType, const Vector3d& position, Vector<GameObjectRef>& outObjects, bool onlyPlayer = true);
+	// Zone 내의 GameObject 목록 가져오기
+	void GetVisibleObjectsInZone(ZoneType zoneType, Vector<GameObjectRef>& outObjects);
 	// 시야 범위에 포함되는 Zone 목록 가져오기
 	void GetVisibleZones(const Vector3d& position, Vector<ZoneType>& outZoneTypes);
 	// 시야내의 SectorId 가져오기
@@ -96,10 +100,6 @@ inline void WorldManager::SendBroadcast(const Vector<GameObjectRef>& objects, co
 {
 	for (const auto& obj : objects)
 	{
-		if (obj->IsPlayer() == false)
-		{
-			continue;
-		}
 		const PlayerRef& player = std::static_pointer_cast<Player>(obj);
 		if (player->GetObjectId() == exceptId)
 		{
@@ -111,12 +111,36 @@ inline void WorldManager::SendBroadcast(const Vector<GameObjectRef>& objects, co
 
 // 시야 내 플레이어들에게 패킷 전송
 template <typename T>
-inline void WorldManager::SendBroadcastToVisiblePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId)
+inline void WorldManager::SendBroadcastToVisiblePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId, const bool sendSelf /*= false*/)
 {
 	Vector<GameObjectRef> players;
 	
 	ObjectPosition allPosition = targetPlayer->GetAllObjectPosition();
 	GetVisibleObjectsInSector(allPosition.currentZone, allPosition.currentVector, players);
 
-	SendBroadcast(players, message, pktId, targetPlayer->GetObjectId());
+	if (sendSelf)
+	{
+		SendBroadcast(players, message, pktId);
+	}
+	else
+	{
+		SendBroadcast(players, message, pktId, targetPlayer->GetObjectId());
+	}
+}
+
+// 같은 Zone 내 플레이어들에게 패킷 전송
+template <typename T>
+void WorldManager::SendBroadcastToZonePlayers(const GameObjectRef targetPlayer, const T& message, const PacketID pktId, const bool sendSelf /*= false*/)
+{
+	Vector<GameObjectRef> players;
+	GetVisibleObjectsInZone(targetPlayer->GetCurrentZone(), players);
+
+	if (sendSelf)
+	{
+		SendBroadcast(players, message, pktId);
+	}
+	else
+	{
+		SendBroadcast(players, message, pktId, targetPlayer->GetObjectId());
+	}
 }
