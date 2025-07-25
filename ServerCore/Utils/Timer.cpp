@@ -59,7 +59,6 @@ std::string Timer::GetFormattedDate(char dateSep /*= '/'*/)
 std::string Timer::GetFormattedHour(char timeSep /*= ':'*/)
 {
 	system_clock::time_point now = system_clock::now();
-	auto ms = ::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
 
 	std::time_t now_c = system_clock::to_time_t(now);
 	std::tm time_tm{};
@@ -68,9 +67,9 @@ std::string Timer::GetFormattedHour(char timeSep /*= ':'*/)
 	char buffer[6];
 	std::snprintf(buffer, sizeof(buffer),
 		"%02d%c%02d",
-		time_tm.tm_min, 
+		time_tm.tm_hour,
 		timeSep,
-		time_tm.tm_sec
+		time_tm.tm_min
 	);
 
 	return std::string(buffer);
