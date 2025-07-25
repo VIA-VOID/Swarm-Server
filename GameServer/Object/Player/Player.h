@@ -1,6 +1,7 @@
 #pragma once
 #include "Object/GameObject.h"
 #include "Utils/Timer.h"
+#include "Chat/Chat.h"
 
 /*-------------------------------------------------------
 				Player
@@ -75,10 +76,9 @@ void Player::SendUnicast(const T& message, const PacketID pktId)
 template <typename BroadcastFunc>
 void Player::BroadcastChatAsync(const std::string& msg, Protocol::MsgType msgType, BroadcastFunc&& func)
 {
-	JobQ.DoAsync([self = shared_from_this(), msg, msgType, func = std::forward<BroadcastFunc>(func)]() {
+	JobQ.DoAsync([self = shared_from_this(), msg, msgType, playerName = _name, func = std::forward<BroadcastFunc>(func)]() {
 		Protocol::SC_CHAT_MSG chatPkt;
-		chatPkt.set_timestamp(Timer::GetNowMsTime());
-		chatPkt.set_msg(msg);
+		chatPkt.set_msg(Chat::MakeMessage(msg, playerName, msgType));
 		chatPkt.set_msgtype(msgType);
 		func(self, chatPkt);
 	}, JobGroup::Social);

@@ -13,7 +13,8 @@ Player::Player(SessionRef session, const Protocol::PlayerType& playerType, const
 	: _session(session), _playerType(playerType), _lastMoveTime(NOW)
 {
 	_objectType = Protocol::OBJECT_TYPE_PLAYER;
-	_name = name;
+	// 임시 플레이어명 설정
+	_name = u8"Player-" + std::to_string(_objectId.GetId());
 	_isEntered.store(false, std::memory_order::memory_order_relaxed);
 	_visibleObjects.clear();
 }
