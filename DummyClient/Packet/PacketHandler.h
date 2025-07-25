@@ -79,6 +79,13 @@ inline void PacketHandler::SendPacket(SessionRef session, const T& packet, Packe
 	const uint16 payloadSize = static_cast<uint16>(packet.ByteSizeLong());
 	const uint16 totalSize = sizeof(PacketHeader) + payloadSize;
 
+	// 패킷 크기 검증
+	if (totalSize > MAX_PACKET_SIZE)
+	{
+		LOG_ERROR("패킷 크기 초과: " + std::to_string(totalSize));
+		return;
+	}
+
 	// sendBuffer 헤더 세팅
 	SendBufferRef sendBuffer = ObjectPool<SendBuffer>::MakeShared(totalSize);
 	PacketHeader* header = reinterpret_cast<PacketHeader*>(sendBuffer->GetWritePtr());
