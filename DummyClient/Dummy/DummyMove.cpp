@@ -34,7 +34,7 @@ void DummyMove::DummyRandomMovement(SessionRef session, Protocol::PosInfo posInf
 
 	if (distance <= 0.01f)
 	{
-		LOG_WARNING("너무짧은 목표거리, 재지정, id: " + std::to_string(_id));
+		//LOG_WARNING("너무짧은 목표거리, 재지정, id: " + std::to_string(_id));
 		DummyRandomMovement(session, posInfo);
 		return;
 	}
@@ -76,7 +76,7 @@ void DummyMove::MoveJob(SessionRef session)
 	if (_currentX < minX || _currentX > maxX || _currentY < minY || _currentY > maxY)
 	{
 		// 새로운 이동 시작
-		LOG_WARNING("이동범위초과, 목표 재지정, id: " + std::to_string(_id));
+		//LOG_WARNING("이동범위초과, 목표 재지정, id: " + std::to_string(_id));
 		NewMove(session);
 		return;
 	}
@@ -98,8 +98,7 @@ void DummyMove::MoveJob(SessionRef session)
 	movePkt.mutable_movevector()->CopyFrom(moveVector);
 	PacketHandler::SendPacket(session, movePkt, PacketID::CS_PLAYER_MOVE);
 
-	int32 startDelay = Utils::GetRandom<int32>(0, 1000);
-	JobQ.DoAsyncAfter(startDelay, [self = shared_from_this(), session]() {
+	JobQ.DoAsyncAfter(_intervalTime, [self = shared_from_this(), session]() {
 		self->MoveJob(session);
 	}, JobGroup::Timer);
 }
