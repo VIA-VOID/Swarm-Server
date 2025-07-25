@@ -10,6 +10,8 @@ public:
 	static std::string GetFormattedTime(char dateSep = '/', char timeSep = L':');
 	// 포맷팅된 현재시간 반환 (yyyy/mm/dd)
 	static std::string GetFormattedDate(char dateSep = '/');
+	// 포맷팅된 현재시간 반환 (HH:MM)
+	static std::string GetFormattedHour(char timeSep = ':');
 	// 일자 변경 여부
 	static bool IsNewDay();
 	// 두 시간 사이의 차이, 밀리초 반환

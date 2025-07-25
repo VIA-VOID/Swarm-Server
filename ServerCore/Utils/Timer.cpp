@@ -11,7 +11,7 @@ using namespace std::chrono;
 ----------------------------*/
 
 // 포맷팅된 현재시간 반환 (yyyy/mm/dd HH:MM:SS.MS)
-std::string Timer::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= L':'*/)
+std::string Timer::GetFormattedTime(char dateSep /*= '/'*/, char timeSep /*= ':'*/)
 {
 	system_clock::time_point now = system_clock::now();
 	auto ms = ::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
@@ -50,6 +50,27 @@ std::string Timer::GetFormattedDate(char dateSep /*= '/'*/)
 		time_tm.tm_year + 1900, dateSep,
 		time_tm.tm_mon + 1, dateSep,
 		time_tm.tm_mday
+	);
+
+	return std::string(buffer);
+}
+
+// 포맷팅된 현재시간 반환 (HH:MM)
+std::string Timer::GetFormattedHour(char timeSep /*= ':'*/)
+{
+	system_clock::time_point now = system_clock::now();
+	auto ms = ::duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+
+	std::time_t now_c = system_clock::to_time_t(now);
+	std::tm time_tm{};
+	::localtime_s(&time_tm, &now_c);
+
+	char buffer[6];
+	std::snprintf(buffer, sizeof(buffer),
+		"%02d%c%02d",
+		time_tm.tm_min, 
+		timeSep,
+		time_tm.tm_sec
 	);
 
 	return std::string(buffer);
