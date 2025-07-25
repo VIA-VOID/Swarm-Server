@@ -175,6 +175,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Dummy\DummyChat.cpp" />
     <ClCompile Include="Dummy\DummyMove.cpp" />
     <ClCompile Include="GameClient.cpp" />
     <ClCompile Include="Job\JobGroup.cpp" />
@@ -211,6 +212,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dummy\DummyChat.h" />
     <ClInclude Include="DummyMacro.h" />
     <ClInclude Include="Dummy\DummyMove.h" />
     <ClInclude Include="GameClient.h" />

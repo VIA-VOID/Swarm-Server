@@ -37,6 +37,7 @@
     <ClCompile Include="Packet\ObjectPacketHandler.cpp">
       <Filter>Packet</Filter>
     </ClCompile>
+    <ClCompile Include="Dummy\DummyChat.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -75,6 +76,7 @@
       <Filter>Packet</Filter>
     </ClInclude>
     <ClInclude Include="DummyMacro.h" />
+    <ClInclude Include="Dummy\DummyChat.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
