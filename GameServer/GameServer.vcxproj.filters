@@ -82,6 +82,9 @@
     <ClCompile Include="World\MapDataLoader.cpp">
       <Filter>World</Filter>
     </ClCompile>
+    <ClCompile Include="Chat\Chat.cpp">
+      <Filter>Chat</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -172,6 +175,9 @@
     <ClInclude Include="World\MapDataLoader.h">
       <Filter>World</Filter>
     </ClInclude>
+    <ClInclude Include="Chat\Chat.h">
+      <Filter>Chat</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Job">
@@ -200,6 +206,9 @@
     </Filter>
     <Filter Include="World\Zone">
       <UniqueIdentifier>{824e7936-e4b3-43f5-86f6-af8403028dc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Chat">
+      <UniqueIdentifier>{1ac1a29b-4578-47f9-8c75-d29ae36fedfb}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

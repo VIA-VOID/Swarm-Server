@@ -189,6 +189,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Chat\Chat.cpp" />
     <ClCompile Include="World\Zone\PvpZone.cpp" />
     <ClCompile Include="World\Zone\BossZone.cpp" />
     <ClCompile Include="Data\BaseJsonLoader.cpp" />
@@ -237,6 +238,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Chat\Chat.h" />
     <ClInclude Include="World\Zone\PvpZone.h" />
     <ClInclude Include="World\Zone\BossZone.h" />
     <ClInclude Include="Data\BaseJsonLoader.h" />
