@@ -1,13 +1,19 @@
 # MMO Game Server
 IOCP 비동기/논블로킹 기반의 실시간 게임 서버
 
+### 개발 환경
+- 공통: C++17, Google Protobuf
+- 서버: Windows 11 API
+- 클라이언트: Unreal Engine 5.3
+- 도구: Visual Studio 2022, WireShark
+
 ## 모듈 구성
 ### ServerCore
 - Windows IOCP 기반 네트워크, 스레드, 메모리, 잡 시스템을 묶은 서버 코어 라이브러리입니다.
 - 게임 서버 구현부나 더미 클라이언트(봇)는 `ServerCore` 모듈을 추가하고, [CoreService](https://github.com/VIA-VOID/Swarm-Server/blob/main/ServerCore/CoreService.h)를 상속해 네트워크 이벤트만 구현하도록 설계했습니다.
 
 ### GameServer
-- 실제 게임 로직(월드/플레이어/채팅 등)을 담당합니다.
+- 실제 게임 로직을 담당합니다.
 - `ServerCore`의 세션/패킷 이벤트를 받아 게임 상태를 갱신, 구현합니다.
 
 ### DummyClient
