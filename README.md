@@ -1,8 +1,38 @@
-# IOCP MMO Game Server
+# MMO Game Server
+IOCP 비동기/논블로킹 기반의 실시간 게임 서버
 
-## ServerCore 개요
+## 모듈 구성
+### ServerCore
 - Windows IOCP 기반 네트워크, 스레드, 메모리, 잡 시스템을 묶은 서버 코어 라이브러리입니다.
 - 게임 서버 구현부나 더미 클라이언트(봇)는 `ServerCore` 모듈을 추가하고, [CoreService](https://github.com/VIA-VOID/Swarm-Server/blob/main/ServerCore/CoreService.h)를 상속해 네트워크 이벤트만 구현하도록 설계했습니다.
+
+### GameServer
+- 실제 게임 로직(월드/플레이어/채팅 등)을 담당합니다.
+- `ServerCore`의 세션/패킷 이벤트를 받아 게임 상태를 갱신, 구현합니다.
+
+### DummyClient
+- 더미 이동/채팅 봇을 생성하여 서버 부하 및 기능 테스트를 수행하는 클라이언트입니다.
+
+## 시연 영상
+### 서버
+- C++17, IOCP
+- [서버 시연영상](https://metadium.jeondoh.synology.me/swarm-server.mp4)
+
+### 클라이언트
+- C++17, UE 5.3
+- [클라이언트 시연영상](https://metadium.jeondoh.synology.me/swarm-client.mp4)
+
+## 패킷 설계
+### Google Protobuf 적용
+- 클라이언트(UE5.3)과 서버의 패킷 통일화, 스키마 단일화가 필요했습니다.
+- Protobuf는 명확한 스키마와 역직렬화 안전성을 제공해 버전 관리에 유리하여 채택하게 되었습니다.
+
+### 자동화 도입
+- 네트워크 통신에 필요한 프로토콜, 패킷 껍대기인 `.proto` 파일만 정의하면 각 메시지를 추출하여 패킷 파일을 생성하도록 하였습니다.
+- 도메인별 분류 이후 `PacketId`, `PacketHandler`, `DomainPacketHandler` 코드를 자동으로 생성합니다.
+- 생성된 파일들을 GameServer, DummyClient, 언리얼 프로젝트로 자동으로 복사하도록 하였습니다.
+- 즉, 신규 패킷 추가 시 정의만 하면 관련된 파일들이 자동으로 생성되고 복사되도록 자동화하였습니다.
+- 관련 프로젝트: [Swarm-Tools](https://github.com/VIA-VOID/Swarm-Tools/tree/main)
 
 ## 멀티스레드 설계
 ### 1) IOCP 워커 스레드
@@ -71,11 +101,5 @@
   - 해제 시 경계 영역을 검사해 오염 여부 확인
 - 관련 코드: [MemoryHeader.cpp](https://github.com/VIA-VOID/Swarm-Server/blob/main/ServerCore/Memory/MemoryHeader.cpp), [MemoryManger.cpp](https://github.com/VIA-VOID/Swarm-Server/blob/main/ServerCore/Memory/MemoryManger.cpp)
 
-## 시연 영상
-### 서버
-- C++17, IOCP
-- [서버 시연영상](https://metadium.jeondoh.synology.me/swarm-server.mp4)
 
-### 클라이언트
-- C++17, UE 5.3
-- [클라이언트 시연영상](https://metadium.jeondoh.synology.me/swarm-client.mp4)
+
